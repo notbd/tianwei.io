@@ -6,9 +6,6 @@ const compat = new FlatCompat()
 export default antfu(
   {
     react: true,
-    ignores: [
-      '**/tailwind.config.js',
-    ],
   },
 
   {
@@ -24,5 +21,12 @@ export default antfu(
       'plugin:tailwindcss/recommended',
       'plugin:@next/next/recommended',
     ],
+
+    settings: {
+      tailwindcss: {
+        // add 'cn' to the default list of functions to have its arguments linted
+        callees: ['cn', 'classnames', 'clsx', 'ctl', 'cva', 'tv'],
+      },
+    },
   }),
 )

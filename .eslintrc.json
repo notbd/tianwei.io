@@ -1,0 +1,4 @@
+// only used for satisfying `next lint` command
+{
+  "extends": "next/core-web-vitals"
+}

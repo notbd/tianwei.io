@@ -1,45 +1,70 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Rubik } from 'next/font/google'
 import './globals.css'
-
-const inter = Inter({ subsets: ['latin'] })
+import { PageHeader } from '@/components/PageHeader'
+import { PageFooter } from '@/components/PageFooter'
+import { ThemeProvider } from '@/components/ThemeProvider'
+import { cn } from '@/lib/utils'
 
 export const metadata: Metadata = {
   title: 'Tianwei Zhang',
   description: 'A software developer.',
 }
 
+const rubik = Rubik({ subsets: ['latin'] })
+
+type RootLayoutProps = { children: React.ReactNode }
+
 export default function RootLayout({
   children,
-}: Readonly<{
-  children: React.ReactNode
-}>) {
+}: Readonly<RootLayoutProps>) {
   return (
-    <html lang="en">
-      <body
-        className={inter.className}
-      >
-        {/* canvas */}
-        <div
-          className="flex min-h-screen flex-col items-center justify-between antialiased"
-        >
+    <html lang="en" suppressHydrationWarning>
 
-          {/* top */}
-          <div>
+      <body className={rubik.className}>
 
-            {/* nav */}
-            <nav />
+        {/* theme */}
+        <ThemeProvider>
 
-            {/* main */}
-            <main>
-              {children}
-            </main>
+          {/* canvas */}
+          <div
+            className={cn(
+              'min-h-screen bg-white text-zinc-900 antialiased dark:bg-zinc-950 dark:text-zinc-50',
+              'flex flex-col items-center',
+            )}
+          >
+
+            {/* content */}
+            <div
+              className={cn(
+                'w-full min-w-72 max-w-2xl grow',
+                'flex flex-col justify-between px-4 py-8',
+              )}
+            >
+
+              {/* top: header + main */}
+              <div
+                className="flex flex-col gap-y-10 transition-all duration-300 md:gap-y-12"
+              >
+
+                {/* header */}
+                <PageHeader />
+
+                {/* main */}
+                <main>
+                  {children}
+                </main>
+              </div>
+
+              {/* bottom: footer */}
+              <PageFooter />
+
+            </div>
           </div>
 
-          {/* footer */}
-          <footer />
-        </div>
+        </ThemeProvider>
       </body>
+
     </html>
   )
 }
