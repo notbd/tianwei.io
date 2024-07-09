@@ -2,8 +2,25 @@
 @tailwind components;
 @tailwind utilities;
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+/* Custom scrollbar */
+
+/* WebKit-based browsers (Chrome, Safari) */
+*::-webkit-scrollbar {
+  @apply bg-zinc-50 dark:bg-zinc-950 w-1;
+}
+
+*::-webkit-scrollbar-thumb {
+  @apply bg-zinc-500 dark:bg-zinc-700 rounded-full;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: theme('colors.zinc.500') theme('colors.zinc.50');
+}
+
+@media (prefers-color-scheme: dark) {
+  * {
+    scrollbar-color: theme('colors.zinc.700') theme('colors.zinc.950');
   }
 }

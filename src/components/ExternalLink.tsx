@@ -18,7 +18,11 @@ export function ExternalLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={cn('text-zinc-600 underline transition hover:text-zinc-400 dark:text-zinc-400 dark:hover:text-zinc-100', className)}
+      className={cn(
+        'text-zinc-600 hover:text-zinc-400 dark:text-zinc-400 dark:hover:text-zinc-100',
+        'underline transition-colors duration-500',
+        className,
+      )}
     >
       {children}
     </a>

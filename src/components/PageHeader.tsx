@@ -5,6 +5,7 @@ import Link from 'next/link'
 import type { LinkProps } from 'next/link'
 import type { ComponentProps } from 'react'
 import { SiteLogo } from '@/components/svgs'
+import { ColorModeToggle } from '@/components/ColorModeToggle'
 import { cn } from '@/lib/utils'
 
 export function PageHeader() {
@@ -18,39 +19,38 @@ export function PageHeader() {
       className="flex items-center justify-between"
     >
       {/* site logo */}
-      <div className={`pr-4 transition-transform ease-out ${logoTranslation}`}>
+      <div className={`pr-4 transition ease-out ${logoTranslation}`}>
         <Link
           href="/"
           tabIndex={-1}
         >
           {/* logo svg imported as component */}
           <SiteLogo
-            className="h-6 text-black dark:text-teal-800"
+            className="h-6 text-teal-700 dark:text-teal-800"
             aria-label="TWZ Website Logo"
           />
         </Link>
       </div>
 
       {/* nav links */}
-      <nav>
-        <ul className="flex justify-end gap-x-1">
-          <li>
-            <NavLink
-              href="/"
-              isSelected={isHome}
-            >
-              Home
-            </NavLink>
-          </li>
-          <li>
-            <NavLink
-              href="/about"
-              isSelected={isAbout}
-            >
-              About
-            </NavLink>
-          </li>
-        </ul>
+      <nav
+        className="flex items-center justify-end gap-x-1"
+      >
+        <NavLink
+          href="/"
+          isSelected={isHome}
+        >
+          Home
+        </NavLink>
+
+        <NavLink
+          href="/about"
+          isSelected={isAbout}
+        >
+          About
+        </NavLink>
+
+        <ColorModeToggle className="ml-1" />
       </nav>
     </header>
   )
@@ -71,11 +71,12 @@ function NavLink({
     <Link
       {...props}
       className={cn(
-        'inline-block rounded-md px-4 py-2 text-sm font-semibold underline transition',
+        'inline-block rounded-md px-4 py-2 text-sm font-semibold underline',
         'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
         {
-          'bg-zinc-50 dark:bg-zinc-700': isSelected,
+          'bg-zinc-200 dark:bg-zinc-800': isSelected,
         },
+        'transition duration-500',
         className,
       )}
     >
