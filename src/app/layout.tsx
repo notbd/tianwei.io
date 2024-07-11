@@ -4,14 +4,45 @@ import { cookies } from 'next/headers'
 import './globals.css'
 import { PageHeader } from '@/components/PageHeader'
 import { PageFooter } from '@/components/PageFooter'
-import { ThemeProvider } from '@/providers/themeProvider'
+import { ThemeProvider } from '@/providers/ThemeProvider'
 import { cn } from '@/lib/utils'
 import type { Theme } from '@/types/themeTypes'
 import { DEFAULT_THEME, KEYS } from '@/constants/constants'
 
 export const metadata: Metadata = {
-  title: 'Tianwei Zhang',
+  title: {
+    template: '%s · tianwei.io',
+    default: 'Tianwei Zhang',
+  },
   description: 'A software developer.',
+  authors: {
+    name: 'Tianwei Zhang',
+    url: 'https://tianwei.io',
+  },
+  viewport: 'width=device-width, initial-scale=1',
+  metadataBase: new URL('https://tianwei.io'),
+  openGraph: {
+    type: 'website',
+    url: 'https://tianwei.io',
+    title: 'Tianwei Zhang',
+    description: 'A software developer.',
+    siteName: 'Tianwei.io',
+    images: [
+      {
+        url: 'https://tianwei.io/twitter.png',
+        width: 2000,
+        height: 1500,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'Tianwei Zhang • tianwei.io',
+    description: 'A software developer.',
+    creator: '@defnotbd',
+    creatorId: '1110568647041400832',
+    images: ['https://tianwei.io/twitter.png'],
+  },
 }
 
 const rubik = Rubik({ subsets: ['latin'] })
