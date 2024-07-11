@@ -29,8 +29,8 @@ export const metadata: Metadata = {
     siteName: 'Tianwei.io',
     images: [
       {
-        url: 'https://tianwei.io/twitter.png',
-        width: 2000,
+        url: 'https://tianwei.io/icon.png',
+        width: 1500,
         height: 1500,
       },
     ],
@@ -41,7 +41,7 @@ export const metadata: Metadata = {
     description: 'A software developer.',
     creator: '@defnotbd',
     creatorId: '1110568647041400832',
-    images: ['https://tianwei.io/twitter.png'],
+    images: ['https://tianwei.io/banner.png'],
   },
 }
 
