@@ -2,11 +2,10 @@
 
 import type { ComponentProps } from 'react'
 import { useEffect, useState } from 'react'
-import { useTheme } from 'next-themes'
 import { LaptopMinimal, Moon, Sun } from 'lucide-react'
 import { setCookie } from 'cookies-next'
+import { useConsistentTheme } from '@/hooks/useConsistentTheme'
 import { cn } from '@/lib/utils'
-import { useInitialTheme } from '@/hooks/useInitialTheme'
 import { DEFAULT_THEME, KEYS } from '@/constants/constants'
 
 type ColorModeToggleProps = ComponentProps<'button'>
@@ -15,12 +14,11 @@ export function ColorModeToggle({
   className,
   ...props
 }: ColorModeToggleProps) {
-  const { theme, setTheme } = useTheme()
-  const initialTheme = useInitialTheme()
+  const { persistedTheme, theme, setTheme } = useConsistentTheme()
   const [isMounted, setIsMounted] = useState(false)
 
   const toggleTheme = () => {
-    let newChosenTheme = DEFAULT_THEME // set default theme when value returned by 'useTheme' hook is invalid
+    let newChosenTheme = DEFAULT_THEME // set default theme when `theme` value returned by hook is invalid (unlikely)
     switch (theme) {
       case 'system':
         newChosenTheme = 'dark'
@@ -46,7 +44,6 @@ export function ColorModeToggle({
       onClick={isMounted ? toggleTheme : () => {}}
       disabled={!isMounted}
       aria-label="Color Mode Toggle"
-      title={theme}
       className={cn(
         'border-zinc-200 text-zinc-600 dark:border-zinc-800 dark:text-zinc-400',
         'size-7 rounded-md border text-center transition-[border] duration-300',
@@ -68,10 +65,10 @@ export function ColorModeToggle({
         })()
       ) : (
         // rendering on server:
-        // -> use intialTheme to match last used value and avoid FOUC
+        // -> use persistedTheme to match last used value and avoid FOUC
         (() => {
-          // initialTheme value was already resolved and won't be empty
-          switch (initialTheme) {
+          // persistedTheme value was already resolved and won't be empty
+          switch (persistedTheme) {
             case 'system':
               return <LaptopMinimal className="m-auto size-4" />
             case 'dark':

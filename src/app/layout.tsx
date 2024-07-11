@@ -1,10 +1,10 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Rubik } from 'next/font/google'
 import { cookies } from 'next/headers'
 import './globals.css'
 import { PageHeader } from '@/components/PageHeader'
 import { PageFooter } from '@/components/PageFooter'
-import { ThemeProvider } from '@/providers/ThemeProvider'
+import { ConsistentThemeProvider } from '@/contexts/ConsistentThemeProvider'
 import { cn } from '@/lib/utils'
 import type { Theme } from '@/types/themeTypes'
 import { DEFAULT_THEME, KEYS } from '@/constants/constants'
@@ -19,7 +19,6 @@ export const metadata: Metadata = {
     name: 'Tianwei Zhang',
     url: 'https://tianwei.io',
   },
-  viewport: 'width=device-width, initial-scale=1',
   metadataBase: new URL('https://tianwei.io'),
   openGraph: {
     type: 'website',
@@ -29,7 +28,7 @@ export const metadata: Metadata = {
     siteName: 'Tianwei.io',
     images: [
       {
-        url: 'https://tianwei.io/icon.png',
+        url: 'https://tianwei.io/logo-icon-square.png',
         width: 1500,
         height: 1500,
       },
@@ -39,10 +38,20 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: 'Tianwei Zhang • tianwei.io',
     description: 'A software developer.',
+    siteId: '1110568647041400832',
     creator: '@defnotbd',
     creatorId: '1110568647041400832',
-    images: ['https://tianwei.io/banner.png'],
+    images: ['https://tianwei.io/logo-banner.png'],
   },
+}
+
+export const viewport: Viewport = {
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '##FAFAFA' },
+    { media: '(prefers-color-scheme: dark)', color: '#09090B' },
+  ],
+  width: 'device-width',
+  initialScale: 1,
 }
 
 const rubik = Rubik({ subsets: ['latin'] })
@@ -52,9 +61,9 @@ type RootLayoutProps = { children: React.ReactNode }
 export default function RootLayout({
   children,
 }: Readonly<RootLayoutProps>) {
-  // read initialTheme from cookies
+  // read persistedTheme from cookies
   const themeCookie = cookies().get(KEYS.LAST_CHOSEN_THEME)
-  const initialTheme: Theme = themeCookie ? ((themeCookie.value as Theme) ?? DEFAULT_THEME) : DEFAULT_THEME // set default when no last chosen theme cookie found
+  const persistedTheme: Theme = themeCookie ? ((themeCookie.value as Theme) ?? DEFAULT_THEME) : DEFAULT_THEME // set default for `persistedTheme` when no last chosen theme cookie found
 
   return (
     <html lang="en" suppressHydrationWarning>
@@ -62,7 +71,7 @@ export default function RootLayout({
       <body className={rubik.className}>
 
         {/* theme */}
-        <ThemeProvider initialTheme={initialTheme}>
+        <ConsistentThemeProvider persistedTheme={persistedTheme}>
 
           {/* canvas */}
           <div
@@ -99,10 +108,8 @@ export default function RootLayout({
 
             </div>
           </div>
-
-        </ThemeProvider>
+        </ConsistentThemeProvider>
       </body>
-
     </html>
   )
 }

@@ -1,5 +1,5 @@
 import type { ComponentProps } from 'react'
-import { Subscript } from './Subscript'
+import { Subscript } from '@/components/Subscript'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from '@/components/ExternalLink'
 
