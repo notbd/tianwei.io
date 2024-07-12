@@ -34,7 +34,7 @@ export function PageHeader() {
 
       {/* nav links */}
       <nav
-        className="flex items-center justify-end gap-x-1"
+        className="flex items-center justify-end"
       >
         <NavLink
           href="/"

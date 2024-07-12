@@ -19,6 +19,10 @@ export const metadata: Metadata = {
     name: 'Tianwei Zhang',
     url: 'https://tianwei.io',
   },
+  creator: 'Tianwei Zhang',
+  generator: 'Next.js',
+  keywords: ['Tianwei Zhang', 'notbd', 'tianwei.io', 'Personal Website', 'Next.js'],
+  referrer: 'origin-when-cross-origin',
   metadataBase: new URL('https://tianwei.io'),
   openGraph: {
     type: 'website',
@@ -28,9 +32,9 @@ export const metadata: Metadata = {
     siteName: 'Tianwei.io',
     images: [
       {
-        url: 'https://tianwei.io/logo-icon-square.png',
-        width: 1500,
-        height: 1500,
+        url: 'https://tianwei.io/logo/icon-square-1024.png',
+        width: 1024,
+        height: 1024,
       },
     ],
   },
@@ -41,13 +45,15 @@ export const metadata: Metadata = {
     siteId: '1110568647041400832',
     creator: '@defnotbd',
     creatorId: '1110568647041400832',
-    images: ['https://tianwei.io/logo-banner.png'],
+    images: ['https://tianwei.io/logo/banner-2_1-2048.png'],
   },
+  manifest: 'https://tianwei.io/manifest.json',
 }
 
 export const viewport: Viewport = {
+  colorScheme: 'dark light',
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '##FAFAFA' },
+    { media: '(prefers-color-scheme: light)', color: '#FAFAFA' },
     { media: '(prefers-color-scheme: dark)', color: '#09090B' },
   ],
   width: 'device-width',
@@ -76,7 +82,7 @@ export default function RootLayout({
           {/* canvas */}
           <div
             className={cn(
-              'min-h-screen w-full bg-zinc-50 text-zinc-900 antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-50',
+              'min-h-screen w-full bg-zinc-50 text-zinc-800 antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-50',
               'flex flex-col items-center',
             )}
           >
@@ -91,7 +97,7 @@ export default function RootLayout({
 
               {/* top: header + main */}
               <div
-                className="flex flex-col gap-y-10 transition-[row-gap] ease-out md:gap-y-12"
+                className="flex flex-col gap-y-12 transition-[row-gap] ease-out md:gap-y-14"
               >
 
                 {/* header */}

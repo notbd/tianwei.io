@@ -14,6 +14,7 @@ export function PageFooter({ className, ...props }: PageFooterProps) {
       <div
         className="flex flex-col items-start md:items-center"
       >
+
         {/* below md width: content license msg */}
         <FooterSegment className="md:hidden">
           {'Content licensed under '}
@@ -63,7 +64,7 @@ export function PageFooter({ className, ...props }: PageFooterProps) {
 
         {/* copyright msg */}
         <FooterSegment>
-          &copy; 2024-Present TIANWEI ZHANG.
+          tianwei.io · &copy; 2024-Present · TIANWEI ZHANG
         </FooterSegment>
 
       </div>
