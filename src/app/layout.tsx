@@ -75,10 +75,14 @@ export default function RootLayout({
         className={cn(
           'min-h-screen w-full',
           'flex flex-col items-center',
-          'bg-zinc-50 text-zinc-800 antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-50',
+          'bg-zinc-50 text-zinc-800 dark:bg-zinc-950 dark:text-zinc-50',
+          // cannot add 'transition-colors' here, else it may cause a flash under dark mode,
+          // since html always starts with light mode and 'dark' class is added later by code
+          'antialiased',
           rubik.className,
         )}
       >
+
         {/* theme */}
         <ConsistentThemeProvider persistedTheme={persistedTheme}>
 

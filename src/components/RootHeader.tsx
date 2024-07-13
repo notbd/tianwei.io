@@ -85,7 +85,7 @@ function NavLink({
         {
           'bg-zinc-200 dark:bg-zinc-800': isSelected,
         },
-        'transition duration-500',
+        'transition-[color] duration-300', // only text color transition, not bg color
         className,
       )}
     >

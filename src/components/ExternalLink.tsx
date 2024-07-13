@@ -20,7 +20,8 @@ export function ExternalLink({
       rel="noopener noreferrer"
       className={cn(
         'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
-        'underline transition-colors duration-500',
+        'transition-colors duration-300',
+        'underline',
         className,
       )}
     >
