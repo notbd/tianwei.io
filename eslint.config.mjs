@@ -12,6 +12,7 @@ export default antfu(
     rules: {
       // use `type` for type definitions instead of `interface`
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
+      'n/prefer-global/process': ['error', 'always'],
     },
   },
 
