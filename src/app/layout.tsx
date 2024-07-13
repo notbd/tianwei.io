@@ -2,8 +2,8 @@ import type { Metadata, Viewport } from 'next'
 import { Rubik } from 'next/font/google'
 import { cookies } from 'next/headers'
 import './globals.css'
-import { PageHeader } from '@/components/PageHeader'
-import { PageFooter } from '@/components/PageFooter'
+import { RootHeader } from '@/components/RootHeader'
+import { RootFooter } from '@/components/RootFooter'
 import { ConsistentThemeProvider } from '@/contexts/ConsistentThemeProvider'
 import { cn } from '@/lib/utils'
 import type { Theme } from '@/types/themeTypes'
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
   },
   creator: 'Tianwei Zhang',
   generator: 'Next.js',
-  keywords: ['Tianwei Zhang', 'notbd', 'tianwei.io', 'Personal Website', 'Next.js'],
+  keywords: ['Tianwei Zhang', 'notbd', 'tianwei.io', 'Personal Website'],
   referrer: 'origin-when-cross-origin',
   metadataBase: new URL('https://tianwei.io'),
   openGraph: {
@@ -52,10 +52,6 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   colorScheme: 'dark light',
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#FAFAFA' },
-    { media: '(prefers-color-scheme: dark)', color: '#09090B' },
-  ],
   width: 'device-width',
   initialScale: 1,
 }
@@ -74,45 +70,41 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
 
-      <body className={rubik.className}>
-
+      {/* canvas */}
+      <body
+        className={cn(
+          'min-h-screen w-full',
+          'flex flex-col items-center',
+          'bg-zinc-50 text-zinc-800 antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-50',
+          rubik.className,
+        )}
+      >
         {/* theme */}
         <ConsistentThemeProvider persistedTheme={persistedTheme}>
 
-          {/* canvas */}
+          {/* content */}
           <div
             className={cn(
-              'min-h-screen w-full bg-zinc-50 text-zinc-800 antialiased transition-colors duration-300 dark:bg-zinc-950 dark:text-zinc-50',
-              'flex flex-col items-center',
+              'w-full min-w-72 max-w-2xl grow',
+              'flex flex-col justify-between px-4 py-8',
             )}
           >
 
-            {/* content */}
+            {/* top: header + main */}
             <div
-              className={cn(
-                'w-full min-w-72 max-w-2xl grow',
-                'flex flex-col justify-between px-4 py-8',
-              )}
+              className="flex flex-col gap-y-12 transition-[row-gap] ease-out md:gap-y-14"
             >
 
-              {/* top: header + main */}
-              <div
-                className="flex flex-col gap-y-12 transition-[row-gap] ease-out md:gap-y-14"
-              >
+              {/* header */}
+              <RootHeader />
 
-                {/* header */}
-                <PageHeader />
-
-                {/* main */}
-                <main>
-                  {children}
-                </main>
-              </div>
-
-              {/* bottom: footer */}
-              <PageFooter />
-
+              {/* main */}
+              <main>{children}</main>
             </div>
+
+            {/* bottom: footer */}
+            <RootFooter />
+
           </div>
         </ConsistentThemeProvider>
       </body>

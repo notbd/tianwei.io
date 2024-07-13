@@ -8,7 +8,12 @@ import { SiteLogo } from '@/components/svgs'
 import { ColorModeToggle } from '@/components/ColorModeToggle'
 import { cn } from '@/lib/utils'
 
-export function PageHeader() {
+type PageHeaderProps = ComponentProps<'header'>
+
+export function RootHeader({
+  className,
+  ...props
+}: PageHeaderProps) {
   const pathname = usePathname()
   const isHome = pathname === '/'
   const isAbout = pathname === '/about'
@@ -16,7 +21,11 @@ export function PageHeader() {
 
   return (
     <header
-      className="flex items-center justify-between"
+      {...props}
+      className={cn(
+        'flex items-center justify-between',
+        className,
+      )}
     >
       {/* site logo */}
       <div className={`pr-4 transition ease-out ${logoTranslation}`}>
@@ -50,7 +59,7 @@ export function PageHeader() {
           About
         </NavLink>
 
-        <ColorModeToggle className="ml-1" />
+        <ColorModeToggle className="ml-2" />
       </nav>
     </header>
   )

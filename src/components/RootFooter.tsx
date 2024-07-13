@@ -5,7 +5,10 @@ import { ExternalLink } from '@/components/ExternalLink'
 
 type PageFooterProps = ComponentProps<'footer'>
 
-export function PageFooter({ className, ...props }: PageFooterProps) {
+export function RootFooter({
+  className,
+  ...props
+}: PageFooterProps) {
   return (
     <footer
       {...props}

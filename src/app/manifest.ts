@@ -7,8 +7,6 @@ export default function manifest(): MetadataRoute.Manifest {
     description: 'Tianwei Zhang\'s personal website',
     start_url: `${process.env.NEXT_PUBLIC_BASE_URL}/`,
     display: 'minimal-ui',
-    background_color: '#09090B',
-    theme_color: '#2F5651',
     icons: [
       {
         src: '/logo/icon-squircle-512.png',
