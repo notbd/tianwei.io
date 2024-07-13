@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { userAgent } from 'next/server'
+import { SITE_BASE_URL } from '@/constants/constants'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -18,6 +18,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/no-googlebot/'],
       },
     ],
-    sitemap: `${process.env.NEXT_PUBLIC_BASE_URL}/sitemap.xml`,
+    sitemap: `${SITE_BASE_URL}/sitemap.xml`,
   }
 }

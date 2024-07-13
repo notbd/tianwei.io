@@ -1,5 +1,8 @@
 import type { Theme } from '@/types/themeTypes'
 
+// ---- STRING CONSTANTS ----
+export const SITE_BASE_URL = 'https://tianwei.io'
+
 // ---- CONFIGURATION CONSTANTS ----
 
 // default color theme

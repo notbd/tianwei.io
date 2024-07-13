@@ -15,12 +15,12 @@ export default function Home() {
         </HomeSectionHeader>
 
         {/* md: last name */}
-        <HomeSectionBody className="hidden font-bold text-teal-700 transition-colors duration-500 dark:text-teal-800 md:flex">
+        <HomeSectionBody className="hidden font-bold text-teal-700 transition-colors duration-500 md:flex dark:text-teal-800">
           Zhang
         </HomeSectionBody>
 
         {/* below md: full name */}
-        <HomeSectionBody className="pl-0 font-semibold text-zinc-400 transition-colors duration-500 dark:text-zinc-200 md:hidden">
+        <HomeSectionBody className="pl-0 font-semibold text-zinc-400 transition-colors duration-500 md:hidden dark:text-zinc-200">
           Tianwei
           <span className="font-bold text-teal-700 transition-colors duration-500 dark:text-teal-800">
             {' Zhang'}
@@ -169,7 +169,10 @@ function HomeSectionHeader({
   return (
     <h2
       {...props}
-      className={cn('text-zinc-400 transition-colors dark:text-zinc-200 md:w-32 md:text-right', className)}
+      className={cn(
+        'text-zinc-400 md:w-32 md:text-right dark:text-zinc-200',
+        className,
+      )}
     >
       {children}
     </h2>
@@ -186,7 +189,10 @@ function HomeSectionBody({
   return (
     <div
       {...props}
-      className={cn('grow pl-2 font-semibold transition-[padding] duration-300 ease-out md:pl-4', className)}
+      className={cn(
+        'grow pl-2 font-semibold transition-[padding] duration-300 ease-out md:pl-4',
+        className,
+      )}
     >
       {children}
     </div>
@@ -220,7 +226,10 @@ function ListItem({
   return (
     <li
       {...props}
-      className={cn('pb-3', className)}
+      className={cn(
+        'pb-3',
+        className,
+      )}
     >
       {children}
     </li>
