@@ -1,7 +1,7 @@
-import type { Metadata, Viewport } from 'next'
 import { Rubik } from 'next/font/google'
 import { cookies } from 'next/headers'
 import './globals.css'
+import { metadata, viewport } from './metadata'
 import { RootHeader } from '@/components/RootHeader'
 import { RootFooter } from '@/components/RootFooter'
 import { ConsistentThemeProvider } from '@/contexts/ConsistentThemeProvider'
@@ -9,52 +9,8 @@ import { cn } from '@/lib/utils'
 import type { Theme } from '@/types/themeTypes'
 import { DEFAULT_THEME, KEYS } from '@/constants/constants'
 
-export const metadata: Metadata = {
-  title: {
-    template: '%s · tianwei.io',
-    default: 'Tianwei Zhang',
-  },
-  description: 'A software developer.',
-  authors: {
-    name: 'Tianwei Zhang',
-    url: 'https://tianwei.io',
-  },
-  creator: 'Tianwei Zhang',
-  generator: 'Next.js',
-  keywords: ['Tianwei Zhang', 'notbd', 'tianwei.io', 'Personal Website'],
-  referrer: 'origin-when-cross-origin',
-  metadataBase: new URL('https://tianwei.io'),
-  openGraph: {
-    type: 'website',
-    url: 'https://tianwei.io',
-    title: 'Tianwei Zhang',
-    description: 'A software developer.',
-    siteName: 'Tianwei.io',
-    images: [
-      {
-        url: 'https://tianwei.io/logo/icon-square-1024.png',
-        width: 1024,
-        height: 1024,
-      },
-    ],
-  },
-  twitter: {
-    card: 'summary_large_image',
-    title: 'Tianwei Zhang • tianwei.io',
-    description: 'A software developer.',
-    siteId: '1110568647041400832',
-    creator: '@defnotbd',
-    creatorId: '1110568647041400832',
-    images: ['https://tianwei.io/logo/banner-2_1-2048.png'],
-  },
-  manifest: 'https://tianwei.io/manifest.json',
-}
-
-export const viewport: Viewport = {
-  colorScheme: 'dark light',
-  width: 'device-width',
-  initialScale: 1,
-}
+// declared in metadata.ts
+export { metadata, viewport }
 
 const rubik = Rubik({ subsets: ['latin'] })
 

@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { SITE_BASE_URL } from '@/constants/constants'
+import { BasePaths } from '@/lib/paths'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -18,6 +18,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: ['/no-googlebot/'],
       },
     ],
-    sitemap: `${SITE_BASE_URL}/sitemap.xml`,
+    sitemap: `${BasePaths.url}/sitemap.xml`,
   }
 }

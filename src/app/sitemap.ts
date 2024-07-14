@@ -1,10 +1,10 @@
 import type { MetadataRoute } from 'next'
-import { SITE_BASE_URL } from '@/constants/constants'
+import { BasePaths } from '@/lib/paths'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     {
-      url: `${SITE_BASE_URL}/`,
+      url: `${BasePaths.url}/`,
     },
   ]
 }
