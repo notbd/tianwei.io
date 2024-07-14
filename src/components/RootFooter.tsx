@@ -33,7 +33,7 @@ export function RootFooter({
         <FooterSegment className="md:hidden">
           {'Source code licensed under '}
 
-          <ExternalLink href="https://gnu.org/licenses/agpl-3.0.html">
+          <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html">
             AGPLv3
           </ExternalLink>
 
