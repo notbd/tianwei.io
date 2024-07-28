@@ -16,8 +16,8 @@ export function RootHeader({
 }: PageHeaderProps) {
   const pathname = usePathname()
   const isHome = pathname === '/'
-  const isAbout = pathname === '/about'
-  const logoTranslation = isHome ? 'md:translate-x-[7.5rem]' : 'md:translate-x-0'
+  const isBlog = pathname.startsWith('/posts')
+  const logoTranslation = isHome ? 'md:translate-x-[7.5rem]' : ''
 
   return (
     <header
@@ -53,10 +53,10 @@ export function RootHeader({
         </NavLink>
 
         <NavLink
-          href="/about"
-          isSelected={isAbout}
+          href="/posts"
+          isSelected={isBlog}
         >
-          About
+          Blog
         </NavLink>
 
         <ColorModeToggle className="ml-2" />

@@ -1,3 +1,6 @@
+// import nextMDX from '@next/mdx'
+import { withContentCollections } from '@content-collections/next'
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   webpack(config) {
@@ -27,6 +30,15 @@ const nextConfig = {
 
     return config
   },
+
+  // Configure `pageExtensions` to include MDX files
+  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 }
 
-export default nextConfig
+// const withMDX = nextMDX({
+//   extension: /\.mdx?$/,
+//   options: {
+//   },
+// })
+
+export default withContentCollections(nextConfig)

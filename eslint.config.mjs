@@ -7,6 +7,9 @@ export default antfu(
   {
     typescript: true,
     react: true,
+    ignores: [
+      // add files to ignore
+    ],
   },
 
   {

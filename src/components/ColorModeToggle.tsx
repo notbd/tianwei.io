@@ -41,6 +41,7 @@ export function ColorModeToggle({
   return (
     <button
       {...props}
+      type="button"
       onClick={isMounted ? toggleTheme : () => {}}
       disabled={!isMounted}
       aria-label="Color Mode Toggle"
@@ -51,33 +52,35 @@ export function ColorModeToggle({
         className,
       )}
     >
-      {isMounted ? (
-        // rendering on client
-        (() => {
-          switch (theme) {
-            case 'system':
-              return <LaptopMinimal className="m-auto size-4" />
-            case 'dark':
-              return <Moon className="m-auto size-4" />
-            default: // 'light'
-              return <Sun className="m-auto size-4" />
-          }
-        })()
-      ) : (
-        // rendering on server:
-        // -> use persistedTheme to match last used value and avoid FOUC
-        (() => {
-          // persistedTheme value was already resolved and won't be empty
-          switch (persistedTheme) {
-            case 'system':
-              return <LaptopMinimal className="m-auto size-4" />
-            case 'dark':
-              return <Moon className="m-auto size-4" />
-            default: // 'light'
-              return <Sun className="m-auto size-4" />
-          }
-        })()
-      )}
+      {isMounted
+        ? (
+            // rendering on client
+            (() => {
+              switch (theme) {
+                case 'system':
+                  return <LaptopMinimal className="m-auto size-4" />
+                case 'dark':
+                  return <Moon className="m-auto size-4" />
+                default: // 'light'
+                  return <Sun className="m-auto size-4" />
+              }
+            })()
+          )
+        : (
+            // rendering on server:
+            // -> use persistedTheme to match last used value and avoid FOUC
+            (() => {
+              // persistedTheme value was already resolved and won't be empty
+              switch (persistedTheme) {
+                case 'system':
+                  return <LaptopMinimal className="m-auto size-4" />
+                case 'dark':
+                  return <Moon className="m-auto size-4" />
+                default: // 'light'
+                  return <Sun className="m-auto size-4" />
+              }
+            })()
+          )}
     </button>
   )
 }
