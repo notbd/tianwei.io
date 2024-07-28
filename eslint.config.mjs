@@ -5,6 +5,7 @@ const compat = new FlatCompat()
 
 export default antfu(
   {
+    typescript: true,
     react: true,
   },
 
