@@ -19,7 +19,13 @@ export function RootFooter({
       >
 
         {/* below md width: content license msg */}
-        <FooterSegment className="md:hidden">
+        <FooterSegment
+          className={cn(
+            'transition duration-200 ease-out',
+            'translate-x-0 opacity-100',
+            'md:pointer-events-none md:absolute md:translate-x-4 md:opacity-0',
+          )}
+        >
           {'Content licensed under '}
 
           <ExternalLink href="https://creativecommons.org/licenses/by-nc-sa/4.0">
@@ -30,7 +36,13 @@ export function RootFooter({
         </FooterSegment>
 
         {/* below md width: source code license msg */}
-        <FooterSegment className="md:hidden">
+        <FooterSegment
+          className={cn(
+            'transition duration-200 ease-out',
+            'translate-x-0 opacity-100',
+            'md:pointer-events-none md:absolute md:translate-x-4 md:opacity-0',
+          )}
+        >
           {'Source code licensed under '}
 
           <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html">
@@ -41,14 +53,20 @@ export function RootFooter({
         </FooterSegment>
 
         {/* above md width: combined license msg */}
-        <FooterSegment className="hidden md:inline-block">
+        <FooterSegment
+          className={cn(
+            'transition duration-200 ease-out',
+            'pointer-events-none absolute -translate-x-4 opacity-0',
+            'md:pointer-events-auto md:relative md:translate-x-0 md:opacity-100',
+          )}
+        >
           {'Licensed under '}
 
           <ExternalLink href="https://creativecommons.org/licenses/by-nc-sa/4.0">
             CC BY-NC-SA 4.0
           </ExternalLink>
 
-          <Subscript className="text-[10px] leading-[14px]">
+          <Subscript className="text-[0.625rem] leading-[0.875rem]">
             {' (content)'}
           </Subscript>
 
@@ -58,7 +76,7 @@ export function RootFooter({
             AGPLv3
           </ExternalLink>
 
-          <Subscript className="text-[10px] leading-[14px]">
+          <Subscript className="text-[0.625rem] leading-[0.875rem]">
             {' (source code)'}
           </Subscript>
 
@@ -67,7 +85,7 @@ export function RootFooter({
 
         {/* copyright msg */}
         <FooterSegment>
-          tianwei.io · &copy; 2024-Present · TIANWEI ZHANG
+          tianwei.io · &copy; 2024-present · TIANWEI ZHANG
         </FooterSegment>
 
       </div>
