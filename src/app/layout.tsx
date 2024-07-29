@@ -1,6 +1,6 @@
 import { Rubik } from 'next/font/google'
 import { cookies } from 'next/headers'
-import './globals.css'
+import '@/styles/globals.css'
 import { metadata, viewport } from './metadata'
 import { RootHeader } from '@/components/RootHeader'
 import { RootFooter } from '@/components/RootFooter'

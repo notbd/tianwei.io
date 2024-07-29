@@ -1,6 +1,7 @@
-import { allPosts } from 'content-collections'
+import { allPosts } from 'contentlayer/generated'
 import { notFound } from 'next/navigation'
-import { MDXContent } from '@content-collections/mdx/react'
+import '@/styles/mdx.css'
+import { Mdx } from '@/components/mdx-components'
 
 type PostProps = {
   params: {
@@ -8,8 +9,14 @@ type PostProps = {
   }
 }
 
-export default function Post({ params }: PostProps) {
-  const post = allPosts.find(post => post._meta.path === params.slug)
+export function generateStaticParams() {
+  return allPosts.map(post => ({
+    slug: post._raw.flattenedPath,
+  }))
+}
+
+export default async function Post({ params }: PostProps) {
+  const post = allPosts.find(post => post.slugAsParams === params.slug)
 
   if (!post) {
     notFound()
@@ -17,8 +24,7 @@ export default function Post({ params }: PostProps) {
 
   return (
     <article>
-      <h1>{post.title}</h1>
-      <MDXContent code={post.mdx} />
+      <Mdx code={post.body.code} />
     </article>
   )
 }

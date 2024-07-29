@@ -12,76 +12,76 @@ export function RootFooter({
   return (
     <footer
       {...props}
-      className={cn('flex justify-start px-4 pt-16 md:justify-center', className)}
+      className={cn('flex items-end justify-start px-4 pt-16 md:justify-center', className)}
     >
       <div
         className="flex flex-col items-start md:items-center"
       >
+        {/* container for license messages */}
+        <div className="relative">
 
-        {/* below md width: content license msg */}
-        <FooterSegment
-          className={cn(
-            'transition duration-200 ease-out',
-            'translate-x-0 opacity-100',
-            'md:pointer-events-none md:absolute md:translate-x-4 md:opacity-0',
-          )}
-        >
-          {'Content licensed under '}
+          {/* below md width: separate content and source code license msg */}
+          <div
+            className={cn(
+              'absolute bottom-0',
+              'transition duration-200 ease-out',
+              'translate-x-0 opacity-100',
+              'md:pointer-events-none md:translate-x-4 md:opacity-0',
+            )}
+          >
 
-          <ExternalLink href="https://creativecommons.org/licenses/by-nc-sa/4.0">
-            CC BY-NC-SA 4.0
-          </ExternalLink>
+            <FooterSegment>
+              {'Content licensed under '}
 
-          .
-        </FooterSegment>
+              <ExternalLink href="https://creativecommons.org/licenses/by-nc-sa/4.0">
+                CC BY-NC-SA 4.0
+              </ExternalLink>
 
-        {/* below md width: source code license msg */}
-        <FooterSegment
-          className={cn(
-            'transition duration-200 ease-out',
-            'translate-x-0 opacity-100',
-            'md:pointer-events-none md:absolute md:translate-x-4 md:opacity-0',
-          )}
-        >
-          {'Source code licensed under '}
+              .
+            </FooterSegment>
 
-          <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html">
-            AGPLv3
-          </ExternalLink>
+            <FooterSegment>
+              {'Source code licensed under '}
 
-          .
-        </FooterSegment>
+              <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html">
+                AGPLv3
+              </ExternalLink>
 
-        {/* above md width: combined license msg */}
-        <FooterSegment
-          className={cn(
-            'transition duration-200 ease-out',
-            'pointer-events-none absolute -translate-x-4 opacity-0',
-            'md:pointer-events-auto md:relative md:translate-x-0 md:opacity-100',
-          )}
-        >
-          {'Licensed under '}
+              .
+            </FooterSegment>
+          </div>
 
-          <ExternalLink href="https://creativecommons.org/licenses/by-nc-sa/4.0">
-            CC BY-NC-SA 4.0
-          </ExternalLink>
+          {/* above md width: combined license msg */}
+          <FooterSegment
+            className={cn(
+              'transition duration-200 ease-out',
+              'pointer-events-none -translate-x-4 opacity-0',
+              'md:pointer-events-auto md:translate-x-0 md:opacity-100',
+            )}
+          >
+            {'Licensed under '}
 
-          <Subscript className="text-[0.625rem] leading-[0.875rem]">
-            {' (content)'}
-          </Subscript>
+            <ExternalLink href="https://creativecommons.org/licenses/by-nc-sa/4.0">
+              CC BY-NC-SA 4.0
+            </ExternalLink>
 
-          {' & '}
+            <Subscript className="text-[0.625rem] leading-[0.875rem]">
+              {' (content)'}
+            </Subscript>
 
-          <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html">
-            AGPLv3
-          </ExternalLink>
+            {' & '}
 
-          <Subscript className="text-[0.625rem] leading-[0.875rem]">
-            {' (source code)'}
-          </Subscript>
+            <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html">
+              AGPLv3
+            </ExternalLink>
 
-          .
-        </FooterSegment>
+            <Subscript className="text-[0.625rem] leading-[0.875rem]">
+              {' (source code)'}
+            </Subscript>
+
+            .
+          </FooterSegment>
+        </div>
 
         {/* copyright msg */}
         <FooterSegment>

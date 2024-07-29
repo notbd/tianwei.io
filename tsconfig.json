@@ -3,11 +3,12 @@
     "incremental": true,
     "jsx": "preserve",
     "lib": ["dom", "dom.iterable", "esnext"],
+    "baseUrl": ".",
     "module": "esnext",
     "moduleResolution": "bundler",
     "paths": {
       "@/*": ["./src/*"],
-      "content-collections": ["./.content-collections/generated"]
+      "contentlayer/generated": ["./.contentlayer/generated"]
     },
     "resolveJsonModule": true,
     "allowJs": true,
@@ -27,7 +28,8 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "**/*.mdx"
+    "**/*.mdx",
+    ".contentlayer/generated"
   ],
   "exclude": ["node_modules"]
 }
