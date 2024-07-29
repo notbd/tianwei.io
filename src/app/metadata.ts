@@ -24,14 +24,9 @@ export const metadata: Metadata = {
         sizes: 'any',
       },
       {
-        url: AssetPaths.iconPNG,
-        type: 'image/png',
-        sizes: '512x512',
-      },
-      {
         url: AssetPaths.favicon,
-        type: 'image/x-icon',
-        sizes: '32x32',
+        type: 'image/png',
+        sizes: '192x192',
       },
     ],
     apple: {

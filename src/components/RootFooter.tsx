@@ -107,7 +107,7 @@ export function RootFooter({
 
         {/* copyright msg */}
         <FooterSegment>
-          tianwei.io · &copy; 2024-present · TIANWEI ZHANG
+          tianwei.io · &copy; 2024-present · Tianwei Zhang
         </FooterSegment>
 
       </div>

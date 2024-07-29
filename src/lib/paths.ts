@@ -25,10 +25,7 @@ export const AssetPaths = {
     }
   })(),
 
-  // fallback icon for browsers (Safari) that do not support svg icon
-  iconPNG: '/assets/icon-squircle-512.png',
-
-  // favicon for legacy browsers
+  // fallback favicon for browsers (Safari) that do not support svg icon
   favicon: '/favicon.ico',
 
   // apple touch icon for Apple devices
