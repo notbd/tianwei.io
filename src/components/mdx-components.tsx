@@ -64,7 +64,12 @@ const mdxComponents: MDXComponents = {
   ),
   a: ({ className, ...props }: ComponentProps<'a'>) => (
     <a
-      className={cn('font-medium underline underline-offset-4', className)}
+      className={cn(
+        'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
+        'transition-[color] duration-300',
+        'font-medium underline underline-offset-4',
+        className,
+      )}
       {...props}
     />
   ),
@@ -102,20 +107,29 @@ const mdxComponents: MDXComponents = {
   ),
   hr: ({ ...props }: ComponentProps<'hr'>) => <hr className="my-4 md:my-8" {...props} />,
   table: ({ className, ...props }: ComponentProps<'table'>) => (
-    <div className="my-6 w-full overflow-y-auto">
-      <table className={cn('w-full overflow-hidden', className)} {...props} />
+    <div className="my-6 w-full overflow-hidden overflow-y-auto rounded-lg border border-zinc-200 drop-shadow-sm dark:border-zinc-800">
+      <table
+        className={cn(
+          'w-full border-collapse bg-white dark:bg-zinc-950',
+          className,
+        )}
+        {...props}
+      />
     </div>
   ),
   tr: ({ className, ...props }: ComponentProps<'tr'>) => (
     <tr
-      className={cn('m-0 border-t p-0 even:bg-zinc-100 dark:even:bg-zinc-800', className)}
+      className={cn(
+        'm-0 p-0 even:bg-zinc-50 dark:even:bg-zinc-900',
+        className,
+      )}
       {...props}
     />
   ),
   th: ({ className, ...props }: ComponentProps<'th'>) => (
     <th
       className={cn(
-        'border px-4 py-2 text-left font-bold [&[align=center]]:text-center [&[align=right]]:text-right',
+        'border-b border-r border-zinc-200 px-4 py-2 text-left font-bold last:border-r-0 dark:border-zinc-800 [&[align=center]]:text-center [&[align=right]]:text-right',
         className,
       )}
       {...props}
@@ -124,7 +138,7 @@ const mdxComponents: MDXComponents = {
   td: ({ className, ...props }: ComponentProps<'td'>) => (
     <td
       className={cn(
-        'border px-4 py-2 text-left [&[align=center]]:text-center [&[align=right]]:text-right',
+        'border-r border-t border-zinc-200 px-4 py-2 text-left last:border-r-0 dark:border-zinc-800 [&[align=center]]:text-center [&[align=right]]:text-right',
         className,
       )}
       {...props}

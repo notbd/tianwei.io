@@ -9,8 +9,7 @@ import { cn } from '@/lib/utils'
 import type { Theme } from '@/types/themeTypes'
 import { DEFAULT_THEME, KEYS } from '@/constants/constants'
 
-// declared in metadata.ts
-export { metadata, viewport }
+export { metadata, viewport } // declared in metadata.ts
 
 const rubik = Rubik({ subsets: ['latin'] })
 

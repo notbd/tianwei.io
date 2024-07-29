@@ -15,7 +15,7 @@ export default function Posts() {
             <h3
               className={cn(
                 'inline-block',
-                'text-lg font-medium underline',
+                'text-xl font-medium underline',
                 'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
                 'transition-[color] duration-300',
               )}
@@ -26,7 +26,7 @@ export default function Posts() {
 
           {
             post.description && (
-              <p className="text-sm">
+              <p className="mt-2 text-sm">
                 {post.description}
               </p>
             )
