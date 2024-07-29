@@ -5,6 +5,10 @@ const compat = new FlatCompat()
 
 export default antfu(
   {
+    stylistic: {
+      indent: 2,
+      quotes: 'single',
+    },
     typescript: true,
     react: true,
     ignores: [

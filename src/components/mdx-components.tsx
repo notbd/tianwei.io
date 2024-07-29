@@ -1,6 +1,7 @@
 import * as React from 'react'
 import type { ComponentProps } from 'react'
 import Image from 'next/image'
+import Link from 'next/link'
 import type { MDXComponents } from 'mdx/types'
 import { useMDXComponent } from 'next-contentlayer2/hooks'
 
@@ -85,7 +86,7 @@ const mdxComponents: MDXComponents = {
   blockquote: ({ className, ...props }: ComponentProps<'blockquote'>) => (
     <blockquote
       className={cn(
-        'mt-6 border-l-2 pl-6 italic',
+        'mt-6 border-l-2 pl-6',
         className,
       )}
       {...props}
@@ -97,12 +98,12 @@ const mdxComponents: MDXComponents = {
     ...props
   }: ComponentProps<'img'>) => (
     // eslint-disable-next-line @next/next/no-img-element
-    <img className={cn('rounded-md border', className)} alt={alt} {...props} />
+    <img className={cn('rounded-md', className)} alt={alt} {...props} />
   ),
   hr: ({ ...props }: ComponentProps<'hr'>) => <hr className="my-4 md:my-8" {...props} />,
   table: ({ className, ...props }: ComponentProps<'table'>) => (
     <div className="my-6 w-full overflow-y-auto">
-      <table className={cn('w-full', className)} {...props} />
+      <table className={cn('w-full overflow-hidden', className)} {...props} />
     </div>
   ),
   tr: ({ className, ...props }: ComponentProps<'tr'>) => (
@@ -132,7 +133,8 @@ const mdxComponents: MDXComponents = {
   pre: ({ className, ...props }: ComponentProps<'pre'>) => (
     <pre
       className={cn(
-        'mb-4 mt-6 overflow-x-auto rounded-lg border bg-black py-4 dark:border-zinc-400/30',
+        'mb-4 mt-6 overflow-x-auto rounded-lg border border-zinc-300/30 py-4 drop-shadow-sm dark:border-zinc-500/20',
+        'bg-[var(--shiki-light-bg)] dark:bg-[var(--shiki-dark-bg)]',
         className,
       )}
       {...props}
@@ -148,6 +150,12 @@ const mdxComponents: MDXComponents = {
     />
   ),
   Image,
+  Link: ({ className, ...props }: React.ComponentProps<typeof Link>) => (
+    <Link
+      className={cn('font-medium underline underline-offset-4', className)}
+      {...props}
+    />
+  ),
 }
 
 type MdxProps = {

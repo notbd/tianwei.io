@@ -1,6 +1,6 @@
 ---
-title: "Test Post MDX"
-description: "This is the summary of the MDX test post."
+title: 'Test Post MDX'
+description: 'This is the summary of the MDX test post.'
 published: true
 ---
 
@@ -10,10 +10,31 @@ This is the body of the test post.
 
 Here is some **bold** and _italics_ text.
 
-Here is a code block:
+Here is an inline code block: `console.log("Hello, World!");{:js}`
 
-```javascript
-console.log("Hello, World!");
+Here are some code blocks:
+
+```ts title="test.ts" showLineNumbers{9} /async/
+console.warn('Hello World!')
+const x = 5
+async function test() {
+  console.info('Hello World!')
+  console.info('Hello World Again!')
+}
+```
+
+```swift title="test.swift"
+var x: Int = 5
+enum Test {
+  case test1
+  case test2
+}
+print("Hello World!")
+```
+
+```py title="test.py" showLineNumbers
+for i in range(10):
+  print(i)
 ```
 
 Here is a blockquote:
@@ -57,7 +78,7 @@ Here is an ordered list:
 Here is a table:
 
 | Header 1 | Header 2 | Header 3 |
-|----------|----------|----------|
+| -------- | -------- | -------- |
 | Row 1    | Row 1    | Row 1    |
 | Row 2    | Row 2    | Row 2    |
 | Row 3    | Row 3    | Row 3    |
