@@ -4,9 +4,9 @@ import type { ComponentProps } from 'react'
 import { useEffect, useState } from 'react'
 import { LaptopMinimal, Moon, Sun } from 'lucide-react'
 import { setCookie } from 'cookies-next'
-import { useConsistentTheme } from '@/hooks/useConsistentTheme'
+import { useConsistentTheme } from '@/lib/hooks/useConsistentTheme'
 import { cn } from '@/lib/utils'
-import { DEFAULT_THEME, KEYS } from '@/constants/constants'
+import { DEFAULT_THEME, KEYS } from '@/lib/constants/constants'
 
 type ColorModeToggleProps = ComponentProps<'button'>
 

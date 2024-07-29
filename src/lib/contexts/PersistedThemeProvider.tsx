@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
-import type { PersistedThemeContextState } from '@/contexts/persistedThemeContext'
-import { PersistedThemeContext } from '@/contexts/persistedThemeContext'
+import type { PersistedThemeContextState } from '@/lib/contexts/persistedThemeContext'
+import { PersistedThemeContext } from '@/lib/contexts/persistedThemeContext'
 import type { Theme } from '@/types/themeTypes'
 
 export type PersistedThemeProviderProps = {

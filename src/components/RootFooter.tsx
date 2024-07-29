@@ -1,7 +1,7 @@
 'use client'
 
 import type { ComponentProps } from 'react'
-import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useMediaQuery } from '@/lib/hooks/useMediaQuery'
 import { Subscript } from '@/components/Subscript'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from '@/components/ExternalLink'

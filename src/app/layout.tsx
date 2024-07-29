@@ -4,10 +4,10 @@ import { metadata, viewport } from './metadata'
 import { geistMono, rubik } from '@/styles/fonts'
 import { RootHeader } from '@/components/RootHeader'
 import { RootFooter } from '@/components/RootFooter'
-import { ConsistentThemeProvider } from '@/contexts/ConsistentThemeProvider'
+import { ConsistentThemeProvider } from '@/lib/contexts/ConsistentThemeProvider'
 import { cn } from '@/lib/utils'
 import type { Theme } from '@/types/themeTypes'
-import { DEFAULT_THEME, KEYS } from '@/constants/constants'
+import { DEFAULT_THEME, KEYS } from '@/lib/constants/constants'
 
 export { metadata, viewport } // declared in metadata.ts
 

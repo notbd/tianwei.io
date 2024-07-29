@@ -2,9 +2,9 @@
 
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import type { ThemeProviderProps as NextThemeProviderProps } from 'next-themes/dist/types'
-import { DEFAULT_THEME } from '@/constants/constants'
-import type { PersistedThemeProviderProps } from '@/contexts/PersistedThemeProvider'
-import { PersistedThemeProvider } from '@/contexts/PersistedThemeProvider'
+import { DEFAULT_THEME } from '@/lib/constants/constants'
+import type { PersistedThemeProviderProps } from '@/lib/contexts/PersistedThemeProvider'
+import { PersistedThemeProvider } from '@/lib/contexts/PersistedThemeProvider'
 
 type ThemeProviderProps = PersistedThemeProviderProps & NextThemeProviderProps
 
