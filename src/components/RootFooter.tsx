@@ -1,4 +1,7 @@
+'use client'
+
 import type { ComponentProps } from 'react'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { Subscript } from '@/components/Subscript'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from '@/components/ExternalLink'
@@ -9,6 +12,8 @@ export function RootFooter({
   className,
   ...props
 }: PageFooterProps) {
+  const isAboveMd = useMediaQuery('(min-width: 48rem)')
+
   return (
     <footer
       {...props}
@@ -33,7 +38,11 @@ export function RootFooter({
             <FooterSegment>
               {'Content licensed under '}
 
-              <ExternalLink href="https://creativecommons.org/licenses/by-nc-sa/4.0">
+              <ExternalLink
+                href="https://creativecommons.org/licenses/by-nc-sa/4.0"
+                tabIndex={isAboveMd ? -1 : 0}
+                aria-hidden={isAboveMd}
+              >
                 CC BY-NC-SA 4.0
               </ExternalLink>
 
@@ -43,7 +52,12 @@ export function RootFooter({
             <FooterSegment>
               {'Source code licensed under '}
 
-              <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html">
+              <ExternalLink
+                href="https://www.gnu.org/licenses/agpl-3.0.html"
+                tabIndex={isAboveMd ? -1 : 0}
+                aria-hidden={isAboveMd}
+              >
+
                 AGPLv3
               </ExternalLink>
 
@@ -61,7 +75,11 @@ export function RootFooter({
           >
             {'Licensed under '}
 
-            <ExternalLink href="https://creativecommons.org/licenses/by-nc-sa/4.0">
+            <ExternalLink
+              href="https://creativecommons.org/licenses/by-nc-sa/4.0"
+              tabIndex={isAboveMd ? 0 : -1}
+              aria-hidden={!isAboveMd}
+            >
               CC BY-NC-SA 4.0
             </ExternalLink>
 
@@ -71,7 +89,11 @@ export function RootFooter({
 
             {' & '}
 
-            <ExternalLink href="https://www.gnu.org/licenses/agpl-3.0.html">
+            <ExternalLink
+              href="https://www.gnu.org/licenses/agpl-3.0.html"
+              tabIndex={isAboveMd ? 0 : -1}
+              aria-hidden={!isAboveMd}
+            >
               AGPLv3
             </ExternalLink>
 
