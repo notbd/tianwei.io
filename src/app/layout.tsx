@@ -1,7 +1,7 @@
-import { Rubik } from 'next/font/google'
 import { cookies } from 'next/headers'
 import '@/styles/globals.css'
 import { metadata, viewport } from './metadata'
+import { geistMono, rubik } from '@/styles/fonts'
 import { RootHeader } from '@/components/RootHeader'
 import { RootFooter } from '@/components/RootFooter'
 import { ConsistentThemeProvider } from '@/contexts/ConsistentThemeProvider'
@@ -10,8 +10,6 @@ import type { Theme } from '@/types/themeTypes'
 import { DEFAULT_THEME, KEYS } from '@/constants/constants'
 
 export { metadata, viewport } // declared in metadata.ts
-
-const rubik = Rubik({ subsets: ['latin'] })
 
 type RootLayoutProps = { children: React.ReactNode }
 
@@ -33,8 +31,8 @@ export default function RootLayout({
           'bg-zinc-50 text-zinc-800 dark:bg-zinc-950 dark:text-zinc-50',
           // cannot add 'transition-colors' here, else it may cause a flash under dark mode,
           // since html always starts with light mode and 'dark' class is added later by code
-          'antialiased',
-          rubik.className,
+          'font-sans antialiased',
+          `${rubik.variable} ${geistMono.variable}`,
         )}
       >
 

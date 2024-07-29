@@ -10,6 +10,12 @@ const config: Config = {
   ],
 
   theme: {
+    extend: {
+      fontFamily: {
+        sans: ['var(--font-rubik)'],
+        mono: ['var(--font-geist-mono)'],
+      },
+    },
   },
 
   plugins: [],

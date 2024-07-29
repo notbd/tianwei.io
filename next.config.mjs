@@ -2,6 +2,10 @@ import { withContentlayer } from 'next-contentlayer2'
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  reactStrictMode: true,
+  // Configure `pageExtensions` to include MDX files
+  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
+
   webpack(config) {
     // Grab the existing rule that handles SVG imports
     const fileLoaderRule = config.module.rules.find(rule =>
@@ -29,9 +33,6 @@ const nextConfig = {
 
     return config
   },
-
-  // Configure `pageExtensions` to include MDX files
-  pageExtensions: ['js', 'jsx', 'mdx', 'ts', 'tsx'],
 }
 
 export default withContentlayer(nextConfig)
