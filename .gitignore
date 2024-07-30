@@ -3,6 +3,9 @@
 # contentlayer
 .contentlayer
 
+# vscode
+.vscode
+
 # dependencies
 /node_modules
 /.pnp
