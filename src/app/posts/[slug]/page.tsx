@@ -1,7 +1,7 @@
 import { allPosts } from 'contentlayer/generated'
 import { notFound } from 'next/navigation'
 import '@/styles/mdx.css'
-import { Mdx } from '@/components/mdx-components'
+import { Mdx } from '@/components/Mdx'
 
 type PostProps = {
   params: {
