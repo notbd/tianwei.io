@@ -64,6 +64,8 @@ const mdxComponents: MDXComponents = {
   ),
   a: ({ className, ...props }: ComponentProps<'a'>) => (
     <a
+      target="_blank"
+      rel="noopener noreferrer"
       className={cn(
         'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
         'transition-[color] duration-300',
