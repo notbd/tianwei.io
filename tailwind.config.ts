@@ -1,4 +1,5 @@
 import type { Config } from 'tailwindcss'
+import { nestedListPlugin } from './src/styles/tailwind-plugins/nestedList'
 
 const config: Config = {
   darkMode: 'selector',
@@ -27,6 +28,8 @@ const config: Config = {
     },
   },
 
-  plugins: [],
+  plugins: [
+    nestedListPlugin,
+  ],
 }
 export default config

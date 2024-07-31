@@ -4,6 +4,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import type { MDXComponents } from 'mdx/types'
 import { useMDXComponent } from 'next-contentlayer2/hooks'
+import '@/styles/mdx.css'
 
 import { cn } from '@/lib/utils'
 
@@ -11,7 +12,7 @@ const mdxComponents: MDXComponents = {
   h1: ({ className, ...props }: ComponentProps<'h1'>) => (
     <h1
       className={cn(
-        'mt-2 scroll-m-20 text-4xl font-bold tracking-tight',
+        'mt-2 scroll-m-20 text-3xl font-bold tracking-tight',
         className,
       )}
       {...props}
@@ -20,7 +21,8 @@ const mdxComponents: MDXComponents = {
   h2: ({ className, ...props }: ComponentProps<'h2'>) => (
     <h2
       className={cn(
-        'mt-10 scroll-m-20 border-b pb-1 text-3xl font-semibold tracking-tight first:mt-0',
+        'mt-10 scroll-m-20 pb-1 text-2xl font-semibold tracking-tight',
+        'border-b border-zinc-200 dark:border-zinc-800',
         className,
       )}
       {...props}
@@ -29,7 +31,7 @@ const mdxComponents: MDXComponents = {
   h3: ({ className, ...props }: ComponentProps<'h3'>) => (
     <h3
       className={cn(
-        'mt-8 scroll-m-20 text-2xl font-semibold tracking-tight',
+        'mt-8 scroll-m-20 text-xl font-semibold tracking-tight',
         className,
       )}
       {...props}
@@ -38,7 +40,7 @@ const mdxComponents: MDXComponents = {
   h4: ({ className, ...props }: ComponentProps<'h4'>) => (
     <h4
       className={cn(
-        'mt-8 scroll-m-20 text-xl font-semibold tracking-tight',
+        'mt-8 scroll-m-20 text-lg font-semibold tracking-tight',
         className,
       )}
       {...props}
@@ -47,7 +49,7 @@ const mdxComponents: MDXComponents = {
   h5: ({ className, ...props }: ComponentProps<'h5'>) => (
     <h5
       className={cn(
-        'mt-8 scroll-m-20 text-lg font-semibold tracking-tight',
+        'mt-8 scroll-m-20 text-[1.0625rem] font-semibold leading-[1.625rem] tracking-tight',
         className,
       )}
       {...props}
@@ -56,7 +58,7 @@ const mdxComponents: MDXComponents = {
   h6: ({ className, ...props }: ComponentProps<'h6'>) => (
     <h6
       className={cn(
-        'mt-8 scroll-m-20 text-base font-semibold tracking-tight',
+        'mt-8 scroll-m-20 text-base font-semibold tracking-tight opacity-60',
         className,
       )}
       {...props}
@@ -67,7 +69,7 @@ const mdxComponents: MDXComponents = {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
+        'text-teal-800 hover:text-teal-600 dark:text-teal-700',
         'transition-[color] duration-300',
         'font-medium underline underline-offset-4',
         className,
@@ -82,18 +84,18 @@ const mdxComponents: MDXComponents = {
     />
   ),
   ul: ({ className, ...props }: ComponentProps<'ul'>) => (
-    <ul className={cn('my-6 ml-6 list-disc', className)} {...props} />
+    <ul className={cn('nested-list-marker my-6 ml-4 list-disc marker:text-zinc-500', className)} {...props} />
   ),
   ol: ({ className, ...props }: ComponentProps<'ol'>) => (
-    <ol className={cn('my-6 ml-6 list-decimal', className)} {...props} />
+    <ol className={cn('my-6 ml-4 list-decimal marker:text-zinc-500', className)} {...props} />
   ),
   li: ({ className, ...props }: ComponentProps<'li'>) => (
-    <li className={cn('mt-2', className)} {...props} />
+    <li className={cn('mt-5', className)} {...props} />
   ),
   blockquote: ({ className, ...props }: ComponentProps<'blockquote'>) => (
     <blockquote
       className={cn(
-        'mt-6 border-l-2 pl-6',
+        'mt-6 border-l-2 pl-6 text-zinc-600 dark:text-zinc-400',
         className,
       )}
       {...props}

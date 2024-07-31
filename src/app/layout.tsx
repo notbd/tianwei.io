@@ -42,8 +42,8 @@ export default function RootLayout({
           {/* content */}
           <div
             className={cn(
-              'w-full min-w-72 max-w-2xl grow',
-              'flex flex-col justify-between px-4 py-8',
+              'w-full min-w-72 max-w-3xl grow',
+              'flex flex-col justify-between px-6 py-8',
             )}
           >
 

@@ -1,9 +1,10 @@
 import { allPosts } from 'contentlayer/generated'
 import { notFound } from 'next/navigation'
-import '@/styles/mdx.css'
+import type { Post } from 'contentlayer/generated'
 import { Mdx } from '@/components/Mdx'
+import { cn } from '@/lib/utils'
 
-type PostProps = {
+type PostArticleProps = {
   params: {
     slug: string
   }
@@ -15,7 +16,7 @@ export function generateStaticParams() {
   }))
 }
 
-export default async function Post({ params }: PostProps) {
+export default function PostArticle({ params }: PostArticleProps) {
   const post = allPosts.find(post => post.slugAsParams === params.slug)
 
   if (!post) {
@@ -23,8 +24,44 @@ export default async function Post({ params }: PostProps) {
   }
 
   return (
-    <article>
-      <Mdx code={post.body.code} />
-    </article>
+    post && (
+      <article>
+        <PostHeader post={post} />
+
+        <Mdx code={post.body.code} />
+      </article>
+    )
+  )
+}
+
+type PostHeaderProps = {
+  post: Post
+}
+
+function PostHeader({ post }: PostHeaderProps) {
+  return (
+    <header
+      className="mb-10"
+    >
+      <h1
+        className={cn(
+          'mt-2 scroll-m-20 text-3xl font-bold tracking-tight',
+        )}
+      >
+        {post.title}
+      </h1>
+
+      {post.description && (
+        <p
+          className={cn(
+            'mt-2',
+            'text-zinc-600 dark:text-zinc-300',
+            'text-lg',
+          )}
+        >
+          {post.description}
+        </p>
+      )}
+    </header>
   )
 }

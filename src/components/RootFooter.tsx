@@ -17,7 +17,7 @@ export function RootFooter({
   return (
     <footer
       {...props}
-      className={cn('flex items-end justify-start px-4 pt-16 md:justify-center', className)}
+      className={cn('mt-32 flex items-end justify-start md:justify-center', className)}
     >
       <div
         className="flex flex-col items-start md:items-center"
