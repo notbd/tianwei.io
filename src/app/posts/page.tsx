@@ -29,7 +29,7 @@ function PostPreview({ post }: PostPreviewProps) {
         <h3
           className={cn(
             'text-xl font-medium underline',
-            'text-zinc-700 hover:text-zinc-400 dark:text-zinc-200 dark:hover:text-zinc-100',
+            'text-zinc-700 hover:text-zinc-500 dark:text-zinc-300 dark:hover:text-zinc-100',
             'transition-[color] duration-300',
           )}
         >

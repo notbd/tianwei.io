@@ -1,9 +1,9 @@
 import * as React from 'react'
 import type { ComponentProps } from 'react'
-import Image from 'next/image'
 import Link from 'next/link'
 import type { MDXComponents } from 'mdx/types'
 import { useMDXComponent } from 'next-contentlayer2/hooks'
+import MdxImage from '@/components/MdxImage'
 import '@/styles/mdx.css'
 
 import { cn } from '@/lib/utils'
@@ -69,7 +69,7 @@ const mdxComponents: MDXComponents = {
       target="_blank"
       rel="noopener noreferrer"
       className={cn(
-        'text-teal-800 hover:text-teal-600 dark:text-teal-700',
+        'text-teal-700 hover:text-teal-600 dark:text-teal-600 dark:hover:text-teal-500',
         'transition-[color] duration-300',
         'font-medium underline underline-offset-4',
         className,
@@ -79,18 +79,29 @@ const mdxComponents: MDXComponents = {
   ),
   p: ({ className, ...props }: ComponentProps<'p'>) => (
     <p
-      className={cn('leading-7 [&:not(:first-child)]:mt-6', className)}
+      className={cn(
+        'leading-7',
+        '[&:not(:first-child)]:mt-6',
+        className,
+      )}
       {...props}
     />
   ),
   ul: ({ className, ...props }: ComponentProps<'ul'>) => (
-    <ul className={cn('nested-list-marker my-6 ml-4 list-disc marker:text-zinc-500', className)} {...props} />
+    <ul className={cn('nested-list-marker my-5 ml-4 list-disc marker:text-teal-600 dark:marker:text-teal-700', className)} {...props} />
   ),
   ol: ({ className, ...props }: ComponentProps<'ol'>) => (
-    <ol className={cn('my-6 ml-4 list-decimal marker:text-zinc-500', className)} {...props} />
+    <ol className={cn('my-5 ml-4 list-decimal marker:text-teal-700 dark:marker:text-teal-600', className)} {...props} />
   ),
   li: ({ className, ...props }: ComponentProps<'li'>) => (
-    <li className={cn('mt-5', className)} {...props} />
+    <li
+      className={cn(
+        'mt-5',
+        '[&>p:not(:first-child)]:mt-3',
+        className,
+      )}
+      {...props}
+    />
   ),
   blockquote: ({ className, ...props }: ComponentProps<'blockquote'>) => (
     <blockquote
@@ -152,7 +163,6 @@ const mdxComponents: MDXComponents = {
     <pre
       className={cn(
         'mb-4 mt-6 overflow-x-auto rounded-lg border border-zinc-300/30 py-4 drop-shadow-sm dark:border-zinc-500/20',
-        'bg-[var(--shiki-light-bg)] dark:bg-[var(--shiki-dark-bg)]',
         className,
       )}
       {...props}
@@ -161,14 +171,15 @@ const mdxComponents: MDXComponents = {
   code: ({ className, ...props }: ComponentProps<'code'>) => (
     <code
       className={cn(
+        'text-teal-700 dark:text-teal-600',
         'relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm',
         className,
       )}
       {...props}
     />
   ),
-  Image,
-  Link: ({ className, ...props }: React.ComponentProps<typeof Link>) => (
+  MdxImage,
+  Link: ({ className, ...props }: ComponentProps<typeof Link>) => (
     <Link
       className={cn('font-medium underline underline-offset-4', className)}
       {...props}

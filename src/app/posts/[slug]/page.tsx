@@ -27,7 +27,6 @@ export default function PostArticle({ params }: PostArticleProps) {
     post && (
       <article>
         <PostHeader post={post} />
-
         <Mdx code={post.body.code} />
       </article>
     )
@@ -41,7 +40,7 @@ type PostHeaderProps = {
 function PostHeader({ post }: PostHeaderProps) {
   return (
     <header
-      className="mb-10"
+      className="mb-14"
     >
       <h1
         className={cn(

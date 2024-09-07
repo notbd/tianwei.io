@@ -19,8 +19,8 @@ const config: Config = {
       },
     },
 
+    // change from px to rem
     screens: {
-      // change from px to rem
       'sm': '40rem',
       'md': '48rem',
       'lg': '64rem',

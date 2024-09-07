@@ -75,6 +75,9 @@ importers:
       lucide-react:
         specifier: ^0.403.0
         version: 0.403.0(react@18.3.1)
+      next-cloudinary:
+        specifier: ^6.10.0
+        version: 6.10.0(next@14.2.5(@babel/core@7.24.9)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1)
       next-contentlayer2:
         specifier: ^0.5.0
         version: 0.5.0(contentlayer2@0.5.0(esbuild@0.21.5))(esbuild@0.21.5)(next@14.2.5(@babel/core@7.24.9)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -808,6 +811,24 @@ packages:
     bundledDependencies:
       - is-unicode-supported
 
+  '@cloudinary-util/types@1.2.0':
+    resolution: {integrity: sha512-2Mo5juB1HV+GmVLq2+bU0Yg5FB6r+csbHyDN6njc0AqkEkp+AW+Q6kYbbTYkT7zk3x9tBWfKn3lfR7wUCwowJw==}
+
+  '@cloudinary-util/types@1.2.0-beta.1':
+    resolution: {integrity: sha512-zdMPqadGhRWwSZQcgsUoouJhr2Dnpc4p1ytGLtnEmVFNvwDhYMR6ER3xLP5FoSNzPx10SoWfNl6UWQKInkk+iQ==}
+
+  '@cloudinary-util/url-loader@5.6.0':
+    resolution: {integrity: sha512-oWTXaaBralKLfk9tD2fWaTfwflx9Acug6L3GO72sLPxIssg+SyeNDiIrNwIFRx6SkFR74bWWNqjp2yu135gaDQ==}
+
+  '@cloudinary-util/util@3.2.0':
+    resolution: {integrity: sha512-VJBqAT3W0HQ9kyMagv+EzXkM/VYR9Ks01ewGxsS8T8b2N0NZFPAhYKeU2H9fOXSl6BVrD6aVYjJZAoT8pfQIyA==}
+
+  '@cloudinary/transformation-builder-sdk@1.14.1':
+    resolution: {integrity: sha512-z49To4r3byg7zHsOGKsw/nHef5B9W3wSBdDsGoY7JOj75kbvmSlP4MCkS0JU3Bv57EvYYw5ymalPz+bvRXmPlA==}
+
+  '@cloudinary/url-gen@1.15.0':
+    resolution: {integrity: sha512-bjU67eZxLUgoRy/Plli4TQio7q6P31OYqnEgXxeN9TKXrzr6h0DeEdIUhKI9gy3HkEBWXWWJIPh7j7gkOJPnyA==}
+
   '@contentlayer2/cli@0.5.0':
     resolution: {integrity: sha512-V6mhjqFN1GNlea75TRsTAdJaT/wG2EwaRUwl13Zv3302682TB8Pkewfew19JvNX+V3c8y7zMYhQ44c2QgR2h9w==}
 
@@ -1500,6 +1521,9 @@ packages:
   '@trysound/sax@0.2.0':
     resolution: {integrity: sha512-L7z9BgrNEcYyUYtF+HaEfiS5ebkh9jXqbszz7pC0hRBPaatV0XjSD3+eHrpqFemQfgwiFF0QPIarnIihIDn7OA==}
     engines: {node: '>=10.13.0'}
+
+  '@tsconfig/recommended@1.0.7':
+    resolution: {integrity: sha512-xiNMgCuoy4mCL4JTywk9XFs5xpRUcKxtWEcMR6FNMtsgewYTIgIR+nvlP4A4iRCAzRsHMnPhvTRrzp4AGcRTEA==}
 
   '@types/acorn@4.0.6':
     resolution: {integrity: sha512-veQTnWP+1D/xbxVrPC3zHnCZRjSrKfhbMUlEA43iMZLu7EsnTtkJklIuwrCPbOi8YkvDQAiW05VQQFvvz9oieQ==}
@@ -3497,6 +3521,12 @@ packages:
   natural-compare@1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
 
+  next-cloudinary@6.10.0:
+    resolution: {integrity: sha512-iGKg4bPAkGjrWQDovbqQJVb3VPzj6TESgEk46D+dS3cVaFJqnVjwGtGlK9wLA/KX7lhZinvnHvouufuiL7f9ig==}
+    peerDependencies:
+      next: ^12 || ^13 || ^14 || >=15.0.0-rc
+      react: ^17 || ^18 || >=19.0.0-beta
+
   next-contentlayer2@0.5.0:
     resolution: {integrity: sha512-pcJGCvxbYfpxD3oBFCsfTNyIPGbz5Aj/n2EU08Db2VgXC0T/vbzfG3cihRFRh1/YmnsoGHXLhnmfh3oeCVfiZg==}
     peerDependencies:
@@ -5374,6 +5404,27 @@ snapshots:
       picocolors: 1.0.1
       sisteransi: 1.0.5
 
+  '@cloudinary-util/types@1.2.0': {}
+
+  '@cloudinary-util/types@1.2.0-beta.1': {}
+
+  '@cloudinary-util/url-loader@5.6.0':
+    dependencies:
+      '@cloudinary-util/types': 1.2.0-beta.1
+      '@cloudinary-util/util': 3.2.0
+      '@cloudinary/url-gen': 1.15.0
+      zod: 3.23.8
+
+  '@cloudinary-util/util@3.2.0': {}
+
+  '@cloudinary/transformation-builder-sdk@1.14.1':
+    dependencies:
+      '@cloudinary/url-gen': 1.15.0
+
+  '@cloudinary/url-gen@1.15.0':
+    dependencies:
+      '@cloudinary/transformation-builder-sdk': 1.14.1
+
   '@contentlayer2/cli@0.5.0(esbuild@0.21.5)':
     dependencies:
       '@contentlayer2/core': 0.5.0(esbuild@0.21.5)
@@ -6183,6 +6234,8 @@ snapshots:
       tslib: 2.6.3
 
   '@trysound/sax@0.2.0': {}
+
+  '@tsconfig/recommended@1.0.7': {}
 
   '@types/acorn@4.0.6':
     dependencies:
@@ -8941,6 +8994,15 @@ snapshots:
   natural-compare-lite@1.4.0: {}
 
   natural-compare@1.4.0: {}
+
+  next-cloudinary@6.10.0(next@14.2.5(@babel/core@7.24.9)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react@18.3.1):
+    dependencies:
+      '@cloudinary-util/types': 1.2.0
+      '@cloudinary-util/url-loader': 5.6.0
+      '@cloudinary-util/util': 3.2.0
+      '@tsconfig/recommended': 1.0.7
+      next: 14.2.5(@babel/core@7.24.9)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react: 18.3.1
 
   next-contentlayer2@0.5.0(contentlayer2@0.5.0(esbuild@0.21.5))(esbuild@0.21.5)(next@14.2.5(@babel/core@7.24.9)(@opentelemetry/api@1.9.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1):
     dependencies:

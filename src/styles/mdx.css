@@ -15,29 +15,32 @@ pre [data-line] {
   padding: 0 1rem;
 }
 
-code,
-code span {
+[data-rehype-pretty-code-figure] code,
+[data-rehype-pretty-code-figure] code span {
   color: var(--shiki-light);
 }
 
-code {
+[data-rehype-pretty-code-figure] pre,
+[data-rehype-pretty-code-figure] code {
   background-color: var(--shiki-light-bg);
+  font-variant-ligatures: none;
 }
 
-code span {
+[data-rehype-pretty-code-figure] code span {
   @apply bg-transparent;
 }
 
-.dark code,
-.dark code span {
+.dark [data-rehype-pretty-code-figure] code,
+.dark [data-rehype-pretty-code-figure] code span {
   color: var(--shiki-dark);
 }
 
-.dark code{
+.dark [data-rehype-pretty-code-figure] pre,
+.dark [data-rehype-pretty-code-figure] code {
   background-color: var(--shiki-dark-bg);
 }
 
-.dark code span{
+.dark [data-rehype-pretty-code-figure] code span{
   @apply bg-transparent;
 }
 
