@@ -36,7 +36,7 @@ export default function MdxImage({
       />
 
       {title && (
-        <figcaption className="mt-1 text-center text-sm text-zinc-600 dark:text-zinc-200">
+        <figcaption className="mt-2 text-center text-sm text-zinc-600 dark:text-zinc-200">
           {title}
         </figcaption>
       )}
