@@ -1,5 +1,5 @@
-import { createContext } from 'react'
 import type { Theme } from '@/types/themeTypes'
+import { createContext } from 'react'
 import { DEFAULT_THEME } from '@/lib/constants/constants'
 
 export type PersistedThemeContextState = {

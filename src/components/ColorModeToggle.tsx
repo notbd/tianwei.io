@@ -1,12 +1,12 @@
 'use client'
 
 import type { ComponentProps } from 'react'
-import { useEffect, useState } from 'react'
-import { LaptopMinimal, Moon, Sun } from 'lucide-react'
 import { setCookie } from 'cookies-next'
+import { LaptopMinimal, Moon, Sun } from 'lucide-react'
+import { useEffect, useState } from 'react'
+import { DEFAULT_THEME, KEYS } from '@/lib/constants/constants'
 import { useConsistentTheme } from '@/lib/hooks/useConsistentTheme'
 import { cn } from '@/lib/utils'
-import { DEFAULT_THEME, KEYS } from '@/lib/constants/constants'
 
 type ColorModeToggleProps = ComponentProps<'button'>
 
@@ -35,6 +35,7 @@ export function ColorModeToggle({
   }
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect
     setIsMounted(true)
   }, [])
 

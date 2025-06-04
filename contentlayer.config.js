@@ -1,7 +1,7 @@
 import { defineDocumentType, makeSource } from 'contentlayer2/source-files'
+import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import rehypePrettyCode from 'rehype-pretty-code'
 import rehypeSlug from 'rehype-slug'
-import rehypeAutolinkHeadings from 'rehype-autolink-headings'
 import remarkGfm from 'remark-gfm'
 
 /** @type {import('contentlayer2/source-files').ComputedFields} */

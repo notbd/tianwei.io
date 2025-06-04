@@ -1,13 +1,13 @@
+import type { Theme } from '@/types/themeTypes'
 import { cookies } from 'next/headers'
-import '@/styles/globals.css'
-import { metadata, viewport } from './metadata'
-import { geistMono, rubik } from '@/styles/fonts'
-import { RootHeader } from '@/components/RootHeader'
 import { RootFooter } from '@/components/RootFooter'
+import { RootHeader } from '@/components/RootHeader'
+import { DEFAULT_THEME, KEYS } from '@/lib/constants/constants'
 import { ConsistentThemeProvider } from '@/lib/contexts/ConsistentThemeProvider'
 import { cn } from '@/lib/utils'
-import type { Theme } from '@/types/themeTypes'
-import { DEFAULT_THEME, KEYS } from '@/lib/constants/constants'
+import { geistMono, rubik } from '@/styles/fonts'
+import { metadata, viewport } from './metadata'
+import '@/styles/globals.css'
 
 export { metadata, viewport } // declared in metadata.ts
 
@@ -16,7 +16,7 @@ type RootLayoutProps = { children: React.ReactNode }
 export default async function RootLayout(
   {
     children,
-  }: Readonly<RootLayoutProps>
+  }: Readonly<RootLayoutProps>,
 ) {
   // read persistedTheme from cookies
   const themeCookie = (await cookies()).get(KEYS.LAST_CHOSEN_THEME)

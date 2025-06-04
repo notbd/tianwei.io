@@ -1,6 +1,6 @@
+import type { Post } from 'contentlayer/generated'
 import { allPosts } from 'contentlayer/generated'
 import { notFound } from 'next/navigation'
-import type { Post } from 'contentlayer/generated'
 import { Mdx } from '@/components/Mdx'
 import { cn } from '@/lib/utils'
 
@@ -17,7 +17,7 @@ export function generateStaticParams() {
 }
 
 export default async function PostArticle(props: PostArticleProps) {
-  const params = await props.params;
+  const params = await props.params
   const post = allPosts.find(post => post.slugAsParams === params.slug)
 
   if (!post) {

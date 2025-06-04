@@ -1,12 +1,12 @@
-import * as React from 'react'
-import type { ComponentProps } from 'react'
-import Link from 'next/link'
 import type { MDXComponents } from 'mdx/types'
+import type { ComponentProps } from 'react'
 import { useMDXComponent } from 'next-contentlayer2/hooks'
+import Link from 'next/link'
+import * as React from 'react'
 import MdxImage from '@/components/MdxImage'
-import '@/styles/mdx.css'
-
 import { cn } from '@/lib/utils'
+
+import '@/styles/mdx.css'
 
 const mdxComponents: MDXComponents = {
   h1: ({ className, ...props }: ComponentProps<'h1'>) => (

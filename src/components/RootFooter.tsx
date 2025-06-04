@@ -1,10 +1,10 @@
 'use client'
 
 import type { ComponentProps } from 'react'
-import { useMediaQuery } from '@/lib/hooks/useMediaQuery'
-import { Subscript } from '@/components/Subscript'
-import { cn } from '@/lib/utils'
 import { ExternalLink } from '@/components/ExternalLink'
+import { Subscript } from '@/components/Subscript'
+import { useMediaQuery } from '@/lib/hooks/useMediaQuery'
+import { cn } from '@/lib/utils'
 
 type PageFooterProps = ComponentProps<'footer'>
 

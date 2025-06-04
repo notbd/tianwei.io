@@ -1,7 +1,7 @@
 import type { ComponentProps } from 'react'
 import { ExternalLink } from '@/components/ExternalLink'
-import { cn } from '@/lib/utils'
 import { SubscriptBlock } from '@/components/Subscript'
+import { cn } from '@/lib/utils'
 
 // home page
 export default function Home() {

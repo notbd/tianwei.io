@@ -1,5 +1,5 @@
-import { allPosts } from 'contentlayer/generated'
 import type { Post } from 'contentlayer/generated'
+import { allPosts } from 'contentlayer/generated'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 

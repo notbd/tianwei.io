@@ -1,7 +1,7 @@
-import { useMemo } from 'react'
 import type { PersistedThemeContextState } from '@/lib/contexts/persistedThemeContext'
-import { PersistedThemeContext } from '@/lib/contexts/persistedThemeContext'
 import type { Theme } from '@/types/themeTypes'
+import { useMemo } from 'react'
+import { PersistedThemeContext } from '@/lib/contexts/persistedThemeContext'
 
 export type PersistedThemeProviderProps = {
   persistedTheme: Theme
@@ -16,10 +16,10 @@ export function PersistedThemeProvider({
   }), [persistedTheme])
 
   return (
-    <PersistedThemeContext.Provider
+    <PersistedThemeContext
       value={exposedPersistedThemeValue}
     >
       {children}
-    </PersistedThemeContext.Provider>
+    </PersistedThemeContext>
   )
 }
