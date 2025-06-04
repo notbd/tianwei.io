@@ -13,11 +13,13 @@ export { metadata, viewport } // declared in metadata.ts
 
 type RootLayoutProps = { children: React.ReactNode }
 
-export default function RootLayout({
-  children,
-}: Readonly<RootLayoutProps>) {
+export default async function RootLayout(
+  {
+    children,
+  }: Readonly<RootLayoutProps>
+) {
   // read persistedTheme from cookies
-  const themeCookie = cookies().get(KEYS.LAST_CHOSEN_THEME)
+  const themeCookie = (await cookies()).get(KEYS.LAST_CHOSEN_THEME)
   const persistedTheme: Theme = themeCookie ? ((themeCookie.value as Theme) ?? DEFAULT_THEME) : DEFAULT_THEME // set default for `persistedTheme` when no last chosen theme cookie found
 
   return (

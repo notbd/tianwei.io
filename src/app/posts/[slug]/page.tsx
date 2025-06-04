@@ -5,9 +5,9 @@ import { Mdx } from '@/components/Mdx'
 import { cn } from '@/lib/utils'
 
 type PostArticleProps = {
-  params: {
+  params: Promise<{
     slug: string
-  }
+  }>
 }
 
 export function generateStaticParams() {
@@ -16,7 +16,8 @@ export function generateStaticParams() {
   }))
 }
 
-export default function PostArticle({ params }: PostArticleProps) {
+export default async function PostArticle(props: PostArticleProps) {
+  const params = await props.params;
   const post = allPosts.find(post => post.slugAsParams === params.slug)
 
   if (!post) {

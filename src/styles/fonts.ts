@@ -1,7 +1,10 @@
-import { Rubik } from 'next/font/google'
-import { GeistMono } from 'geist/font/mono'
+import { Geist_Mono, Rubik } from 'next/font/google'
 
-export { GeistMono as geistMono }
+export const geistMono = Geist_Mono({
+  subsets: ['latin'],
+  variable: '--font-geist-mono',
+  display: 'swap',
+})
 
 export const rubik = Rubik({
   subsets: ['latin'],
