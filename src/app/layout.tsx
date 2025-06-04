@@ -5,7 +5,7 @@ import { RootHeader } from '@/components/RootHeader'
 import { DEFAULT_THEME, KEYS } from '@/lib/constants/constants'
 import { ConsistentThemeProvider } from '@/lib/contexts/ConsistentThemeProvider'
 import { cn } from '@/lib/utils'
-import { geistMono, rubik } from '@/styles/fonts'
+import { berkeleyMono, rubik } from '@/styles/fonts'
 import { metadata, viewport } from './metadata'
 import '@/styles/globals.css'
 
@@ -34,7 +34,7 @@ export default async function RootLayout(
           // cannot add 'transition-colors' here, else it may cause a flash under dark mode,
           // since html always starts with light mode and 'dark' class is added later by code
           'font-sans antialiased',
-          `${rubik.variable} ${geistMono.variable}`,
+          `${rubik.variable} ${berkeleyMono.variable}`,
         )}
       >
 

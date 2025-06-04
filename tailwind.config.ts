@@ -15,7 +15,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['var(--font-rubik)'],
-        mono: ['var(--font-geist-mono)'],
+        mono: ['var(--font-berkeley-mono)'],
       },
     },
 

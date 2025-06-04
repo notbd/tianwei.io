@@ -1,12 +1,12 @@
-import { Geist_Mono, Rubik } from 'next/font/google'
-
-export const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-  display: 'swap',
-})
+import { Rubik } from 'next/font/google'
+import localFont from 'next/font/local'
 
 export const rubik = Rubik({
   subsets: ['latin'],
   variable: '--font-rubik',
+})
+
+export const berkeleyMono = localFont({
+  src: '../fonts/BerkeleyMono-Regular.woff2',
+  variable: '--font-berkeley-mono',
 })
