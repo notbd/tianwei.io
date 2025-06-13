@@ -1,6 +1,6 @@
 'use client'
 
-import type { ThemeProviderProps as NextThemeProviderProps } from 'next-themes/dist/types'
+import type { ThemeProviderProps as NextThemeProviderProps } from 'next-themes'
 import type { PersistedThemeProviderProps } from '@/lib/contexts/PersistedThemeProvider'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
 import { DEFAULT_THEME } from '@/lib/constants/constants'
