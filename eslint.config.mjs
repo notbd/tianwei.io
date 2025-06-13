@@ -24,7 +24,7 @@ export default antfu(
     },
   },
 
-  // Extend additional plugins using `FlatCompat()`
+  // extend additional plugins using `FlatCompat()`
   ...compat.config({
     extends: [
       'plugin:tailwindcss/recommended',

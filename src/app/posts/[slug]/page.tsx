@@ -56,7 +56,6 @@ function PostHeader({ post }: PostHeaderProps) {
           className={cn(
             'mt-2',
             'text-zinc-600 dark:text-zinc-300',
-            'text-md',
           )}
         >
           {post.description}
