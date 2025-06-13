@@ -1,9 +1,10 @@
 {
   "name": "tianwei.io",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
+    "dev:turbo": "next dev --turbopack",
     "build": "next build",
     "build:content": "contentlayer2 build",
     "start": "next start",

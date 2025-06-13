@@ -41,7 +41,7 @@ type PostHeaderProps = {
 function PostHeader({ post }: PostHeaderProps) {
   return (
     <header
-      className="mb-14"
+      className="mb-10"
     >
       <h1
         className={cn(
@@ -56,12 +56,30 @@ function PostHeader({ post }: PostHeaderProps) {
           className={cn(
             'mt-2',
             'text-zinc-600 dark:text-zinc-300',
-            'text-lg',
+            'text-md',
           )}
         >
           {post.description}
         </p>
       )}
+
+      {/* date display */}
+      {post.date && (
+        <p className={cn(
+          'mt-2',
+          'text-zinc-500 dark:text-zinc-400',
+          'text-sm',
+        )}
+        >
+          {new Date(post.date).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+        </p>
+      )}
+
+      <hr className="my-6 border-zinc-200/50 dark:border-zinc-700/50" />
     </header>
   )
 }

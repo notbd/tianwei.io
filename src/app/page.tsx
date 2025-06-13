@@ -39,12 +39,12 @@ export default function Home() {
 
             {/* ikalendar2 */}
             <ListItem>
-              <ExternalLink href="https://github.com/notbd/Ikalendar2">
+              <ExternalLink href="https://ikalendar.app">
                 ikalendar2
               </ExternalLink>
 
               <SubscriptBlock>
-                SwiftUI app for tracking in-game rotations
+                SwiftUI app for tracking Splatoon 2 in-game rotations
               </SubscriptBlock>
             </ListItem>
 

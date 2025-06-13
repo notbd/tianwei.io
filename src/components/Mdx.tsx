@@ -12,7 +12,7 @@ const mdxComponents: MDXComponents = {
   h1: ({ className, ...props }: ComponentProps<'h1'>) => (
     <h1
       className={cn(
-        'mt-2 scroll-m-20 text-3xl font-bold tracking-tight',
+        'mt-10 scroll-m-20 text-3xl font-bold tracking-tight',
         className,
       )}
       {...props}

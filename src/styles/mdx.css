@@ -1,5 +1,5 @@
 [data-rehype-pretty-code-title] {
-  @apply mt-4 py-2 px-4 text-sm font-medium;
+  @apply mt-4 py-2 px-4 text-sm font-medium font-mono;
 }
 
 [data-rehype-pretty-code-title] + pre {
@@ -15,8 +15,13 @@ pre [data-line] {
   padding: 0 1rem;
 }
 
+[data-rehype-pretty-code-figure] {
+  @apply my-8;
+} 
+
 [data-rehype-pretty-code-figure] code,
 [data-rehype-pretty-code-figure] code span {
+  @apply text-sm;
   color: var(--shiki-light);
 }
 
@@ -38,10 +43,6 @@ pre [data-line] {
 .dark [data-rehype-pretty-code-figure] pre,
 .dark [data-rehype-pretty-code-figure] code {
   background-color: var(--shiki-dark-bg);
-}
-
-.dark [data-rehype-pretty-code-figure] code span{
-  @apply bg-transparent;
 }
 
 [data-highlighted-chars] {

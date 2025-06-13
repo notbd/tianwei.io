@@ -4,11 +4,28 @@ import Link from 'next/link'
 import { cn } from '@/lib/utils'
 
 export default function Posts() {
+  const publishedPosts = allPosts.filter(post => post.published)
+
+  // order posts by date (descending), then by title (ascending)
+  // posts without a date come last
+  publishedPosts.sort((a, b) => {
+    if (a.date && b.date) {
+      if (a.date > b.date)
+        return -1
+      if (a.date < b.date)
+        return 1
+      return a.title.localeCompare(b.title)
+    }
+    if (a.date && !b.date)
+      return -1
+    if (!a.date && b.date)
+      return 1
+    return a.title.localeCompare(b.title)
+  })
+
   return (
-    <ul
-      className="flex flex-col gap-y-6"
-    >
-      {allPosts.map(post => (
+    <ul className="flex flex-col gap-y-6">
+      {publishedPosts.map(post => (
         <PostPreview key={post._id} post={post} />
       ))}
     </ul>
