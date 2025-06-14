@@ -15,14 +15,14 @@ export default function Home() {
         </HomeSectionHeader>
 
         {/* md: last name */}
-        <HomeSectionBody className="hidden font-bold text-teal-700 transition-colors duration-500 md:flex dark:text-teal-800">
+        <HomeSectionBody className="hidden font-bold text-teal-700 transition-colors duration-500 md:flex">
           Zhang
         </HomeSectionBody>
 
         {/* below md: full name */}
         <HomeSectionBody className="pl-0 font-semibold text-zinc-400 transition-colors duration-500 md:hidden dark:text-zinc-200">
           Tianwei
-          <span className="font-bold text-teal-700 transition-colors duration-500 dark:text-teal-800">
+          <span className="font-bold text-teal-700 transition-colors duration-500">
             {' Zhang'}
           </span>
         </HomeSectionBody>
@@ -170,7 +170,7 @@ function HomeSectionHeader({
     <h2
       {...props}
       className={cn(
-        'text-zinc-400 md:w-32 md:text-right dark:text-zinc-200',
+        'text-zinc-500 md:w-32 md:text-right dark:text-zinc-200',
         className,
       )}
     >

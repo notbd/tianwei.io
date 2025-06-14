@@ -13,7 +13,7 @@ ikalendar2 started out using completion handlers to manage asynchronous data fet
 
 Below is one example of how completion handlers were used in the NetworkManager class to fetch data, decode, and pass it back to the caller.
 
-```swift title="IkaNetworkManager.swift"
+```swift title="IkaNetworkManager.swift" /completion/
 final class IkaNetworkManager {
 
   // ...other class members
@@ -190,7 +190,7 @@ That changed when Apple finally introduced the support for async/await and struc
 
 Revisiting our example, we go back to the `IkaNetworkManager` class since we don't need publishers anymore, then drop the completion handlers and instead mark the function as `async throws`. The function can now return the data directly, or throw an error that gets propagated to the caller, all without the need for a callback closure.
 
-```swift title="IkaNetworkManager.swift"
+```swift title="IkaNetworkManager.swift" /async/
 final class IkaNetworkManager {
 
   // ...other class members
@@ -230,7 +230,7 @@ final class IkaNetworkManager {
 
 Meanwhile, the caller's code sees even bigger improvements:
 
-```swift title="IkaCatalog.swift"
+```swift title="IkaCatalog.swift" /async/ /await/
 @MainActor
 @Observable
 final class IkaCatalog {
@@ -242,7 +242,7 @@ final class IkaCatalog {
 
   // ...other class members
 
-  /// Loads the catalog data asynchronously.
+  /// Function called to update the data model.
   private func loadCatalog() async
   {
     await setLoadStatus(.loading)
@@ -258,7 +258,7 @@ final class IkaCatalog {
     }
   }
 
-  /// Called by `loadCatalog()`.
+  /// Called internally by `loadCatalog()`.
   private func loadData() async throws
   {
     // these functions call `fetchAndDecode()` internally
