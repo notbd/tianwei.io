@@ -115,6 +115,12 @@ export default function Home() {
           </ExternalLink>
           {', '}
 
+          {/* linkedin */}
+          <ExternalLink href="https://linkedin.com/in/tianwei-z">
+            LinkedIn
+          </ExternalLink>
+          {', '}
+
           {/* instagram */}
           <ExternalLink href="https://instagram.com/zhang13music">
             Instagram

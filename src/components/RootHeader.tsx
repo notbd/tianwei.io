@@ -36,7 +36,7 @@ export function RootHeader({
           {/* logo svg imported as component */}
           <SiteLogo
             className="h-6 text-teal-700 dark:text-teal-800"
-            aria-label="TWZ Website Logo"
+            aria-label="Website Logo for tianwei.io"
           />
         </Link>
       </div>
