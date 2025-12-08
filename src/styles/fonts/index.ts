@@ -7,6 +7,6 @@ export const rubik = Rubik({
 })
 
 export const berkeleyMono = localFont({
-  src: '../fonts/BerkeleyMono-Regular.woff2',
+  src: './sources/BerkeleyMono-Regular.woff2',
   variable: '--font-berkeley-mono',
 })

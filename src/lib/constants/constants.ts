@@ -1,4 +1,4 @@
-import type { Theme } from '@/types/themeTypes'
+import type { Theme } from '@/lib/types/themeTypes'
 
 // ---- CONFIGURATION CONSTANTS ----
 

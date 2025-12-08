@@ -35,8 +35,7 @@ export function ColorModeToggle({
   }
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks-extra/no-direct-set-state-in-use-effect
-    setIsMounted(true)
+    queueMicrotask(() => setIsMounted(true))
   }, [])
 
   return (
@@ -48,8 +47,8 @@ export function ColorModeToggle({
       aria-label="Color Mode Toggle"
       className={cn(
         'border-zinc-200 text-zinc-600 dark:border-zinc-800 dark:text-zinc-400',
-        'size-7 rounded-md border-[0.0625rem] text-center',
-        { 'cursor-default': !isMounted },
+        'size-7 rounded-md border text-center',
+        { 'cursor-pointer': isMounted },
         className,
       )}
     >

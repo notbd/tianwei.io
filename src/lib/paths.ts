@@ -1,4 +1,4 @@
-import type { DeploymentEnv } from '@/types/deploymentTypes'
+import type { DeploymentEnv } from '@/lib/types/deploymentTypes'
 
 export const BasePaths = {
   domain: process.env.VERCEL_URL || 'tianwei.io',

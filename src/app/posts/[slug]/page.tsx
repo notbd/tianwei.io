@@ -1,84 +1,65 @@
-import type { Post } from 'contentlayer/generated'
-import { allPosts } from 'contentlayer/generated'
+import type { Post, PostSummary } from '@/lib/api'
 import { notFound } from 'next/navigation'
-import { Mdx } from '@/components/Mdx'
-import { cn } from '@/lib/utils'
+import { MdxContent } from '@/components/mdx/MdxContent'
+import { apiClient } from '@/lib/api'
 
-type PostArticleProps = {
-  params: Promise<{
-    slug: string
-  }>
+type PageProps = {
+  params: Promise<{ slug: string }>
 }
 
-export function generateStaticParams() {
-  return allPosts.map(post => ({
-    slug: post._raw.flattenedPath,
-  }))
+export async function generateStaticParams() {
+  const posts: PostSummary[] = await apiClient.post.listAll()
+  return posts.map(post => ({ slug: post.slug }))
 }
 
-export default async function PostArticle(props: PostArticleProps) {
-  const params = await props.params
-  const post = allPosts.find(post => post.slugAsParams === params.slug)
+export default async function PostPage({ params }: PageProps) {
+  const { slug } = await params
 
-  if (!post) {
+  let post: Post
+  try {
+    post = await apiClient.post.getBySlug(slug)
+  }
+  catch {
     notFound()
   }
 
   return (
-    post && (
-      <article>
-        <PostHeader post={post} />
-        <Mdx code={post.body.code} />
-      </article>
-    )
-  )
-}
+    <main className="max-w-3xl py-8">
 
-type PostHeaderProps = {
-  post: Post
-}
+      {/* header */}
+      <header className="mb-12">
 
-function PostHeader({ post }: PostHeaderProps) {
-  return (
-    <header
-      className="mb-10"
-    >
-      <h1
-        className={cn(
-          'mt-2 scroll-m-20 text-3xl font-bold tracking-tight',
+        {/* title */}
+        <h1 className="text-3xl font-bold">{post.title}</h1>
+
+        {/* (optional) description */}
+        {post.description && (
+          <p className="mt-2 text-zinc-600 dark:text-zinc-400">{post.description}</p>
         )}
-      >
-        {post.title}
-      </h1>
 
-      {post.description && (
-        <p
-          className={cn(
-            'mt-2',
-            'text-zinc-600 dark:text-zinc-300',
-          )}
-        >
-          {post.description}
-        </p>
-      )}
+        {/* other attributes */}
+        <div className="mt-4 text-sm text-zinc-500 dark:text-zinc-500">
+          <span>
+            By
+            {' '}
+            {post.author}
+          </span>
+          <span className="mx-2">·</span>
+          <time>
+            {post.createdAt.toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'short',
+              day: 'numeric',
+            })}
+          </time>
+          {/* <span className="mx-2">|</span>
+          <span>{post.category}</span> */}
+        </div>
+      </header>
 
-      {/* date display */}
-      {post.date && (
-        <p className={cn(
-          'mt-2',
-          'text-zinc-500 dark:text-zinc-400',
-          'text-sm',
-        )}
-        >
-          {new Date(post.date).toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </p>
-      )}
+      {/* content */}
+      <MdxContent source={post.content} />
 
-      <hr className="my-6 border-zinc-200/50 dark:border-zinc-700/50" />
-    </header>
+    </main>
   )
 }

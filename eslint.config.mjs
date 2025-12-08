@@ -1,5 +1,6 @@
 import antfu from '@antfu/eslint-config'
 import { FlatCompat } from '@eslint/eslintrc'
+import nextPlugin from '@next/eslint-plugin-next'
 
 const compat = new FlatCompat()
 
@@ -12,30 +13,41 @@ export default antfu(
     typescript: true,
     react: true,
     ignores: [
-      // add files to ignore
+      '.next/**',
+      'out/**',
+      'build/**',
+      'next-env.d.ts',
     ],
   },
 
   {
+    plugins: {
+      '@next/next': nextPlugin,
+    },
     rules: {
-      // use `type` for type definitions instead of `interface`
+      ...nextPlugin.configs.recommended.rules,
+      ...nextPlugin.configs['core-web-vitals'].rules,
+    },
+  },
+
+  {
+    rules: {
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       'n/prefer-global/process': ['error', 'always'],
     },
   },
 
-  // extend additional plugins using `FlatCompat()`
   ...compat.config({
     extends: [
-      'plugin:tailwindcss/recommended',
-      'plugin:@next/next/recommended',
+      // `eslint-plugin-tailwindcss` does not support tailwindcss v4 yet
+      // ----
+      // 'plugin:tailwindcss/recommended',
     ],
 
     settings: {
-      tailwindcss: {
-        // add 'cn' to the default list of functions to have its arguments linted
-        callees: ['cn', 'classnames', 'clsx', 'ctl', 'cva', 'tv'],
-      },
+      // tailwindcss: {
+      //   callees: ['cn', 'classnames', 'clsx', 'ctl', 'cva', 'tv'],
+      // },
     },
   }),
 )

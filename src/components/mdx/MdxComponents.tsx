@@ -1,14 +1,10 @@
 import type { MDXComponents } from 'mdx/types'
 import type { ComponentProps } from 'react'
-import { useMDXComponent } from 'next-contentlayer2/hooks'
 import Link from 'next/link'
-import * as React from 'react'
-import MdxImage from '@/components/MdxImage'
+import MdxImage from '@/components/mdx/MdxImage'
 import { cn } from '@/lib/utils'
 
-import '@/styles/mdx.css'
-
-const mdxComponents: MDXComponents = {
+export const mdxComponents: MDXComponents = {
   h1: ({ className, ...props }: ComponentProps<'h1'>) => (
     <h1
       className={cn(
@@ -49,7 +45,7 @@ const mdxComponents: MDXComponents = {
   h5: ({ className, ...props }: ComponentProps<'h5'>) => (
     <h5
       className={cn(
-        'mt-8 scroll-m-20 text-[1.0625rem] font-semibold leading-[1.625rem] tracking-tight',
+        'mt-8 scroll-m-20 text-[1.0625rem] font-semibold leading-6.5 tracking-tight',
         className,
       )}
       {...props}
@@ -64,42 +60,53 @@ const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  a: ({ className, ...props }: ComponentProps<'a'>) => (
-    <a
-      target="_blank"
-      rel="noopener noreferrer"
-      className={cn(
-        'text-teal-700 hover:text-teal-600 dark:text-teal-600 dark:hover:text-teal-500',
-        'transition-[color] duration-300',
-        'font-medium underline underline-offset-4',
-        className,
-      )}
-      {...props}
-    />
-  ),
+  a: ({ className, href = '', ...props }: ComponentProps<'a'>) => {
+    const isExternal
+      = href.startsWith('http')
+        || href.startsWith('mailto:')
+        || href.startsWith('tel:')
+
+    return (
+      <a
+        href={href}
+        target={isExternal ? '_blank' : undefined}
+        rel={isExternal ? 'noopener noreferrer' : undefined}
+        className={cn(
+          'text-teal-700 hover:text-teal-600 dark:text-teal-600 dark:hover:text-teal-500',
+          'transition-[color] duration-300 font-medium underline underline-offset-4',
+          className,
+        )}
+        {...props}
+      />
+    )
+  },
   p: ({ className, ...props }: ComponentProps<'p'>) => (
     <p
-      className={cn(
-        'leading-7',
-        '[&:not(:first-child)]:mt-6',
-        className,
-      )}
+      className={cn('leading-7', 'not-first:mt-6', className)}
       {...props}
     />
   ),
   ul: ({ className, ...props }: ComponentProps<'ul'>) => (
-    <ul className={cn('nested-list-marker my-5 ml-4 list-disc marker:text-teal-600 dark:marker:text-teal-700', className)} {...props} />
+    <ul
+      className={cn(
+        'nested-list-marker my-5 ml-4 list-disc marker:text-teal-600 dark:marker:text-teal-700',
+        className,
+      )}
+      {...props}
+    />
   ),
   ol: ({ className, ...props }: ComponentProps<'ol'>) => (
-    <ol className={cn('my-5 ml-4 list-decimal marker:text-teal-700 dark:marker:text-teal-600', className)} {...props} />
+    <ol
+      className={cn(
+        'my-5 ml-4 list-decimal marker:text-teal-700 dark:marker:text-teal-600',
+        className,
+      )}
+      {...props}
+    />
   ),
   li: ({ className, ...props }: ComponentProps<'li'>) => (
     <li
-      className={cn(
-        'mt-5',
-        '[&>p:not(:first-child)]:mt-3',
-        className,
-      )}
+      className={cn('mt-5', '[&>p:not(:first-child)]:mt-3', className)}
       {...props}
     />
   ),
@@ -112,15 +119,14 @@ const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  img: ({
-    className,
-    alt,
-    ...props
-  }: ComponentProps<'img'>) => (
-    // eslint-disable-next-line @next/next/no-img-element
+  img: ({ className, alt, ...props }: ComponentProps<'img'>) => (
+    // using img instead of next Image because already using Cloudinary for image optimization
+    // eslint-disable-next-line next/no-img-element
     <img className={cn('rounded-md', className)} alt={alt} {...props} />
   ),
-  hr: ({ ...props }: ComponentProps<'hr'>) => <hr className="my-4 md:my-8" {...props} />,
+  hr: ({ ...props }: ComponentProps<'hr'>) => (
+    <hr className="my-4 md:my-8" {...props} />
+  ),
   table: ({ className, ...props }: ComponentProps<'table'>) => (
     <div className="my-6 w-full overflow-hidden overflow-y-auto rounded-lg border border-zinc-200 drop-shadow-sm dark:border-zinc-800">
       <table
@@ -144,7 +150,7 @@ const mdxComponents: MDXComponents = {
   th: ({ className, ...props }: ComponentProps<'th'>) => (
     <th
       className={cn(
-        'border-b border-r border-zinc-200 px-4 py-2 text-left font-bold last:border-r-0 dark:border-zinc-800 [&[align=center]]:text-center [&[align=right]]:text-right',
+        'border-b border-r border-zinc-200 px-4 py-2 text-left font-bold last:border-r-0 dark:border-zinc-800 [[align=center]]:text-center [[align=right]]:text-right',
         className,
       )}
       {...props}
@@ -153,7 +159,7 @@ const mdxComponents: MDXComponents = {
   td: ({ className, ...props }: ComponentProps<'td'>) => (
     <td
       className={cn(
-        'border-r border-t border-zinc-200 px-4 py-2 text-left last:border-r-0 dark:border-zinc-800 [&[align=center]]:text-center [&[align=right]]:text-right',
+        'border-r border-t border-zinc-200 px-4 py-2 text-left last:border-r-0 dark:border-zinc-800 [[align=center]]:text-center [[align=right]]:text-right',
         className,
       )}
       {...props}
@@ -185,19 +191,4 @@ const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-}
-
-type MdxProps = {
-  code: string
-}
-
-export function Mdx({ code }: MdxProps) {
-  const Component = useMDXComponent(code)
-
-  return (
-    // eslint-disable-next-line tailwindcss/no-custom-classname
-    <div className="mdx">
-      <Component components={mdxComponents} />
-    </div>
-  )
 }

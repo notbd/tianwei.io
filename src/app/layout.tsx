@@ -1,4 +1,4 @@
-import type { Theme } from '@/types/themeTypes'
+import type { Theme } from '@/lib/types/themeTypes'
 import { cookies } from 'next/headers'
 import { RootFooter } from '@/components/RootFooter'
 import { RootHeader } from '@/components/RootHeader'
@@ -7,7 +7,7 @@ import { ConsistentThemeProvider } from '@/lib/contexts/ConsistentThemeProvider'
 import { cn } from '@/lib/utils'
 import { berkeleyMono, rubik } from '@/styles/fonts'
 import { metadata, viewport } from './metadata'
-import '@/styles/globals.css'
+import '@/styles/globals.tailwind.css'
 
 export { metadata, viewport } // declared in metadata.ts
 

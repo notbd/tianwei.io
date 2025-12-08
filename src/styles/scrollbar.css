@@ -1,0 +1,55 @@
+/* ============================================
+   Scrollbar Styling
+   ============================================ */
+
+:root {
+  --scrollbar-thumb: rgba(161, 161, 170, 0.5);
+  --scrollbar-thumb-hover: rgba(113, 113, 122, 0.7);
+}
+
+.dark {
+  --scrollbar-thumb: rgba(113, 113, 122, 0.5);
+  --scrollbar-thumb-hover: rgba(161, 161, 170, 0.7);
+}
+
+/* ==== All (WebKit and Firefox) ==== */
+
+/* Setting these will auto turn off all below */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+/* ==== WebKit only (Chrome, Edge, Safari) ==== */
+
+/* html::-webkit-scrollbar,
+body::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: 9999px;
+}
+
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+html::-webkit-scrollbar-corner,
+body::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+} */

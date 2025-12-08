@@ -1,6 +1,7 @@
 'use client'
 
 import type { ComponentProps } from 'react'
+import { useEffect, useState } from 'react'
 import { ExternalLink } from '@/components/ExternalLink'
 import { Subscript } from '@/components/Subscript'
 import { useMediaQuery } from '@/lib/hooks/useMediaQuery'
@@ -12,7 +13,13 @@ export function RootFooter({
   className,
   ...props
 }: PageFooterProps) {
+  const [isMounted, setIsMounted] = useState(false)
   const isAboveMd = useMediaQuery('(min-width: 48rem)')
+  const isMountedAndAboveMd = isMounted && isAboveMd === true
+
+  useEffect(() => {
+    queueMicrotask(() => setIsMounted(true))
+  }, [])
 
   return (
     <footer
@@ -40,8 +47,8 @@ export function RootFooter({
 
               <ExternalLink
                 href="https://creativecommons.org/licenses/by-nc-sa/4.0"
-                tabIndex={isAboveMd ? -1 : 0}
-                aria-hidden={isAboveMd}
+                tabIndex={isMountedAndAboveMd ? -1 : 0}
+                aria-hidden={isMountedAndAboveMd}
               >
                 CC BY-NC-SA 4.0
               </ExternalLink>
@@ -54,8 +61,8 @@ export function RootFooter({
 
               <ExternalLink
                 href="https://www.gnu.org/licenses/agpl-3.0.html"
-                tabIndex={isAboveMd ? -1 : 0}
-                aria-hidden={isAboveMd}
+                tabIndex={isMountedAndAboveMd ? -1 : 0}
+                aria-hidden={isMountedAndAboveMd}
               >
 
                 AGPLv3
@@ -77,13 +84,13 @@ export function RootFooter({
 
             <ExternalLink
               href="https://creativecommons.org/licenses/by-nc-sa/4.0"
-              tabIndex={isAboveMd ? 0 : -1}
-              aria-hidden={!isAboveMd}
+              tabIndex={!isMountedAndAboveMd ? -1 : 0}
+              aria-hidden={!isMountedAndAboveMd}
             >
               CC BY-NC-SA 4.0
             </ExternalLink>
 
-            <Subscript className="text-[0.625rem] leading-[0.875rem]">
+            <Subscript className="text-[0.625rem] leading-3.5">
               {' (content)'}
             </Subscript>
 
@@ -91,13 +98,13 @@ export function RootFooter({
 
             <ExternalLink
               href="https://www.gnu.org/licenses/agpl-3.0.html"
-              tabIndex={isAboveMd ? 0 : -1}
-              aria-hidden={!isAboveMd}
+              tabIndex={!isMountedAndAboveMd ? -1 : 0}
+              aria-hidden={!isMountedAndAboveMd}
             >
               AGPLv3
             </ExternalLink>
 
-            <Subscript className="text-[0.625rem] leading-[0.875rem]">
+            <Subscript className="text-[0.625rem] leading-3.5">
               {' (source code)'}
             </Subscript>
 
@@ -113,6 +120,7 @@ export function RootFooter({
       </div>
     </footer>
   )
+  // )
 }
 
 type FooterSegmentProps = ComponentProps<'p'> & { children: React.ReactNode }
