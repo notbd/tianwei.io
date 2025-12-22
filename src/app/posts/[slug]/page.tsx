@@ -24,13 +24,13 @@ export default async function PostPage({ params }: PageProps) {
   }
 
   return (
-    <main className="max-w-3xl py-8">
+    <main className="max-w-3xl pb-8">
 
       {/* header */}
-      <header className="mb-12">
+      <header className="mb-12 pb-4 border-b border-gray-200 dark:border-gray-800">
 
         {/* title */}
-        <h1 className="text-3xl font-bold">{post.title}</h1>
+        <h1 className="text-2xl font-bold">{post.title}</h1>
 
         {/* (optional) description */}
         {post.description && (
@@ -38,13 +38,7 @@ export default async function PostPage({ params }: PageProps) {
         )}
 
         {/* other attributes */}
-        <div className="mt-4 text-sm text-zinc-500 dark:text-zinc-500">
-          <span>
-            By
-            {' '}
-            {post.author}
-          </span>
-          <span className="mx-2">·</span>
+        <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-500">
           <time>
             {post.createdAt.toLocaleDateString('en-US', {
               year: 'numeric',
