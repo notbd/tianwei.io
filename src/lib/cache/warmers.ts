@@ -9,8 +9,19 @@ type PrefixWarmer = (id: string) => Promise<void>
  */
 export const tagWarmers: Record<string, CacheWarmer> = {
   posts: async () => {
+    console.info('[warmer] posts: start')
     const posts = await apiClient.post.listAll()
-    await Promise.all(posts.map(p => apiClient.post.getBySlug(p.slug)))
+    console.info('[warmer] posts: fetched list', posts.length)
+
+    await Promise.all(
+      posts.map(async (p) => {
+        console.info('[warmer] post:', p.slug, 'start')
+        await apiClient.post.getBySlug(p.slug)
+        console.info('[warmer] post:', p.slug, 'done')
+      }),
+    )
+
+    console.info('[warmer] posts: done')
   },
 }
 

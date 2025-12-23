@@ -14,18 +14,34 @@ export async function POST(request: NextRequest) {
     // Option 1: Revalidate a specific post
     if (slug) {
       const result = await revalidateAndWarmPost(slug)
+
+      // Return appropriate status based on success
+      if (!result.success) {
+        return NextResponse.json(result, { status: 207 }) // 207 Multi-Status for partial success
+      }
+
       return NextResponse.json(result)
     }
 
     // Option 2: Revalidate multiple tags
     if (tags && Array.isArray(tags)) {
       const result = await revalidateAndWarmTags(tags)
+
+      if (!result.success) {
+        return NextResponse.json(result, { status: 207 })
+      }
+
       return NextResponse.json(result)
     }
 
     // Option 3: Revalidate a single tag
     if (tag) {
       const result = await revalidateAndWarmTags([tag])
+
+      if (!result.success) {
+        return NextResponse.json(result, { status: 207 })
+      }
+
       return NextResponse.json(result)
     }
 
@@ -37,7 +53,10 @@ export async function POST(request: NextRequest) {
   catch (error) {
     console.error('Revalidation error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      {
+        error: 'Internal server error',
+        message: error instanceof Error ? error.message : String(error),
+      },
       { status: 500 },
     )
   }
