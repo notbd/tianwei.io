@@ -2,9 +2,7 @@
 <samp>
 <h1>tianwei.io</h1>
 
-My personal website.
-
-This repository serves as the frontend presentation layer, fetching content dynamically from a decoupled Hono API.
+The frontend layer of my personal website [tianwei.io](https://tianwei.io).
 
 <h2>Stack</h2>
 
@@ -17,11 +15,11 @@ This repository serves as the frontend presentation layer, fetching content dyna
 
 <h2>Site Architecture</h2>
 
-This site has been refactored from a static Contentlayer-based setup to a dynamic three-tier architecture. The main motivation behind this change was to improve scalability and maintainability. Also, Contentlayer has stopped being actively maintained.
+- **[Frontend](https://github.com/notbd/tianwei.io)**: a Next.js application rendering content from the API dynamically using SSR with optimized caching strategies.
+- **[API Layer](https://github.com/notbd/tianwei-io-api)**: a Hono service (Node.js) that serves content data from the content engine via REST endpoints.
+- **[Content Engine](https://github.com/notbd/tianwei-io-content)**: a dedicated repo that stores, parses and syncs MDX to a remote PostgreSQL database.
 
-- **Content Engine**: A dedicated repo that stores, parses and syncs MDX to a PostgreSQL database.
-- **API Layer**: A [Hono](https://hono.dev) service (Node.js) that serves data via REST endpoints.
-- **Frontend**: This Next.js application, which consumes the API and renders content dynamically using SSR with optimized caching strategies.
+Note: previously this site incorporated [Contentlayer](https://contentlayer.dev) to manage frontend and content data in a single repo. I have since moved to a decoupled architecture that separates the frontend and backend which allows for better flexibility and scalability.
 
 <h2>Local Run</h2>
 
@@ -44,8 +42,7 @@ pnpm run build
 > **Notes**:
 >
 > 1. Cloudinary env variables need to be configured following the [instructions](https://next.cloudinary.dev/installation) for images to show properly.
-> 2. This frontend requires the API service to be active to fetch post data. Contentlayer has been completely removed.
-> 3. Typography and code highlighting are handled by custom React components within `src/components/mdx` and via the `rehype-pretty-code` package respectively.
+> 2. Typography and code highlighting are handled by custom React components within `src/components/mdx` and via the `rehype-pretty-code` package respectively.
 
 <h2>License</h2>
 
