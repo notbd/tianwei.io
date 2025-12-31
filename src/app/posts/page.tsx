@@ -9,7 +9,7 @@ export default async function PostsPage() {
     <main className="max-w-3xl pb-8">
 
       {/* header */}
-      <header className="mb-12 pb-4 border-b border-gray-200 dark:border-gray-800">
+      <header className="mb-12 pb-4 border-b border-gray-200/30 dark:border-gray-800/30">
         <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
           Posts
         </h1>

@@ -78,7 +78,7 @@ export default function Home() {
               <ExternalLink href="https://engineering.calendar.utoronto.ca/course/ece244h1">
                 ECE244
               </ExternalLink>
-              , Teaching Assistant
+              , Graduate Teaching Assistant
 
               <SubscriptBlock>
                 Programming Fundamentals, Fall 2022
