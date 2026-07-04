@@ -37,4 +37,23 @@ export const post = {
       },
     )
   },
+
+  /**
+   * Get a single post regardless of publish status (draftMode only).
+   * Requires PREVIEW_SECRET; never cached.
+   */
+  getPreviewBySlug: async (slug: string): Promise<Post> => {
+    const previewSecret = process.env.PREVIEW_SECRET
+    if (previewSecret === undefined || previewSecret === '')
+      throw new Error('PREVIEW_SECRET is not configured')
+
+    return fetchOne(
+      `/api/__preview/post/${slug}`,
+      postSchema,
+      {
+        cache: 'no-store',
+        headers: { Authorization: `Bearer ${previewSecret}` },
+      },
+    )
+  },
 }

@@ -28,15 +28,3 @@ export const errorResponse = z.object({
   status: z.literal('error'),
   message: z.string(),
 })
-
-// Inferred types
-export type SuccessResponse<T> = {
-  status: 'success'
-  data: T
-}
-export type SuccessListResponse<T> = {
-  status: 'success'
-  count: number
-  data: T[]
-}
-export type ErrorResponse = z.infer<typeof errorResponse>
