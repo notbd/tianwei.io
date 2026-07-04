@@ -59,6 +59,11 @@ export const metadata: Metadata = {
     images: [BasePaths.url + AssetPaths.twitterImage],
   },
   manifest: `${BasePaths.url}/manifest.json`,
+  alternates: {
+    types: {
+      'application/rss+xml': `${BasePaths.url}/feed.xml`,
+    },
+  },
 }
 
 export const viewport: Viewport = {
