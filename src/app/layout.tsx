@@ -1,9 +1,6 @@
-import type { Theme } from '@/lib/types/themeTypes'
-import { cookies } from 'next/headers'
 import { RootFooter } from '@/components/RootFooter'
 import { RootHeader } from '@/components/RootHeader'
-import { DEFAULT_THEME, KEYS } from '@/lib/constants/constants'
-import { ConsistentThemeProvider } from '@/lib/contexts/ConsistentThemeProvider'
+import { ThemeProvider } from '@/lib/contexts/ThemeProvider'
 import { cn } from '@/lib/utils'
 import { berkeleyMono, rubik } from '@/styles/fonts'
 import { metadata, viewport } from './metadata'
@@ -11,17 +8,18 @@ import '@/styles/globals.tailwind.css'
 
 export { metadata, viewport } // declared in metadata.ts
 
+// Mirrors the stored theme choice (next-themes' localStorage key) into a
+// data attribute BEFORE first paint, so the toggle icon is correct without
+// any server-side state. Runs synchronously as the first thing in <body>.
+const themeChoiceScript = `(function(){var c='system';try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')c=t}catch(e){}document.documentElement.setAttribute('data-theme-choice',c)})()`
+
 type RootLayoutProps = { children: React.ReactNode }
 
-export default async function RootLayout(
+export default function RootLayout(
   {
     children,
   }: Readonly<RootLayoutProps>,
 ) {
-  // read persistedTheme from cookies
-  const themeCookie = (await cookies()).get(KEYS.LAST_CHOSEN_THEME)
-  const persistedTheme: Theme = themeCookie ? ((themeCookie.value as Theme) ?? DEFAULT_THEME) : DEFAULT_THEME // set default for `persistedTheme` when no last chosen theme cookie found
-
   return (
     <html lang="en" suppressHydrationWarning>
 
@@ -37,9 +35,11 @@ export default async function RootLayout(
           `${rubik.variable} ${berkeleyMono.variable}`,
         )}
       >
+        {/* eslint-disable-next-line react-dom/no-dangerously-set-innerhtml */}
+        <script dangerouslySetInnerHTML={{ __html: themeChoiceScript }} />
 
         {/* theme */}
-        <ConsistentThemeProvider persistedTheme={persistedTheme}>
+        <ThemeProvider>
 
           {/* content */}
           <div
@@ -65,7 +65,7 @@ export default async function RootLayout(
             <RootFooter />
 
           </div>
-        </ConsistentThemeProvider>
+        </ThemeProvider>
       </body>
     </html>
   )

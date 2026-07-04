@@ -10,7 +10,9 @@ export default antfu(
       indent: 2,
       quotes: 'single',
     },
-    typescript: true,
+    typescript: {
+      tsconfigPath: 'tsconfig.json',
+    },
     react: true,
     ignores: [
       '.next/**',
@@ -35,6 +37,17 @@ export default antfu(
       'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       'n/prefer-global/process': ['error', 'always'],
+    },
+  },
+
+  {
+    // type-aware react rules can only run on files covered by tsconfig;
+    // plain JS config files would crash them
+    files: ['**/*.js', '**/*.mjs', '**/*.cjs'],
+    rules: {
+      'react/no-implicit-key': 'off',
+      'react/no-leaked-conditional-rendering': 'off',
+      'react/prefer-read-only-props': 'off',
     },
   },
 
