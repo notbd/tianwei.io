@@ -39,6 +39,7 @@ jobs:
         run: pnpm build
         env:
           CONTENT_API_URL: ${{ secrets.CONTENT_API_URL }}
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
           REVALIDATION_SECRET: ci-dummy-secret
 
       - name: Install Playwright browsers
@@ -48,4 +49,5 @@ jobs:
         run: pnpm test:e2e
         env:
           CONTENT_API_URL: ${{ secrets.CONTENT_API_URL }}
+          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
           REVALIDATION_SECRET: ci-dummy-secret
