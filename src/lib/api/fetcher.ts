@@ -60,7 +60,20 @@ async function baseFetch(endpoint: string, options?: FetchOptions): Promise<unkn
       throw requestError
     }
 
-    return response.json()
+    // Parse inside the loop: a 2xx with a non-JSON body (proxy/CDN error
+    // page) is just as transient as a 5xx and must be retried, not
+    // surfaced as a bare SyntaxError that bypasses the retry loop.
+    const rawBody = await response.text()
+    try {
+      return JSON.parse(rawBody)
+    }
+    catch {
+      lastError = new NetworkRequestError(
+        response.status,
+        `Invalid JSON from ${url} (${response.status}): ${rawBody.slice(0, 120)}`,
+      )
+      continue
+    }
   }
 
   throw lastError

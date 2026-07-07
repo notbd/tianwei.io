@@ -44,6 +44,15 @@ describe('pOST /api/revalidate auth', () => {
     expect(res.status).toBe(401)
     expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
+
+  it('fails CLOSED when REVALIDATION_SECRET is unset', async () => {
+    // regression: interpolating an unset env var made the expected header
+    // the literal "Bearer undefined" — which an attacker can just send
+    vi.stubEnv('REVALIDATION_SECRET', '')
+    const res = await POST(makeRequest({ tags: ['posts'] }, 'Bearer undefined'))
+    expect(res.status).toBe(401)
+    expect(revalidateAndWarmTags).not.toHaveBeenCalled()
+  })
 })
 
 describe('pOST /api/revalidate payloads', () => {

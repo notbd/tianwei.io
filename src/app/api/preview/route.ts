@@ -1,6 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { draftMode } from 'next/headers'
 import { NextResponse } from 'next/server'
+import { secureEquals } from '@/lib/secureCompare'
 
 /**
  * Enables Next.js draft mode and redirects to the requested post.
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
   const slug = request.nextUrl.searchParams.get('slug')
 
   const expected = process.env.PREVIEW_SECRET
-  if (expected === undefined || expected === '' || secret !== expected) {
+  if (expected === undefined || expected === '' || secret === null || !secureEquals(secret, expected)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

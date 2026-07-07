@@ -31,8 +31,10 @@ export async function GET(): Promise<Response> {
     </item>`
   }).join('\n')
 
+  // max over every post's effective date — an OLD post with a NEW
+  // updatedAt must bump this too, so readers re-poll
   const lastBuildDate = posts.length > 0
-    ? (posts[0].updatedAt ?? posts[0].createdAt).toUTCString()
+    ? new Date(Math.max(...posts.map(post => (post.updatedAt ?? post.createdAt).getTime()))).toUTCString()
     : new Date(0).toUTCString()
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>

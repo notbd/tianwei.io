@@ -1,9 +1,11 @@
 name: CI
 
+# pull_request covers dev (synchronize on every push); push:main covers the
+# merge commit. A dev push trigger would double-run everything.
 on:
   pull_request:
   push:
-    branches: [main, dev]
+    branches: [main]
 
 jobs:
   checks:

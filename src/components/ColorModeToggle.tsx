@@ -4,6 +4,7 @@ import type { ComponentProps } from 'react'
 import type { Theme } from '@/lib/types/themeTypes'
 import { LaptopMinimal, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
+import { useEffect } from 'react'
 import { DEFAULT_THEME } from '@/lib/constants/constants'
 import { cn } from '@/lib/utils'
 
@@ -30,11 +31,17 @@ export function ColorModeToggle({
 }: ColorModeToggleProps) {
   const { theme, setTheme } = useTheme()
 
+  // Derive the icon attribute from next-themes' state instead of setting
+  // it in the click handler: theme can also change from OTHER sources
+  // (cross-tab localStorage sync), and this keeps one source of truth.
+  useEffect(() => {
+    if (theme === 'system' || theme === 'dark' || theme === 'light')
+      document.documentElement.setAttribute('data-theme-choice', theme)
+  }, [theme])
+
   const toggleTheme = () => {
     const current: Theme = theme === 'dark' || theme === 'light' ? theme : DEFAULT_THEME
-    const next = NEXT_THEME[current]
-    setTheme(next)
-    document.documentElement.setAttribute('data-theme-choice', next)
+    setTheme(NEXT_THEME[current])
   }
 
   return (

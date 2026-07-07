@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   description: 'A software developer.',
   authors: {
     name: 'Tianwei Zhang',
-    url: BasePaths.domain,
+    url: BasePaths.url,
   },
   creator: 'Tianwei Zhang',
   generator: 'Next.js',
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
       },
       {
         url: AssetPaths.favicon,
-        type: 'image/png',
+        type: 'image/x-icon',
         sizes: '192x192',
       },
     ],

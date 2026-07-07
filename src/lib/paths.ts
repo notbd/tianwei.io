@@ -1,7 +1,14 @@
 import type { DeploymentEnv } from '@/lib/types/deploymentTypes'
 
+const CANONICAL_DOMAIN = 'tianwei.io'
+
+// VERCEL_URL is ALWAYS the generated <deployment>.vercel.app URL — even in
+// production — so absolute URLs (sitemap, feed, og:url, RSS guids) must use
+// the canonical domain there, and the deployment URL only on previews.
+const vercelEnv = process.env.VERCEL_ENV
 const vercelUrl = process.env.VERCEL_URL
-const domain = vercelUrl !== undefined && vercelUrl !== '' ? vercelUrl : 'tianwei.io'
+const isPreview = vercelEnv !== 'production' && vercelUrl !== undefined && vercelUrl !== ''
+const domain = isPreview ? vercelUrl : CANONICAL_DOMAIN
 
 export const BasePaths = {
   domain,

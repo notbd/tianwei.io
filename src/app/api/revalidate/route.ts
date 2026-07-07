@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
 import { revalidateAndWarmPost, revalidateAndWarmTags } from '@/lib/cache'
+import { secureEquals } from '@/lib/secureCompare'
 
 const revalidateBodySchema = z.object({
   tag: z.string().min(1).optional(),
@@ -10,8 +11,16 @@ const revalidateBodySchema = z.object({
 })
 
 export async function POST(request: NextRequest) {
-  const authHeader = request.headers.get('authorization')
-  if (authHeader !== `Bearer ${process.env.REVALIDATION_SECRET}`) {
+  // Fail CLOSED on missing configuration: the old interpolated comparison
+  // made an unset secret match the literal header "Bearer undefined".
+  const secret = process.env.REVALIDATION_SECRET
+  if (secret === undefined || secret === '') {
+    console.error('REVALIDATION_SECRET is not configured — rejecting revalidation request')
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const authHeader = request.headers.get('authorization') ?? ''
+  if (!secureEquals(authHeader, `Bearer ${secret}`)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

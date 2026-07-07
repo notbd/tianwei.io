@@ -82,6 +82,26 @@ describe('fetchOne', () => {
     expect(await fetchOne('/api/thing', itemSchema)).toEqual({ id: 3 })
   })
 
+  it('retries a 2xx with a non-JSON body (CDN error page) and recovers', async () => {
+    const responses = [
+      new Response('<html>gateway error</html>', { status: 200 }),
+      new Response(JSON.stringify({ status: 'success', data: { id: 5 } }), { status: 200 }),
+    ]
+    const fetchMock = vi.fn(async () => responses.shift()!)
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { fetchOne } = await importFetcher()
+    expect(await fetchOne('/api/thing', itemSchema)).toEqual({ id: 5 })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+  })
+
+  it('surfaces a descriptive error when every body is non-JSON', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response('<html>oops</html>', { status: 200 })))
+
+    const { fetchOne } = await importFetcher()
+    await expect(fetchOne('/api/thing', itemSchema)).rejects.toThrow(/Invalid JSON from/)
+  })
+
   it('does NOT retry 4xx (a retried 404 would delay a legitimate notFound)', async () => {
     const fetchMock = stubFetch({ status: 404, statusText: 'Not Found' })
     const { fetchOne } = await importFetcher()

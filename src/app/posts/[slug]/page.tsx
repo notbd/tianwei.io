@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import type { Post, PostSummary } from '@/lib/api'
 import { draftMode } from 'next/headers'
 import Link from 'next/link'
@@ -5,9 +6,45 @@ import { notFound } from 'next/navigation'
 import { MdxContent } from '@/components/mdx/MdxContent'
 import { apiClient, NetworkRequestError } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
+import { BasePaths } from '@/lib/paths'
 
 type PageProps = {
   params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const { slug } = await params
+
+  let post: Post
+  try {
+    post = await apiClient.post.getBySlug(slug)
+  }
+  catch (error) {
+    // unknown slug: the page itself will render notFound()
+    if (error instanceof NetworkRequestError && error.status === 404)
+      return {}
+    throw error
+  }
+
+  const description = post.description ?? undefined
+  return {
+    title: post.title, // root template appends '· tianwei.io'
+    description,
+    openGraph: {
+      type: 'article',
+      url: `${BasePaths.url}/posts/${post.slug}`,
+      title: post.title,
+      description,
+      publishedTime: post.createdAt.toISOString(),
+      modifiedTime: (post.updatedAt ?? post.createdAt).toISOString(),
+      authors: [post.author],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: post.title,
+      description,
+    },
+  }
 }
 
 export async function generateStaticParams() {
@@ -82,7 +119,7 @@ export default async function PostPage({ params }: PageProps) {
           )}
           <span className="mx-2">·</span>
           <Link
-            href={`/categories/${post.category}`}
+            href={`/categories/${encodeURIComponent(post.category)}`}
             className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 dark:decoration-zinc-700 dark:hover:text-zinc-300"
           >
             {post.category}

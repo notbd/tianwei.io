@@ -25,7 +25,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ]
   }
   catch (error) {
-    // a transient API outage must not fail the whole build
+    // A transient API outage must not fail the build. Tradeoff: if this
+    // fires during an on-demand regeneration (post-revalidation), the
+    // degraded sitemap stays cached until the NEXT content sync — accepted,
+    // since the fetcher already retries transient failures with backoff.
     console.error('sitemap: falling back to static entries:', error)
     return staticEntries
   }

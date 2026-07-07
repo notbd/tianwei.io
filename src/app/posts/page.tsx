@@ -27,7 +27,7 @@ export default async function PostsPage() {
             {categories.map(category => (
               <Link
                 key={category}
-                href={`/categories/${category}`}
+                href={`/categories/${encodeURIComponent(category)}`}
                 className="rounded-full border border-zinc-200 px-3 py-0.5 text-sm text-zinc-600 hover:border-teal-600 hover:text-teal-700 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-teal-600 dark:hover:text-teal-500 transition-colors"
               >
                 {category}
