@@ -8,6 +8,20 @@ vi.mock('next/headers', () => ({
   draftMode: async () => ({ enable, disable }),
 }))
 
+// after() has no request context in unit tests — run callbacks inline
+vi.mock('next/server', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next/server')>()
+  return {
+    ...actual,
+    after: (task: () => unknown) => {
+      void task()
+    },
+  }
+})
+
+// route imports the API config, which requires this at module load
+vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
+
 const { GET } = await import('./route')
 
 const SECRET = 'a-preview-secret-of-sufficient-length'
@@ -20,13 +34,18 @@ function makeRequest(params: Record<string, string>): NextRequest {
   return Object.assign(request, { nextUrl: url }) as unknown as NextRequest
 }
 
+const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))
+
 beforeEach(() => {
   vi.clearAllMocks()
   vi.stubEnv('PREVIEW_SECRET', SECRET)
+  vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
+  vi.stubGlobal('fetch', fetchMock)
 })
 
 afterEach(() => {
   vi.unstubAllEnvs()
+  vi.unstubAllGlobals()
 })
 
 describe('gET /api/preview', () => {
@@ -54,5 +73,18 @@ describe('gET /api/preview', () => {
     expect(enable).toHaveBeenCalledOnce()
     expect(res.status).toBe(307)
     expect(res.headers.get('location')).toBe('https://tianwei.io/posts/my-draft')
+  })
+
+  it('fires a best-effort DB pre-warm after successful auth (ADR-0005)', async () => {
+    await GET(makeRequest({ secret: SECRET, slug: 'my-draft' }))
+    expect(fetchMock).toHaveBeenCalledWith(
+      'https://api.example.test/api/categories',
+      expect.objectContaining({ cache: 'no-store' }),
+    )
+  })
+
+  it('never warms the DB for unauthenticated requests (no public wake lever)', async () => {
+    await GET(makeRequest({ secret: 'wrong', slug: 'my-draft' }))
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })
