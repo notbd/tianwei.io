@@ -35,7 +35,7 @@ export default function MdxImage({
         {...props}
       />
 
-      {title && (
+      {title !== undefined && title !== '' && (
         <figcaption className="mt-2 text-center text-sm text-zinc-600 dark:text-zinc-200">
           {title}
         </figcaption>

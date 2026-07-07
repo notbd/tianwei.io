@@ -13,9 +13,10 @@ export type RevalidateResult = {
  */
 async function warmCacheForTag(tag: string): Promise<boolean> {
   try {
-  // Check exact match first
-    if (tagWarmers[tag]) {
-      await tagWarmers[tag]()
+    // Check exact match first
+    const exactWarmer = tagWarmers[tag]
+    if (exactWarmer !== undefined) {
+      await exactWarmer()
       return true
     }
 
@@ -34,22 +35,6 @@ async function warmCacheForTag(tag: string): Promise<boolean> {
     console.error(`Failed to warm cache for tag "${tag}":`, error)
     throw error // Re-throw to ensure we know if warming fails
   }
-}
-
-/**
- * Revalidates cache for multiple tags (no warming)
- */
-export async function revalidateTags(
-  tags: string[],
-): Promise<RevalidateResult> {
-  const revalidated: string[] = []
-
-  for (const tag of tags) {
-    revalidateTag(tag, 'max')
-    revalidated.push(tag)
-  }
-
-  return { success: true, revalidated }
 }
 
 /**
@@ -91,7 +76,7 @@ export async function revalidateAndWarmTags(
       if (result.value.wasWarmed) {
         warmed.push(result.value.tag)
       }
-      if (!result.value.success && result.value.error) {
+      if (!result.value.success && result.value.error !== undefined) {
         errors.push(result.value.error)
       }
     }

@@ -1,9 +1,13 @@
 import type { PostSummary } from '@/lib/api/post/schemas'
 import Link from 'next/link'
+import { PostList } from '@/components/PostList'
 import { apiClient } from '@/lib/api'
 
 export default async function PostsPage() {
-  const posts: PostSummary[] = await apiClient.post.listAll()
+  const [posts, categories]: [PostSummary[], string[]] = await Promise.all([
+    apiClient.post.listAll(),
+    apiClient.category.listAll(),
+  ])
 
   return (
     <main className="max-w-3xl pb-8">
@@ -16,48 +20,24 @@ export default async function PostsPage() {
         <p className="mt-2 text-zinc-500 dark:text-zinc-200">
           Writings on topics that interest me and things I'm proud of.
         </p>
+
+        {/* category filters */}
+        {categories.length > 1 && (
+          <nav aria-label="Categories" className="mt-4 flex flex-wrap gap-2">
+            {categories.map(category => (
+              <Link
+                key={category}
+                href={`/categories/${encodeURIComponent(category)}`}
+                className="rounded-full border border-zinc-200 px-3 py-0.5 text-sm text-zinc-600 hover:border-teal-600 hover:text-teal-700 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-teal-600 dark:hover:text-teal-500 transition-colors"
+              >
+                {category}
+              </Link>
+            ))}
+          </nav>
+        )}
       </header>
 
-      <ul className="space-y-6">
-        {posts.map(post => (
-          <li key={post.id} className="group relative">
-
-            {/* clickable cell */}
-            <Link href={`/posts/${post.slug}`} className="block">
-              <article className="flex flex-col gap-1">
-
-                {/* row 1: time + category */}
-                <div className="flex items-center text-sm text-zinc-400 dark:text-zinc-600">
-                  <time dateTime={post.createdAt.toISOString()}>
-                    {post.createdAt.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </time>
-                </div>
-
-                {/* row 2: title */}
-                <h2 className="text-xl font-bold text-zinc-900 group-hover:text-teal-700 dark:text-zinc-100 dark:group-hover:text-teal-600 transition-colors duration-200">
-                  {post.title}
-                </h2>
-
-                {/* (optional) row 3: description */}
-                {post.description && (
-                  <p className="text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
-                    {post.description}
-                  </p>
-                )}
-
-                {/* row 4: click prompt */}
-                <div className="text-sm font-medium text-teal-600 dark:text-teal-500 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
-                  {'->'}
-                </div>
-              </article>
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <PostList posts={posts} />
     </main>
   )
 }

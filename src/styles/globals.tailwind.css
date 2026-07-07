@@ -14,3 +14,19 @@
   --breakpoint-xl: 80rem;
   --breakpoint-2xl: 96rem;
 }
+
+/*
+ * Color mode toggle icons, selected purely in CSS off the
+ * `data-theme-choice` attribute that an inline pre-paint script sets on
+ * <html> from localStorage. This keeps the toggle flash-free while the
+ * page itself stays fully static (no server-side cookie read).
+ */
+.theme-icon {
+  display: none;
+}
+[data-theme-choice='system'] .theme-icon-system,
+[data-theme-choice='dark'] .theme-icon-dark,
+[data-theme-choice='light'] .theme-icon-light,
+html:not([data-theme-choice]) .theme-icon-system {
+  display: block;
+}

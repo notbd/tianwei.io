@@ -1,21 +1,31 @@
 import type { DeploymentEnv } from '@/lib/types/deploymentTypes'
 
+const CANONICAL_DOMAIN = 'tianwei.io'
+
+// VERCEL_URL is ALWAYS the generated <deployment>.vercel.app URL — even in
+// production — so absolute URLs (sitemap, feed, og:url, RSS guids) must use
+// the canonical domain there, and the deployment URL only on previews.
+const vercelEnv = process.env.VERCEL_ENV
+const vercelUrl = process.env.VERCEL_URL
+const isPreview = vercelEnv !== 'production' && vercelUrl !== undefined && vercelUrl !== ''
+const domain = isPreview ? vercelUrl : CANONICAL_DOMAIN
+
 export const BasePaths = {
-  domain: process.env.VERCEL_URL || 'tianwei.io',
-  url: `https://${process.env.VERCEL_URL || 'tianwei.io'}`,
+  domain,
+  url: `https://${domain}`,
 }
 
 export const AssetPaths = {
   // use different svg icons based on deployment environment
   iconSVG: (() => {
-    const env = process.env.VERCEL_ENV as DeploymentEnv
+    const env = process.env.VERCEL_ENV as DeploymentEnv | undefined
 
-    if (!env || !['development', 'preview', 'production'].includes(env)) {
+    if (env === undefined || !['development', 'preview', 'production'].includes(env)) {
       // no VERCEL_ENV: local development
       return '/assets/icon-squircle-local.svg'
     }
 
-    switch (env as DeploymentEnv) {
+    switch (env) {
       case 'development':
         return '/assets/icon-squircle-dev.svg'
       case 'preview':
