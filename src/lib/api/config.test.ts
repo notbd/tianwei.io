@@ -18,10 +18,7 @@ describe('config', () => {
   it.each([undefined, ''])('throws loudly when CONTENT_API_URL is %j', async (value) => {
     // regression: an unset value used to surface as a relative-URL fetch
     // that HANGS `next build` instead of failing
-    if (value === undefined)
-      vi.stubEnv('CONTENT_API_URL', undefined as unknown as string)
-    else
-      vi.stubEnv('CONTENT_API_URL', value)
+    vi.stubEnv('CONTENT_API_URL', value)
 
     await expect(import('./config')).rejects.toThrow(/CONTENT_API_URL is not set/)
   })

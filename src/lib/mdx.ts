@@ -1,4 +1,3 @@
-import type { MDXRemoteProps } from 'next-mdx-remote/rsc'
 import type { Options as RehypePrettyCodeOptions } from 'rehype-pretty-code'
 import { compileMDX } from 'next-mdx-remote/rsc'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
@@ -25,7 +24,7 @@ export async function compileMdxContent<
 >(source: string): Promise<CompileMDXResult<TFrontmatter>> {
   const result = await compileMDX<TFrontmatter>({
     source,
-    components: mdxComponents as MDXRemoteProps['components'],
+    components: mdxComponents,
     options: {
       parseFrontmatter: false, // frontmatter already parsed by API
       mdxOptions: {
