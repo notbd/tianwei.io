@@ -2,6 +2,8 @@
 <samp>
 <h1>tianwei.io</h1>
 
+[![CI](https://github.com/notbd/tianwei.io/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/notbd/tianwei.io/actions/workflows/ci.yml)
+
 The frontend layer of my personal website [tianwei.io](https://tianwei.io).
 
 <h2>Stack</h2>
@@ -11,7 +13,7 @@ The frontend layer of my personal website [tianwei.io](https://tianwei.io).
 - **MDX Processing**: [next-mdx-remote](https://github.com/hashicorp/next-mdx-remote)
 - **Data Validation**: [Zod](https://zod.dev)
 - **Image Optimization**: [Cloudinary](https://cloudinary.com)
-- **Testing**: [Vitest](https://vitest.dev)
+- **Testing**: [Vitest](https://vitest.dev) (unit/contract) + [Playwright](https://playwright.dev) (browser smoke)
 - **Deployment**: [Vercel](https://vercel.com)
 
 <h2>Site Architecture</h2>
@@ -38,6 +40,8 @@ Design records live in [`docs/adr/`](./docs/adr/).
 
 <h2>Local Run</h2>
 
+Prerequisites: **Node.js ≥ 22** and **pnpm 10**.
+
 ```shell
 git clone git@github.com:notbd/tianwei.io.git
 cd tianwei.io
@@ -60,9 +64,12 @@ pnpm lint        # type-aware ESLint
 pnpm typecheck
 pnpm test        # vitest: API contract locks, fetcher, cache/revalidate, route auth, sitemap
 pnpm build
+pnpm test:e2e    # Playwright browser smoke against the production build
 ```
 
-CI (`.github/workflows/ci.yml`) runs all four on every push and pull request. The test suite pins the API contract (exact JSON shapes the frontend parses), the revalidation route's auth and status codes, and the cache-warming dispatch logic.
+CI (`.github/workflows/ci.yml`) runs all of these on every pull request and on pushes to `main`. The vitest suite pins the API contract (exact JSON shapes the frontend parses), the revalidation route's auth and status codes, and the cache-warming dispatch logic; the Playwright suite covers navigation, the theme toggle cycle, and the feed/sitemap outputs.
+
+The manual pre-merge checklist for cross-repo releases lives in [`docs/release-verification.md`](./docs/release-verification.md).
 
 <h2>Cache Revalidation & Warming</h2>
 
@@ -118,7 +125,7 @@ After revalidation, the system automatically warms the cache by pre-fetching dat
 
 - **`posts` tag**: Fetches the posts list and all individual post pages
 - **`post-{slug}` tags**: Fetches the specific post page
-- **Parallel execution**: Warming executes in parallel for multiple tags to minimize latency
+- **Bounded concurrency**: individual post warms run through a small worker pool (4 at a time), so warming can't stampede the origin API or race the function timeout as the catalog grows
 
 Warming failures surface as a `207` response with `success: false` — the content engine's deploy pipeline treats that as a failed deploy rather than silently shipping a cold cache.
 
