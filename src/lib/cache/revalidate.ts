@@ -47,9 +47,14 @@ export async function revalidateAndWarmTags(
   const warmed: string[] = []
   const errors: string[] = []
 
-  // Revalidate all tags first (synchronous)
+  // Revalidate all tags first (synchronous). `{ expire: 0 }` expires the
+  // tagged entries outright, so the next request blocks on a fresh render
+  // instead of being served the previous version (the 'max' profile is
+  // stale-while-revalidate). This is the documented choice for
+  // invalidations that arrive through a webhook-style Route Handler:
+  // https://nextjs.org/docs/app/api-reference/functions/revalidateTag
   for (const tag of tags) {
-    revalidateTag(tag, 'max')
+    revalidateTag(tag, { expire: 0 })
     revalidated.push(tag)
   }
 
