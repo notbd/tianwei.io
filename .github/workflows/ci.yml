@@ -20,6 +20,12 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # Public values, not secrets: the read-only content API and the Cloudinary
+    # cloud name visible in every image URL. Inlined so Dependabot and fork
+    # PRs, which get no Actions secrets, can build.
+    env:
+      CONTENT_API_URL: https://tio.twz.app
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dllyef7is
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -49,10 +55,6 @@ jobs:
       # Hits the public read-only content API at build time (SSG).
       - name: Build
         run: pnpm build
-        env:
-          CONTENT_API_URL: ${{ secrets.CONTENT_API_URL }}
-          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
-          REVALIDATION_SECRET: ci-dummy-secret
 
       - name: Cache Playwright browsers
         uses: actions/cache@v4
@@ -65,7 +67,3 @@ jobs:
 
       - name: Browser smoke tests
         run: pnpm test:e2e
-        env:
-          CONTENT_API_URL: ${{ secrets.CONTENT_API_URL }}
-          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
-          REVALIDATION_SECRET: ci-dummy-secret
