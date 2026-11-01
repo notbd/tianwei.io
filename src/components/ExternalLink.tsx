@@ -1,4 +1,5 @@
 import type { ComponentProps } from 'react'
+import { homeLinkClassName } from '@/components/homeLink'
 import { cn } from '@/lib/utils'
 
 type ExternalLinkProps = ComponentProps<'a'> & {
@@ -18,13 +19,7 @@ export function ExternalLink({
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={cn(
-        'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
-        // color only: transition-colors would also fade the focus ring in
-        'transition-[color] duration-200',
-        'underline',
-        className,
-      )}
+      className={cn(homeLinkClassName, className)}
     >
       {children}
     </a>

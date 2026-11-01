@@ -1,14 +1,23 @@
 import type { ComponentProps } from 'react'
+import Link from 'next/link'
 import { Fragment } from 'react'
 import { ExternalLink } from '@/components/ExternalLink'
+import { homeLinkClassName } from '@/components/homeLink'
 import { JsonLd } from '@/components/JsonLd'
 import { SubscriptBlock } from '@/components/Subscript'
-import { SITE_URL } from '@/lib/paths'
+import { getPosts } from '@/lib/api'
+import { formatPostDate } from '@/lib/dates'
+import { postPath, SITE_URL } from '@/lib/paths'
 import { site } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
+// the newest posts listed on the home page; the rest are one click away
+const RECENT_POSTS = 3
+
 // home page
-export default function Home() {
+export default async function Home() {
+  const posts = await getPosts()
+
   return (
     <>
       <JsonLd data={{
@@ -65,6 +74,39 @@ export default function Home() {
               </SubscriptBlock>
             </li>
 
+          </ul>
+        </HomeSectionBody>
+      </HomeSection>
+
+      {/* Writing */}
+      <HomeSection id="writing">
+        <HomeSectionHeader>
+          Writing
+        </HomeSectionHeader>
+
+        <HomeSectionBody>
+          <ul>
+            {posts.slice(0, RECENT_POSTS).map(post => (
+              <li key={post.id} className="pb-3">
+                <Link href={postPath(post.slug)} className={homeLinkClassName}>
+                  {post.title}
+                </Link>
+
+                <SubscriptBlock>
+                  <time dateTime={post.createdAt.toISOString()}>
+                    {formatPostDate(post.createdAt)}
+                  </time>
+                </SubscriptBlock>
+              </li>
+            ))}
+
+            {posts.length > RECENT_POSTS && (
+              <li className="pb-3">
+                <Link href="/posts" className={homeLinkClassName}>
+                  All posts
+                </Link>
+              </li>
+            )}
           </ul>
         </HomeSectionBody>
       </HomeSection>
