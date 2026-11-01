@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import type { PostSummary } from '@/lib/api/post/schemas'
 import Link from 'next/link'
 import { PostList } from '@/components/PostList'
 import { apiClient } from '@/lib/api'
@@ -11,7 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default async function PostsPage() {
-  const [posts, categories]: [PostSummary[], string[]] = await Promise.all([
+  const [posts, categories] = await Promise.all([
     apiClient.post.listAll(),
     apiClient.category.listAll(),
   ])

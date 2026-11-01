@@ -24,7 +24,7 @@ export const metadata: Metadata = {
       },
       {
         url: AssetPaths.favicon,
-        type: 'image/x-icon',
+        type: 'image/png', // a PNG despite the .ico name
         sizes: '192x192',
       },
     ],

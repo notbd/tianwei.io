@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import type { Post, PostSummary } from '@/lib/api'
+import type { Post } from '@/lib/api'
 import { draftMode } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export async function generateStaticParams() {
-  const posts: PostSummary[] = await apiClient.post.listAll()
+  const posts = await apiClient.post.listAll()
 
   // Fail the build loudly rather than silently shipping zero prerendered
   // pages (which would degrade every post visit to on-demand rendering).

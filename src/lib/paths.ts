@@ -11,7 +11,6 @@ const isPreview = vercelEnv !== 'production' && vercelUrl !== undefined && verce
 const domain = isPreview ? vercelUrl : CANONICAL_DOMAIN
 
 export const BasePaths = {
-  domain,
   url: `https://${domain}`,
 }
 

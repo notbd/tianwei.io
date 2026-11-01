@@ -38,10 +38,10 @@ export default function Home() {
         </HomeSectionHeader>
 
         <HomeSectionBody>
-          <List>
+          <ul>
 
             {/* ikalendar2 */}
-            <ListItem>
+            <li className="pb-3">
               <ExternalLink href="https://ikalendar.app">
                 ikalendar2
               </ExternalLink>
@@ -49,9 +49,9 @@ export default function Home() {
               <SubscriptBlock>
                 SwiftUI app for tracking Splatoon 2 in-game rotations
               </SubscriptBlock>
-            </ListItem>
+            </li>
 
-          </List>
+          </ul>
         </HomeSectionBody>
       </HomeSection>
 
@@ -62,10 +62,10 @@ export default function Home() {
         </HomeSectionHeader>
 
         <HomeSectionBody>
-          <List>
+          <ul>
 
             {/* Toronto */}
-            <ListItem>
+            <li className="pb-3">
               <ExternalLink href="https://www.ece.utoronto.ca/">
                 Toronto
               </ExternalLink>
@@ -74,10 +74,10 @@ export default function Home() {
               <SubscriptBlock>
                 Master of Engineering, School of Graduate Studies
               </SubscriptBlock>
-            </ListItem>
+            </li>
 
             {/* ECE244 */}
-            <ListItem>
+            <li className="pb-3">
               <ExternalLink href="https://engineering.calendar.utoronto.ca/course/ece244h1">
                 ECE244
               </ExternalLink>
@@ -86,10 +86,10 @@ export default function Home() {
               <SubscriptBlock>
                 Programming Fundamentals, Fall 2022
               </SubscriptBlock>
-            </ListItem>
+            </li>
 
             {/* Illinois */}
-            <ListItem>
+            <li className="pb-3">
               <ExternalLink href="https://cs.illinois.edu/">
                 Illinois
               </ExternalLink>
@@ -98,9 +98,9 @@ export default function Home() {
               <SubscriptBlock>
                 Bachelor of Science, The Grainger College of Engineering
               </SubscriptBlock>
-            </ListItem>
+            </li>
 
-          </List>
+          </ul>
         </HomeSectionBody>
       </HomeSection>
 
@@ -205,42 +205,5 @@ function HomeSectionBody({
     >
       {children}
     </div>
-  )
-}
-
-type ListProps = ComponentProps<'ul'> & { children: React.ReactNode }
-
-function List({
-  className,
-  children,
-  ...props
-}: ListProps) {
-  return (
-    <ul
-      {...props}
-      className={className}
-    >
-      {children}
-    </ul>
-  )
-}
-
-type ListItemProps = ComponentProps<'li'> & { children: React.ReactNode }
-
-function ListItem({
-  className,
-  children,
-  ...props
-}: ListItemProps) {
-  return (
-    <li
-      {...props}
-      className={cn(
-        'pb-3',
-        className,
-      )}
-    >
-      {children}
-    </li>
   )
 }
