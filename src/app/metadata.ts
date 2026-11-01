@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   generator: 'Next.js',
   keywords: ['Tianwei Zhang', 'notbd', 'tianwei.io', 'Personal Website'],
   referrer: 'origin-when-cross-origin',
-  metadataBase: new URL('https://tianwei.io'),
+  metadataBase: new URL(BasePaths.url),
   icons: {
     icon: [
       {
@@ -37,7 +37,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    url: BasePaths.url,
+    url: './', // resolved against each page's own path (and metadataBase)
     title: 'Tianwei Zhang',
     description: 'A software developer.',
     siteName: 'Tianwei.io',
@@ -60,6 +60,7 @@ export const metadata: Metadata = {
   },
   manifest: `${BasePaths.url}/manifest.json`,
   alternates: {
+    canonical: './', // same per-page resolution as og:url above
     types: {
       'application/rss+xml': `${BasePaths.url}/feed.xml`,
     },

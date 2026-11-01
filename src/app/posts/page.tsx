@@ -1,7 +1,13 @@
+import type { Metadata } from 'next'
 import type { PostSummary } from '@/lib/api/post/schemas'
 import Link from 'next/link'
 import { PostList } from '@/components/PostList'
 import { apiClient } from '@/lib/api'
+
+export const metadata: Metadata = {
+  title: 'Posts', // root template appends '· tianwei.io'
+  description: 'Writings on topics that interest me and things I\'m proud of.',
+}
 
 export default async function PostsPage() {
   const [posts, categories]: [PostSummary[], string[]] = await Promise.all([
