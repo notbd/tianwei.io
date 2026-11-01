@@ -21,7 +21,12 @@ export default antfu(
 
   {
     rules: {
-      'no-console': ['error', { allow: ['warn', 'error', 'info'] }],
+      'no-console': [
+        'error',
+        {
+          allow: ['warn', 'error', 'info'],
+        },
+      ],
       '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
       'n/prefer-global/process': ['error', 'always'],
     },
