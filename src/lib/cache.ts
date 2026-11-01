@@ -32,20 +32,17 @@ export async function revalidateAndWarmTags(tags: string[]): Promise<RevalidateR
   for (const tag of tags)
     revalidateTag(tag, { expire: 0 })
 
-  const warmed: string[] = []
-  const errors: string[] = []
-  await Promise.all(tags.map(async (tag) => {
-    try {
-      if (await warm(tag))
-        warmed.push(tag)
-    }
-    catch (error) {
-      const reason = error instanceof Error
-        ? error.message
-        : String(error)
-      errors.push(`Failed to warm tag "${tag}": ${reason}`)
-    }
-  }))
+  // settled in request order, so `warmed` and the errors list the tags as given
+  const outcomes = await Promise.allSettled(tags.map(warm))
+  const warmed = tags.filter((_tag, i) => outcomes[i]?.status === 'fulfilled' && outcomes[i].value)
+  const errors = outcomes.flatMap((outcome, i) => {
+    if (outcome.status === 'fulfilled')
+      return []
+    const reason = outcome.reason instanceof Error
+      ? outcome.reason.message
+      : String(outcome.reason)
+    return [`Failed to warm tag "${tags[i]}": ${reason}`]
+  })
 
   if (errors.length > 0)
     console.error(errors.join('; '))

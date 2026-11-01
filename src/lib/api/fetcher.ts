@@ -1,19 +1,21 @@
 import type { z } from 'zod'
 import { errorEnvelope, listEnvelope, successEnvelope } from './schemas'
 
-const baseUrl = process.env.CONTENT_API_URL
-
-// Fail fast and loud: an unset CONTENT_API_URL otherwise surfaces as
-// fetch('/api/...') with a relative URL, which HANGS `next build` at the
-// page-data collection stage instead of erroring.
-if (baseUrl === undefined || baseUrl === '') {
-  throw new Error(
-    'CONTENT_API_URL is not set — the frontend cannot reach the content API. '
-    + 'Set it in .env.local (local dev) or the environment (CI workflow env / Vercel env).',
-  )
+/**
+ * `path` on the content API. Fails fast and loud when CONTENT_API_URL is
+ * unset: a relative fetch('/api/...') would otherwise HANG `next build` at
+ * the page-data collection stage instead of erroring.
+ */
+export function apiUrl(path: string): string {
+  const baseUrl = process.env.CONTENT_API_URL
+  if (baseUrl === undefined || baseUrl === '') {
+    throw new Error(
+      'CONTENT_API_URL is not set — the frontend cannot reach the content API. '
+      + 'Set it in .env.local (local dev) or the environment (CI workflow env / Vercel env).',
+    )
+  }
+  return `${baseUrl}${path}`
 }
-
-export const API_BASE_URL = baseUrl
 
 /** A response the API answered with a non-2xx status (or an unusable body). */
 export class ApiError extends Error {
@@ -57,7 +59,7 @@ const BACKOFF_BASE_MS = 300
 const ATTEMPT_TIMEOUT_MS = 10_000
 
 async function requestJson(path: string, options: FetchOptions = {}): Promise<unknown> {
-  const url = `${API_BASE_URL}${path}`
+  const url = apiUrl(path)
 
   let lastError: unknown
   for (let attempt = 0; attempt < ATTEMPTS; attempt++) {

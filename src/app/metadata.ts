@@ -14,7 +14,7 @@ const iconVariant = ICON_VARIANT[process.env.VERCEL_ENV ?? ''] ?? 'local'
 // A page's own `openGraph` or `twitter` object replaces the root's whole
 // object (Next merges metadata shallowly), so pages that set their own
 // repeat these fields.
-export const openGraphSiteName = 'Tianwei.io'
+export const openGraphSiteName = site.shortName
 export const twitterAccounts = {
   siteId: site.twitter.id,
   creator: site.twitter.handle,

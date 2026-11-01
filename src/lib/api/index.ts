@@ -1,7 +1,7 @@
 import type { FetchOptions } from './fetcher'
 import type { Post, PostSummary } from './schemas'
 import { z } from 'zod'
-import { API_BASE_URL, fetchList, fetchOne } from './fetcher'
+import { apiUrl, fetchList, fetchOne } from './fetcher'
 import { postSchema, postSummarySchema } from './schemas'
 
 export { ApiError, isNotFoundError } from './fetcher'
@@ -68,7 +68,7 @@ export async function getDraftPost(slug: string): Promise<Post> {
  */
 export async function wakeDatabase(): Promise<void> {
   try {
-    await fetch(`${API_BASE_URL}/api/categories`, { cache: 'no-store' })
+    await fetch(apiUrl('/api/categories'), { cache: 'no-store' })
   }
   catch {}
 }

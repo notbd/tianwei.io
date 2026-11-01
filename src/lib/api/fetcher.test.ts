@@ -34,16 +34,19 @@ afterEach(() => {
 })
 
 describe('configuration', () => {
-  it('exposes API_BASE_URL when CONTENT_API_URL is set', async () => {
-    const { API_BASE_URL } = await importFetcher()
-    expect(API_BASE_URL).toBe('https://api.example.test')
+  it('builds API URLs from CONTENT_API_URL', async () => {
+    const { apiUrl } = await importFetcher()
+    expect(apiUrl('/api/posts')).toBe('https://api.example.test/api/posts')
   })
 
-  it.each([undefined, ''])('throws loudly when CONTENT_API_URL is %j', async (value) => {
+  it.each([undefined, ''])('fails loudly, without a request, when CONTENT_API_URL is %j', async (value) => {
     // regression: an unset value used to surface as a relative-URL fetch
     // that HANGS `next build` instead of failing
     vi.stubEnv('CONTENT_API_URL', value)
-    await expect(importFetcher()).rejects.toThrow(/CONTENT_API_URL is not set/)
+    const fetchMock = stubFetch({})
+    const { fetchOne } = await importFetcher()
+    await expect(fetchOne('/api/thing', itemSchema)).rejects.toThrow(/CONTENT_API_URL is not set/)
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 })
 

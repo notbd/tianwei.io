@@ -1,14 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { revalidateTag, listAll, getBySlug } = vi.hoisted(() => {
-  // the real cacheTags come from @/lib/api, whose fetcher needs this at import
-  vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
-  return {
-    revalidateTag: vi.fn(),
-    listAll: vi.fn(),
-    getBySlug: vi.fn(),
-  }
-})
+const { revalidateTag, listAll, getBySlug } = vi.hoisted(() => ({
+  revalidateTag: vi.fn(),
+  listAll: vi.fn(),
+  getBySlug: vi.fn(),
+}))
 
 vi.mock('next/cache', () => ({ revalidateTag }))
 vi.mock('@/lib/api', async importOriginal => ({

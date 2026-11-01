@@ -19,9 +19,6 @@ vi.mock('next/server', async (importOriginal) => {
   }
 })
 
-// route imports the API config, which requires this at module load
-vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
-
 const { GET } = await import('./route')
 
 const SECRET = 'a-preview-secret-of-sufficient-length'

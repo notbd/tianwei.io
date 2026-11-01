@@ -5,9 +5,6 @@ const revalidateAndWarmTags = vi.fn()
 
 vi.mock('@/lib/cache', () => ({ revalidateAndWarmTags }))
 
-// the route reads cacheTags from @/lib/api, whose fetcher needs this at import
-vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
-
 const { POST } = await import('./route')
 
 const SECRET = 'test-secret'
