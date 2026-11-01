@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { Post } from '@/lib/api'
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { openGraphSiteName, twitterAccounts } from '@/app/metadata'
 import { JsonLd } from '@/components/JsonLd'
 import { MdxContent } from '@/components/mdx/MdxContent'
 import { TextLink } from '@/components/TextLink'
@@ -32,8 +33,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   return {
     title: post.title, // root template appends '· tianwei.io'
     description,
+    // no images here: the route's opengraph-image.tsx supplies the card
     openGraph: {
       type: 'article',
+      siteName: openGraphSiteName,
       url: absoluteUrl(postPath(post.slug)),
       title: post.title,
       description,
@@ -43,6 +46,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     twitter: {
       card: 'summary_large_image',
+      ...twitterAccounts,
       title: post.title,
       description,
     },
