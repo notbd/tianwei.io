@@ -83,7 +83,14 @@ test('feed.xml serves RSS with every post', async ({ request }) => {
   expect(response.headers()['content-type']).toContain('application/rss+xml')
   const body = await response.text()
   expect(body).toContain('<rss version="2.0"')
-  expect(body).toContain('<item>')
+
+  // the sitemap lists every post from the same data with the same URL
+  // builder, so each of its post URLs must be an item link here
+  const sitemap = await (await request.get('/sitemap.xml')).text()
+  const postUrls = sitemap.match(/https:\/\/[^<]+\/posts\/[^<]+(?=<\/loc>)/g) ?? []
+  expect(postUrls.length).toBeGreaterThan(0)
+  for (const url of postUrls)
+    expect(body, url).toContain(`<link>${url}</link>`)
 })
 
 test('sitemap includes posts and categories', async ({ request }) => {

@@ -6,5 +6,5 @@ export const apiClient = {
   category,
 }
 
-export { isNotFoundError, NetworkRequestError } from './errors'
+export { isNotFoundError } from './errors'
 export type { Post, PostSummary } from './post'
