@@ -1,6 +1,7 @@
 import type { PostSummary } from '@/lib/api'
 import Link from 'next/link'
 import { formatPostDate } from '@/lib/dates'
+import { postPath } from '@/lib/paths'
 
 type PostListProps = {
   posts: PostSummary[]
@@ -14,7 +15,7 @@ export function PostList({ posts }: PostListProps) {
         <li key={post.id} className="group relative">
 
           {/* clickable cell */}
-          <Link href={`/posts/${post.slug}`} className="block">
+          <Link href={postPath(post.slug)} className="block">
             <article className="flex flex-col gap-1">
 
               {/* row 1: time + category */}

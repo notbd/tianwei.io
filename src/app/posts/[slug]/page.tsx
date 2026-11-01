@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation'
 import { MdxContent } from '@/components/mdx/MdxContent'
 import { apiClient, NetworkRequestError } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
-import { BasePaths } from '@/lib/paths'
+import { BasePaths, categoryPath, postPath } from '@/lib/paths'
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     openGraph: {
       type: 'article',
-      url: `${BasePaths.url}/posts/${post.slug}`,
+      url: `${BasePaths.url}${postPath(post.slug)}`,
       title: post.title,
       description,
       publishedTime: post.createdAt.toISOString(),
@@ -119,7 +119,7 @@ export default async function PostPage({ params }: PageProps) {
           )}
           <span className="mx-2">·</span>
           <Link
-            href={`/categories/${encodeURIComponent(post.category)}`}
+            href={categoryPath(post.category)}
             className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 dark:decoration-zinc-700 dark:hover:text-zinc-300"
           >
             {post.category}

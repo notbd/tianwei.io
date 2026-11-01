@@ -1,5 +1,5 @@
 import { apiClient } from '@/lib/api'
-import { BasePaths } from '@/lib/paths'
+import { BasePaths, postPath } from '@/lib/paths'
 
 // Static + tagged data: the feed regenerates through the same on-demand
 // revalidation flow as the pages (content sync -> revalidateTag('posts')).
@@ -18,7 +18,7 @@ export async function GET(): Promise<Response> {
   const posts = await apiClient.post.listAll()
 
   const items = posts.map((post) => {
-    const url = `${BasePaths.url}/posts/${post.slug}`
+    const url = `${BasePaths.url}${postPath(post.slug)}`
     const descriptionTag = post.description !== null && post.description !== ''
       ? `\n      <description>${escapeXml(post.description)}</description>`
       : ''

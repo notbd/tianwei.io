@@ -15,6 +15,16 @@ export const BasePaths = {
   url: `https://${domain}`,
 }
 
+// Route paths, built in one place so every link, sitemap entry and feed
+// item encodes them the same way (slugs are ASCII; categories may not be).
+export function postPath(slug: string): string {
+  return `/posts/${slug}`
+}
+
+export function categoryPath(category: string): string {
+  return `/categories/${encodeURIComponent(category)}`
+}
+
 export const AssetPaths = {
   // use different svg icons based on deployment environment
   iconSVG: (() => {

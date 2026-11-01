@@ -3,6 +3,7 @@ import type { PostSummary } from '@/lib/api/post/schemas'
 import Link from 'next/link'
 import { PostList } from '@/components/PostList'
 import { apiClient } from '@/lib/api'
+import { categoryPath } from '@/lib/paths'
 
 export const metadata: Metadata = {
   title: 'Posts', // root template appends '· tianwei.io'
@@ -33,7 +34,7 @@ export default async function PostsPage() {
             {categories.map(category => (
               <Link
                 key={category}
-                href={`/categories/${encodeURIComponent(category)}`}
+                href={categoryPath(category)}
                 className="rounded-full border border-zinc-200 px-3 py-0.5 text-sm text-zinc-600 hover:border-teal-600 hover:text-teal-700 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-teal-600 dark:hover:text-teal-500 transition-colors"
               >
                 {category}

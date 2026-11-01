@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 import { apiClient } from '@/lib/api'
-import { BasePaths } from '@/lib/paths'
+import { BasePaths, categoryPath, postPath } from '@/lib/paths'
 
 // No fallback on API failure, on purpose. At build time a throw fails the
 // build, like every other page does on a non-404 fetch error. During an
@@ -18,10 +18,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${BasePaths.url}/` },
     { url: `${BasePaths.url}/posts` },
     ...categories.map(category => ({
-      url: `${BasePaths.url}/categories/${category}`,
+      url: `${BasePaths.url}${categoryPath(category)}`,
     })),
     ...posts.map(post => ({
-      url: `${BasePaths.url}/posts/${post.slug}`,
+      url: `${BasePaths.url}${postPath(post.slug)}`,
       lastModified: post.updatedAt ?? post.createdAt,
     })),
   ]
