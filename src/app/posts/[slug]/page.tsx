@@ -102,7 +102,7 @@ export default async function PostPage({ params }: PageProps) {
         )}
 
         {/* other attributes */}
-        <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-500">
+        <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
           <time dateTime={post.createdAt.toISOString()}>
             {formatPostDate(post.createdAt, 'short')}
           </time>

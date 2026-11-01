@@ -18,7 +18,7 @@ export function PostList({ posts }: PostListProps) {
             <article className="flex flex-col gap-1">
 
               {/* row 1: time + category */}
-              <div className="flex items-center text-sm text-zinc-400 dark:text-zinc-600">
+              <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400">
                 <time dateTime={post.createdAt.toISOString()}>
                   {formatPostDate(post.createdAt)}
                 </time>

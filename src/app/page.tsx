@@ -23,7 +23,7 @@ export default function Home() {
         </HomeSectionBody>
 
         {/* below md: full name */}
-        <HomeSectionBody className="pl-0 font-semibold text-zinc-400 transition-colors duration-500 md:hidden dark:text-zinc-200">
+        <HomeSectionBody className="pl-0 font-semibold text-zinc-500 transition-colors duration-500 md:hidden dark:text-zinc-200">
           Tianwei
           <span className="font-bold text-teal-700 transition-colors duration-500">
             {' Zhang'}
