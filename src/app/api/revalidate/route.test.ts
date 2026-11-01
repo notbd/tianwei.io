@@ -2,9 +2,8 @@ import type { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const revalidateAndWarmTags = vi.fn()
-const revalidateAndWarmPost = vi.fn()
 
-vi.mock('@/lib/cache', () => ({ revalidateAndWarmTags, revalidateAndWarmPost }))
+vi.mock('@/lib/cache', () => ({ revalidateAndWarmTags }))
 
 const { POST } = await import('./route')
 
@@ -17,30 +16,39 @@ function makeRequest(body: unknown, auth?: string): NextRequest {
       'content-type': 'application/json',
       ...(auth !== undefined && { authorization: auth }),
     },
-    body: typeof body === 'string' ? body : JSON.stringify(body),
+    body: typeof body === 'string'
+      ? body
+      : JSON.stringify(body),
   }) as unknown as NextRequest
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
   vi.stubEnv('REVALIDATION_SECRET', SECRET)
-  revalidateAndWarmTags.mockResolvedValue({ success: true, revalidated: ['posts'], warmed: ['posts'] })
-  revalidateAndWarmPost.mockResolvedValue({ success: true, revalidated: ['post-a', 'posts'], warmed: [] })
+  revalidateAndWarmTags.mockResolvedValue({
+    success: true,
+    revalidated: ['posts'],
+    warmed: ['posts'],
+  })
 })
 
 afterEach(() => {
   vi.unstubAllEnvs()
 })
 
-describe('pOST /api/revalidate auth', () => {
+describe('/api/revalidate auth', () => {
   it('401s without an authorization header and touches nothing', async () => {
-    const res = await POST(makeRequest({ tags: ['posts'] }))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }))
     expect(res.status).toBe(401)
     expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
 
   it('401s with a wrong bearer token', async () => {
-    const res = await POST(makeRequest({ tags: ['posts'] }, 'Bearer wrong'))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }, 'Bearer wrong'))
     expect(res.status).toBe(401)
     expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
@@ -49,21 +57,25 @@ describe('pOST /api/revalidate auth', () => {
     // regression: interpolating an unset env var made the expected header
     // the literal "Bearer undefined" — which an attacker can just send
     vi.stubEnv('REVALIDATION_SECRET', '')
-    const res = await POST(makeRequest({ tags: ['posts'] }, 'Bearer undefined'))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }, 'Bearer undefined'))
     expect(res.status).toBe(401)
     expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
 })
 
-describe('pOST /api/revalidate payloads', () => {
-  it('handles { slug } via revalidateAndWarmPost', async () => {
+describe('/api/revalidate payloads', () => {
+  it('handles { slug } as the post tag plus the list tag', async () => {
     const res = await POST(makeRequest({ slug: 'hello' }, `Bearer ${SECRET}`))
     expect(res.status).toBe(200)
-    expect(revalidateAndWarmPost).toHaveBeenCalledWith('hello')
+    expect(revalidateAndWarmTags).toHaveBeenCalledWith(['post-hello', 'posts'])
   })
 
   it('handles { tags: [...] }', async () => {
-    const res = await POST(makeRequest({ tags: ['posts', 'post-a'] }, `Bearer ${SECRET}`))
+    const res = await POST(makeRequest({
+      tags: ['posts', 'post-a'],
+    }, `Bearer ${SECRET}`))
     expect(res.status).toBe(200)
     expect(revalidateAndWarmTags).toHaveBeenCalledWith(['posts', 'post-a'])
   })
@@ -86,13 +98,28 @@ describe('pOST /api/revalidate payloads', () => {
       warmed: [],
       error: 'warmer exploded',
     })
-    const res = await POST(makeRequest({ tags: ['posts'] }, `Bearer ${SECRET}`))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }, `Bearer ${SECRET}`))
     expect(res.status).toBe(207)
     expect(await res.json()).toMatchObject({ success: false, error: 'warmer exploded' })
   })
 
-  it('500s on an invalid JSON body', async () => {
+  it('400s on an invalid JSON body (a client error, not a server failure)', async () => {
     const res = await POST(makeRequest('not json{', `Bearer ${SECRET}`))
+    expect(res.status).toBe(400)
+    expect(revalidateAndWarmTags).not.toHaveBeenCalled()
+  })
+
+  it('500s when revalidation itself throws (a warming failure is a 207, not this)', async () => {
+    revalidateAndWarmTags.mockRejectedValue(new Error('revalidateTag exploded'))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }, `Bearer ${SECRET}`))
     expect(res.status).toBe(500)
+    expect(await res.json()).toMatchObject({
+      error: 'Internal server error',
+      message: 'revalidateTag exploded',
+    })
   })
 })

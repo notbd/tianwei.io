@@ -49,9 +49,12 @@ async function baseFetch(endpoint: string, options?: FetchOptions): Promise<unkn
     }
 
     if (!response.ok) {
+      // the API's error envelope says why; fall back to the status code
+      // when the body is not one (proxy page, empty body). Not statusText:
+      // HTTP/2 responses carry none (Node 26's fetch negotiates it).
       const requestError = new NetworkRequestError(
         response.status,
-        `Request failed (${response.status}): ${response.statusText}`,
+        errorEnvelopeMessage(await response.text()) ?? `Request failed (${response.status})`,
       )
       if (response.status >= 500) {
         lastError = requestError
@@ -79,10 +82,13 @@ async function baseFetch(endpoint: string, options?: FetchOptions): Promise<unkn
   throw lastError
 }
 
-function handleErrorResponse(json: unknown): void {
-  const parseError = errorResponse.safeParse(json)
-  if (parseError.success) {
-    throw new NetworkRequestError(400, parseError.data.message)
+function errorEnvelopeMessage(rawBody: string): string | undefined {
+  try {
+    const envelope = errorResponse.safeParse(JSON.parse(rawBody))
+    return envelope.success ? envelope.data.message : undefined
+  }
+  catch {
+    return undefined
   }
 }
 
@@ -100,7 +106,6 @@ export async function fetchOne<T>(
   options?: FetchOptions,
 ): Promise<T> {
   const json = await baseFetch(endpoint, options)
-  handleErrorResponse(json)
 
   const responseSchema = successResponse(schema)
   const result = responseSchema.parse(json)
@@ -118,7 +123,6 @@ export async function fetchList<T>(
   options?: FetchOptions,
 ): Promise<T[]> {
   const json = await baseFetch(endpoint, options)
-  handleErrorResponse(json)
 
   const responseSchema = successListResponse(itemSchema)
   const result = responseSchema.parse(json)

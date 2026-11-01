@@ -1,6 +1,6 @@
 # ADR-0005: No speculative database pre-warming
 
-- **Status**: Accepted (2026-07)
+- **Status**: Accepted (2026-07, amended 2026-10-31)
 - **Repos affected**: tianwei.io, tianwei-io-api (Neon usage pattern)
 
 ## Context
@@ -10,11 +10,12 @@ after suspension pays a ~0.5–1s wake. Several mitigations were considered,
 including a beacon fired on homepage load so the database is warm "by the
 time it's needed."
 
-The deciding fact: **visitors never need it**. Every visitor-facing route
-is prerendered (ADR-0003); the database is only touched by CI builds,
+The deciding fact: **visitors almost never need it**. Every visitor-facing
+route is prerendered (ADR-0003); the database is only touched by CI builds,
 post-sync cache warming (where the sync itself has already woken the
-compute), and the author's draft preview. Cold start is a real latency,
-but almost nobody stands in front of it.
+compute), the first visit to each page after a content sync (ADR-0002,
+amended 2026-10-31), and the author's draft preview. Cold start is a real
+latency, but almost nobody stands in front of it.
 
 ## Decision
 
@@ -45,9 +46,16 @@ Accepted (the one targeted exception):
 
 ## Consequences
 
-- Visitor latency is governed by the CDN, never by Neon's scheduler.
+- Visitor latency is governed by the CDN, except on the first visit to each
+  page after a content sync (see the amendment below).
 - The author's first draft preview after idle gets most of the wake
   hidden inside the redirect; subsequent previews are warm anyway.
 - If a future feature puts the database on a visitor-facing path, this
   ADR must be revisited — the correct order is "make the path static or
   cached first, pre-warm only if a human still waits."
+- Amended 2026-10-31: ADR-0002 now expires tags with `{ expire: 0 }`, so
+  the first visit to each page after a sync renders on demand and reaches
+  the database through the API. A visitor who arrives after the compute
+  has suspended pays the wake on top of that render. Accepted as the price
+  of freshness; warming for it would take a beacon or a keep-alive, which
+  stay rejected for the reasons above.

@@ -32,11 +32,12 @@ export function RootHeader({
         <Link
           href="/"
           tabIndex={-1}
+          aria-label="tianwei.io"
         >
           {/* logo svg imported as component */}
           <SiteLogo
             className="h-6 text-teal-700 dark:text-teal-800"
-            aria-label="Website Logo for tianwei.io"
+            aria-hidden
           />
         </Link>
       </div>
@@ -48,6 +49,7 @@ export function RootHeader({
         <NavLink
           href="/"
           isSelected={isHome}
+          aria-current={isHome ? 'page' : undefined}
         >
           Home
         </NavLink>
@@ -55,6 +57,11 @@ export function RootHeader({
         <NavLink
           href="/posts"
           isSelected={isPosts}
+          aria-current={isPosts
+            ? (pathname === '/posts'
+                ? 'page'
+                : 'true')
+            : undefined}
         >
           Posts
         </NavLink>

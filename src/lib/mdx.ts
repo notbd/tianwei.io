@@ -14,15 +14,8 @@ const rehypePrettyCodeOptions: RehypePrettyCodeOptions = {
   keepBackground: true,
 }
 
-type CompileMDXResult<TFrontmatter> = {
-  content: React.ReactElement
-  frontmatter: TFrontmatter
-}
-
-export async function compileMdxContent<
-  TFrontmatter extends Record<string, unknown> = Record<string, unknown>,
->(source: string): Promise<CompileMDXResult<TFrontmatter>> {
-  const result = await compileMDX<TFrontmatter>({
+export async function compileMdxContent(source: string): Promise<React.ReactElement> {
+  const { content } = await compileMDX({
     source,
     components: mdxComponents,
     options: {
@@ -46,5 +39,5 @@ export async function compileMdxContent<
     },
   })
 
-  return result
+  return content
 }

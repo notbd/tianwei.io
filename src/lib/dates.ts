@@ -1,4 +1,4 @@
-import { DISPLAY_TIME_ZONE } from '@/lib/constants/constants'
+import { DISPLAY_TIME_ZONE } from '@/lib/constants'
 
 /**
  * The one formatting path for post dates. Every visible date on the
@@ -7,7 +7,9 @@ import { DISPLAY_TIME_ZONE } from '@/lib/constants/constants'
 export function formatPostDate(date: Date, style: 'long' | 'short' = 'long'): string {
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: style === 'long' ? 'long' : 'short',
+    month: style === 'long'
+      ? 'long'
+      : 'short',
     day: 'numeric',
     timeZone: DISPLAY_TIME_ZONE,
   })

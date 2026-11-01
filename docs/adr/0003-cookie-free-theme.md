@@ -26,14 +26,19 @@ markup:
 - The toggle renders **all three icons**; CSS shows exactly one based on
   `data-theme-choice`. No hydration gate, no cookie, no flash.
 - The toggle's click handler updates both next-themes state and the
-  attribute.
+  attribute. (Update 2026-07: the handler only calls `setTheme`; a
+  `useEffect` on next-themes' `theme` writes the attribute, so a change
+  from another tab stays in sync. 2026-10: three `sr-only` labels switched
+  by the same CSS give the button an accessible name that states the
+  current theme.)
 
 ## Consequences
 
 - `/`, `/posts`, and every post page are prerendered again (post TTFB
   ~3s → ~30ms locally; edge-cached globally on Vercel).
 - Guarded against regression: `generateStaticParams` refuses an empty
-  catalog, post pages only swallow true 404s, and a Playwright test pins
+  catalog, post pages only swallow the API's not-found answers (404, and
+  since 2026-10 the 400 for a malformed slug), and a Playwright test pins
   the toggle cycle + persistence across reload.
 - Users without JavaScript see the system-theme icon and no toggle
   behavior — acceptable, since theming itself requires JS.

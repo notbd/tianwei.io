@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { revalidateAndWarmPost, revalidateAndWarmTags } from '@/lib/cache'
+import { revalidateAndWarmTags } from '@/lib/cache'
 import { secureEquals } from '@/lib/secureCompare'
 
 const revalidateBodySchema = z.object({
@@ -25,60 +25,39 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const parsedBody = revalidateBodySchema.safeParse(await request.json())
-    if (!parsedBody.success) {
+    // an unparsable body is the caller's error, so it lands in the 400 below
+    const parsedBody = revalidateBodySchema.safeParse(await request.json().catch(() => undefined))
+    const { tag, tags, slug }: z.infer<typeof revalidateBodySchema> = parsedBody.success
+      ? parsedBody.data
+      : {}
+
+    // { slug } refreshes that post plus the list; { tags } and { tag } pass through
+    const tagList = slug !== undefined
+      ? [`post-${slug}`, 'posts']
+      : tags ?? (tag !== undefined
+        ? [tag]
+        : undefined)
+    if (tagList === undefined) {
       return NextResponse.json(
         { error: 'Missing tag, tags, or slug' },
         { status: 400 },
       )
     }
-    const { tag, tags, slug } = parsedBody.data
 
-    // Option 1: Revalidate a specific post
-    if (slug !== undefined) {
-      const result = await revalidateAndWarmPost(slug)
-
-      // Return appropriate status based on success
-      if (!result.success) {
-        return NextResponse.json(result, { status: 207 }) // 207 Multi-Status for partial success
-      }
-
-      return NextResponse.json(result)
-    }
-
-    // Option 2: Revalidate multiple tags
-    if (tags !== undefined) {
-      const result = await revalidateAndWarmTags(tags)
-
-      if (!result.success) {
-        return NextResponse.json(result, { status: 207 })
-      }
-
-      return NextResponse.json(result)
-    }
-
-    // Option 3: Revalidate a single tag
-    if (tag !== undefined) {
-      const result = await revalidateAndWarmTags([tag])
-
-      if (!result.success) {
-        return NextResponse.json(result, { status: 207 })
-      }
-
-      return NextResponse.json(result)
-    }
-
-    return NextResponse.json(
-      { error: 'Missing tag, tags, or slug' },
-      { status: 400 },
-    )
+    const result = await revalidateAndWarmTags(tagList)
+    // 207 Multi-Status: tags were revalidated but warming did not fully succeed
+    return NextResponse.json(result, {
+      status: result.success ? 200 : 207,
+    })
   }
   catch (error) {
     console.error('Revalidation error:', error)
     return NextResponse.json(
       {
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : String(error),
+        message: error instanceof Error
+          ? error.message
+          : String(error),
       },
       { status: 500 },
     )

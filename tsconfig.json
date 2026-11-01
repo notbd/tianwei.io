@@ -12,6 +12,7 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "strict": true,
+    "noUncheckedIndexedAccess": true,
     "noEmit": true,
     "esModuleInterop": true,
     "isolatedModules": true,

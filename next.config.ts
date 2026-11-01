@@ -12,7 +12,15 @@ const securityHeaders = [
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  poweredByHeader: false,
   allowedDevOrigins: ['127.0.0.1'],
+  // keep `next dev` from writing its managed agent-instructions block into the repo
+  agentRules: false,
+  // MDX images are served by Cloudinary, so next/image only builds URLs
+  images: {
+    loader: 'custom',
+    loaderFile: './src/lib/cloudinaryLoader.ts',
+  },
   async headers() {
     return [
       {

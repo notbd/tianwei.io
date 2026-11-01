@@ -1,4 +1,4 @@
-import type { DeploymentEnv } from '@/lib/types/deploymentTypes'
+type DeploymentEnv = 'development' | 'preview' | 'production'
 
 const CANONICAL_DOMAIN = 'tianwei.io'
 
@@ -11,8 +11,17 @@ const isPreview = vercelEnv !== 'production' && vercelUrl !== undefined && verce
 const domain = isPreview ? vercelUrl : CANONICAL_DOMAIN
 
 export const BasePaths = {
-  domain,
   url: `https://${domain}`,
+}
+
+// Route paths, built in one place so every link, sitemap entry and feed
+// item encodes them the same way (slugs are ASCII; categories may not be).
+export function postPath(slug: string): string {
+  return `/posts/${slug}`
+}
+
+export function categoryPath(category: string): string {
+  return `/categories/${encodeURIComponent(category)}`
 }
 
 export const AssetPaths = {

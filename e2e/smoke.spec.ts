@@ -25,7 +25,7 @@ test('posts index lists articles and navigates to a post', async ({ page }) => {
 test('theme toggle cycles system -> dark -> light without flash-prone state', async ({ page }) => {
   await page.goto('/')
   const html = page.locator('html')
-  const toggle = page.getByRole('button', { name: 'Color Mode Toggle' })
+  const toggle = page.getByRole('button', { name: /color theme/i })
 
   // pre-paint script default
   await expect(html).toHaveAttribute('data-theme-choice', 'system')
@@ -52,13 +52,45 @@ test('theme toggle cycles system -> dark -> light without flash-prone state', as
   await expect(html).toHaveClass(/dark/)
 })
 
+test('unknown post, malformed slug, category and path all 404 with the not-found title', async ({ request }) => {
+  // the API answers 400 for 'Not-A-Slug'; the page must 404 it like an unknown slug, not 500
+  const paths = [
+    '/posts/this-post-does-not-exist',
+    '/posts/Not-A-Slug',
+    '/categories/not-a-real-category',
+    '/this-page-does-not-exist',
+  ]
+  for (const path of paths) {
+    const response = await request.get(path)
+    expect(response.status(), path).toBe(404)
+    expect(await response.text(), path).toContain('<title>Not Found · tianwei.io</title>')
+  }
+})
+
+test('an unmatched URL renders the not-found page server-side inside the layout', async ({ request }) => {
+  // notFound() from the post/category pages cannot be asserted this way: without
+  // Cache Components, Next 16 ships a bare shell for it and renders the boundary
+  // on the client (see src/app/not-found.tsx)
+  const body = await (await request.get('/this-page-does-not-exist')).text()
+  expect(body).not.toContain('__next_error__')
+  expect(body).toContain('<h1')
+  expect(body).toContain('Not Found')
+})
+
 test('feed.xml serves RSS with every post', async ({ request }) => {
   const response = await request.get('/feed.xml')
   expect(response.status()).toBe(200)
   expect(response.headers()['content-type']).toContain('application/rss+xml')
   const body = await response.text()
   expect(body).toContain('<rss version="2.0"')
-  expect(body).toContain('<item>')
+
+  // the sitemap lists every post from the same data with the same URL
+  // builder, so each of its post URLs must be an item link here
+  const sitemap = await (await request.get('/sitemap.xml')).text()
+  const postUrls = sitemap.match(/https:\/\/[^<]+\/posts\/[^<]+(?=<\/loc>)/g) ?? []
+  expect(postUrls.length).toBeGreaterThan(0)
+  for (const url of postUrls)
+    expect(body, url).toContain(`<link>${url}</link>`)
 })
 
 test('sitemap includes posts and categories', async ({ request }) => {

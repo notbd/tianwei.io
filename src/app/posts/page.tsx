@@ -1,16 +1,28 @@
-import type { PostSummary } from '@/lib/api/post/schemas'
+import type { Metadata } from 'next'
 import Link from 'next/link'
+import { metadata as rootMetadata } from '@/app/metadata'
 import { PostList } from '@/components/PostList'
 import { apiClient } from '@/lib/api'
+import { categoryPath } from '@/lib/paths'
+
+const description = 'Writings on topics that interest me and things I\'m proud of.'
+
+export const metadata: Metadata = {
+  title: 'Posts', // root template appends '· tianwei.io'
+  description,
+  // a child openGraph/twitter replaces the root's whole object, hence the spreads
+  openGraph: { ...rootMetadata.openGraph, title: 'Posts', description },
+  twitter: { ...rootMetadata.twitter, title: 'Posts • tianwei.io', description },
+}
 
 export default async function PostsPage() {
-  const [posts, categories]: [PostSummary[], string[]] = await Promise.all([
+  const [posts, categories] = await Promise.all([
     apiClient.post.listAll(),
     apiClient.category.listAll(),
   ])
 
   return (
-    <main className="max-w-3xl pb-8">
+    <div className="max-w-3xl pb-8">
 
       {/* header */}
       <header className="mb-12 pb-4 border-b border-gray-200/30 dark:border-gray-800/30">
@@ -27,7 +39,7 @@ export default async function PostsPage() {
             {categories.map(category => (
               <Link
                 key={category}
-                href={`/categories/${encodeURIComponent(category)}`}
+                href={categoryPath(category)}
                 className="rounded-full border border-zinc-200 px-3 py-0.5 text-sm text-zinc-600 hover:border-teal-600 hover:text-teal-700 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-teal-600 dark:hover:text-teal-500 transition-colors"
               >
                 {category}
@@ -38,6 +50,6 @@ export default async function PostsPage() {
       </header>
 
       <PostList posts={posts} />
-    </main>
+    </div>
   )
 }

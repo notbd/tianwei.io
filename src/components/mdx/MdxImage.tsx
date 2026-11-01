@@ -1,12 +1,10 @@
-'use client'
-
-import type { CldImageProps } from 'next-cloudinary'
-import { CldImage } from 'next-cloudinary'
+import type { ImageProps } from 'next/image'
+import Image from 'next/image'
 
 const _mdxImageSizeCategories = ['sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
 type MdxImageSizeCategory = typeof _mdxImageSizeCategories[number]
 
-type MdxImageProps = CldImageProps & {
+type MdxImageProps = ImageProps & {
   title?: string
   sizeCategory?: MdxImageSizeCategory
 }
@@ -29,7 +27,8 @@ export default function MdxImage({
 
   return (
     <figure className="my-8">
-      <CldImage
+      {/* src is a Cloudinary public id; src/lib/cloudinaryLoader.ts (images.loaderFile) builds the URL */}
+      <Image
         sizes={`(max-width: ${maxWidthInRem}rem) 100vw, ${maxWidthInRem}rem`}
         className={`mx-auto w-full max-w-3xl rounded-md ${tailwindMaxWidthClass}`}
         {...props}

@@ -1,7 +1,8 @@
 /* eslint-disable react-refresh/only-export-components -- Next.js metadata
  * file convention requires exporting size/contentType alongside the image */
+import type { Post } from '@/lib/api'
 import { ImageResponse } from 'next/og'
-import { apiClient, NetworkRequestError } from '@/lib/api'
+import { apiClient, isNotFoundError } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
 
 export const size = { width: 1200, height: 630 }
@@ -11,27 +12,36 @@ type ImageProps = {
   params: Promise<{ slug: string }>
 }
 
+// Prerender one image per post. The page's generateStaticParams does not
+// carry over to this route, which left every social unfurl paying a cold
+// satori render; a slug outside this list still renders on demand.
+export async function generateStaticParams() {
+  const posts = await apiClient.post.listAll()
+  return posts.map(post => ({ slug: post.slug }))
+}
+
 export default async function OpengraphImage({ params }: ImageProps) {
   const { slug } = await params
 
-  let title = 'tianwei.io'
-  let description = ''
-  let dateLabel = ''
+  let post: Post
   try {
-    const post = await apiClient.post.getBySlug(slug)
-    title = post.title
-    description = post.description ?? ''
-    dateLabel = formatPostDate(post.createdAt)
+    post = await apiClient.post.getBySlug(slug)
   }
   catch (error) {
-    // a nonexistent slug should not get a 200 default card
-    if (error instanceof NetworkRequestError && error.status === 404)
+    // a slug that names no post should not get a 200 default card
+    if (isNotFoundError(error))
       return new Response('Not Found', { status: 404 })
-    // transient failure: fall back to the site card rather than failing
-    // the build — but never silently (this degraded card stays cached
-    // until the next revalidation)
-    console.error(`opengraph-image: falling back to the site card for "${slug}":`, error)
+    // Anything else propagates, like the page does: this route is
+    // prerendered, so a site card drawn on a transient failure would be
+    // cached until the next content sync. A throw fails the build instead,
+    // and an on-demand render errors for that request and is retried on
+    // the next one.
+    throw error
   }
+
+  const title = post.title
+  const description = post.description ?? ''
+  const dateLabel = formatPostDate(post.createdAt)
 
   return new ImageResponse(
     (
@@ -63,7 +73,9 @@ export default async function OpengraphImage({ params }: ImageProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div
             style={{
-              fontSize: title.length > 48 ? 56 : 68,
+              fontSize: title.length > 48
+                ? 56
+                : 68,
               fontWeight: 700,
               lineHeight: 1.15,
               letterSpacing: '-0.02em',
@@ -73,12 +85,20 @@ export default async function OpengraphImage({ params }: ImageProps) {
           </div>
           {description !== '' && (
             <div style={{ fontSize: 30, color: '#a1a1aa', lineHeight: 1.4 }}>
-              {description.length > 120 ? `${description.slice(0, 117)}...` : description}
+              {description.length > 120
+                ? `${description.slice(0, 117)}...`
+                : description}
             </div>
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 26, color: '#71717a' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: 26,
+          color: '#71717a',
+        }}
+        >
           <div>Tianwei Zhang</div>
           <div>{dateLabel}</div>
         </div>

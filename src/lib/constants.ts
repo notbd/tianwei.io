@@ -1,6 +1,6 @@
-import type { Theme } from '@/lib/types/themeTypes'
-
 // ---- CONFIGURATION CONSTANTS ----
+
+export type Theme = 'system' | 'dark' | 'light'
 
 // default color theme
 export const DEFAULT_THEME: Theme = 'system'

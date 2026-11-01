@@ -29,18 +29,18 @@ Note: previously this site incorporated [Contentlayer](https://contentlayer.dev)
 Every route is **fully static**:
 
 - Post pages are prerendered at build time (`generateStaticParams`); the posts list and home page are static too.
-- Data fetches use the Next.js data cache with `revalidate: false` + tags — content only changes through **on-demand revalidation** (see below), never by TTL.
+- Data fetches use the Next.js data cache with `revalidate: false` + tags — content only changes through **on-demand revalidation** (see below), never by TTL. Revalidation expires the tags outright (`{ expire: 0 }`), so the first request after a content sync renders fresh content instead of a stale copy.
 - The theme system is deliberately cookie-free: an inline pre-paint script reads the choice from localStorage and drives both the `dark` class (next-themes) and the toggle icon (CSS on a `data-theme-choice` attribute). No server-side theme state means no dynamic rendering.
 - All dates render in **`DISPLAY_TIME_ZONE`** (`America/New_York`) through the single `formatPostDate()` helper; storage stays UTC instants. Must match the content engine's `CONTENT_TIME_ZONE` — see [ADR-0004](./docs/adr/0004-display-time-zone.md).
-- `generateStaticParams` refuses to build an empty catalog, and a post page only 404s on a true API 404 — any other fetch failure fails the build loudly instead of silently dropping pages. Transient 5xx/network failures are retried with backoff in the fetcher.
-- `/feed.xml` (RSS), `/categories/[category]` pages, and per-post OG images are all statically generated from the same tagged data, so one revalidation refreshes everything.
+- `generateStaticParams` refuses to build an empty catalog, and a post page only 404s when the API says the slug names no post (404, or 400 for a malformed slug); any other fetch failure fails the build loudly instead of silently dropping pages. Transient 5xx/network failures are retried with backoff in the fetcher.
+- `/feed.xml` (RSS), `/categories/[category]` pages, and per-post OG images (`opengraph-image.tsx` has its own `generateStaticParams`) are all statically generated from the same tagged data, so one revalidation refreshes everything.
 - **Draft preview**: `/api/preview?secret=<PREVIEW_SECRET>&slug=<slug>` enables Next.js draftMode and renders unpublished posts through the API's secret-protected preview endpoint; `/api/preview/disable` exits.
 
 Design records live in [`docs/adr/`](./docs/adr/).
 
 <h2>Local Run</h2>
 
-Prerequisites: **Node.js ≥ 22** and **pnpm 10**.
+Prerequisites: **Node.js 26** (see `.nvmrc`) and **pnpm 10**.
 
 ```shell
 git clone git@github.com:notbd/tianwei.io.git
@@ -54,7 +54,7 @@ pnpm dev
 
 > **Notes**:
 >
-> 1. Cloudinary env variables need to be configured following the [instructions](https://next.cloudinary.dev/installation) for images to show properly.
+> 1. `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` (see `.env.example`) must be set: `next/image` builds the MDX images' Cloudinary URLs through `src/lib/cloudinaryLoader.ts`, which throws without it, so any post with an `<MdxImage>` fails to render and `pnpm build` fails.
 > 2. Typography and code highlighting are handled by custom React components within `src/components/mdx` and via the `rehype-pretty-code` package respectively.
 
 <h2>Quality Gates</h2>
@@ -62,18 +62,19 @@ pnpm dev
 ```shell
 pnpm lint        # type-aware ESLint
 pnpm typecheck
-pnpm test        # vitest: API contract locks, fetcher, cache/revalidate, route auth, sitemap
+pnpm test        # vitest: API contract locks, fetcher, config, paths, dates, cache/revalidate, route auth, sitemap, feed
 pnpm build
+pnpm exec playwright install chromium   # once per Playwright version
 pnpm test:e2e    # Playwright browser smoke against the production build
 ```
 
-CI (`.github/workflows/ci.yml`) runs all of these on every pull request and on pushes to `main`. The vitest suite pins the API contract (exact JSON shapes the frontend parses), the revalidation route's auth and status codes, and the cache-warming dispatch logic; the Playwright suite covers navigation, the theme toggle cycle, and the feed/sitemap outputs.
+CI (`.github/workflows/ci.yml`) runs all of these on every pull request and on pushes to `main`. The build and smoke steps use the two public values inlined in the workflow (`CONTENT_API_URL=https://tio.twz.app`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), so no Actions secrets are involved and Dependabot and fork pull requests build too. The vitest suite pins the API contract (exact JSON shapes the frontend parses), the revalidation route's auth and status codes, the cache-warming dispatch logic, the canonical host and the feed; the Playwright suite covers navigation, the theme toggle cycle, the 404 pages, and the feed/sitemap outputs.
 
 The manual pre-merge checklist for cross-repo releases lives in [`docs/release-verification.md`](./docs/release-verification.md).
 
 <h2>Cache Revalidation & Warming</h2>
 
-The application exposes a revalidation API endpoint at `/api/revalidate` that invalidates Next.js cache tags and warms the cache by pre-fetching fresh data.
+The application exposes a revalidation API endpoint at `/api/revalidate` that expires Next.js cache tags and re-fetches the affected data through the API to verify it (the "warm").
 
 <h3>Authentication</h3>
 
@@ -93,7 +94,7 @@ Requests must include a `Bearer` token matching `REVALIDATION_SECRET` in the `Au
   }
   ```
 
-  Invalidates both the post cache tag (`post-{slug}`) and the posts list tag, then warms both.
+  Invalidates `post-{slug}` and `posts`. Every post fetch also carries `posts`, so this expires every page, then re-fetches the list and every post.
 
 - **Revalidate by tag(s)**:
 
@@ -117,17 +118,17 @@ Requests must include a `Bearer` token matching `REVALIDATION_SECRET` in the `Au
   }
   ```
 
-  Invalidates the specified cache tags and warms matching routes.
+  Expires the given tags and re-fetches the data of every tag that has a warmer (`posts`, `post-*`); other tags are only expired.
 
 <h3>Warming Behavior</h3>
 
-After revalidation, the system automatically warms the cache by pre-fetching data for matching routes. This ensures fresh content is available immediately after invalidation:
+Tags are expired with `revalidateTag(tag, { expire: 0 })`: every page and data entry carrying the tag is invalidated outright, so the first request after a sync blocks on a fresh render instead of receiving the previous version (the `'max'` profile would serve it stale once). In the same request the route then re-fetches the tags' data through the API:
 
-- **`posts` tag**: Fetches the posts list and all individual post pages
-- **`post-{slug}` tags**: Fetches the specific post page
+- **`posts` tag**: Fetches the posts list and every individual post
+- **`post-{slug}` tags**: Fetches the specific post
 - **Bounded concurrency**: individual post warms run through a small worker pool (4 at a time), so warming can't stampede the origin API or race the function timeout as the catalog grows
 
-Warming failures surface as a `207` response with `success: false` — the content engine's deploy pipeline treats that as a failed deploy rather than silently shipping a cold cache.
+The warm is the end-to-end check that the API serves the synced content: a failure surfaces as a `207` response with `success: false`, which the content engine's deploy pipeline treats as a failed deploy. It does not refill the cache: Next applies the expiry after the route handler returns, so the warm's own cache writes expire with everything else. After a sync, the first visit to each affected page renders it fresh and needs the API to be up at that moment (the fetcher retries transient failures).
 
 <h2>License</h2>
 

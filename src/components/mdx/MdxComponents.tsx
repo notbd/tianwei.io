@@ -120,7 +120,7 @@ export const mdxComponents: MDXComponents = {
     />
   ),
   img: ({ className, alt, ...props }: ComponentProps<'img'>) => (
-    // using img instead of next Image because already using Cloudinary for image optimization
+    // plain Markdown images carry arbitrary URLs, not Cloudinary public ids, so they bypass next/image and its Cloudinary loader; use <MdxImage> for optimized images
     // eslint-disable-next-line next/no-img-element
     <img className={cn('rounded-md', className)} alt={alt} {...props} />
   ),

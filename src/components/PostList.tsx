@@ -1,6 +1,7 @@
 import type { PostSummary } from '@/lib/api'
 import Link from 'next/link'
 import { formatPostDate } from '@/lib/dates'
+import { postPath } from '@/lib/paths'
 
 type PostListProps = {
   posts: PostSummary[]
@@ -14,11 +15,11 @@ export function PostList({ posts }: PostListProps) {
         <li key={post.id} className="group relative">
 
           {/* clickable cell */}
-          <Link href={`/posts/${post.slug}`} className="block">
+          <Link href={postPath(post.slug)} className="block">
             <article className="flex flex-col gap-1">
 
               {/* row 1: time + category */}
-              <div className="flex items-center text-sm text-zinc-400 dark:text-zinc-600">
+              <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400">
                 <time dateTime={post.createdAt.toISOString()}>
                   {formatPostDate(post.createdAt)}
                 </time>
@@ -36,8 +37,8 @@ export function PostList({ posts }: PostListProps) {
                 </p>
               )}
 
-              {/* row 4: click prompt */}
-              <div className="text-sm font-medium text-teal-600 dark:text-teal-500 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
+              {/* row 4: click prompt (decorative, kept out of the link's accessible name) */}
+              <div aria-hidden="true" className="text-sm font-medium text-teal-600 dark:text-teal-500 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
                 {'->'}
               </div>
             </article>
