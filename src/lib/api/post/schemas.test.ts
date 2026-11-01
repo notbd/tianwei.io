@@ -12,6 +12,7 @@ const CANONICAL_POST = {
   description: 'How I use 1Password ssh agent.',
   author: 'Tianwei Zhang',
   createdAt: '2025-10-23T00:00:00.000Z',
+  updatedAt: null,
   isPublished: true,
   content: '# Hello\n\nBody.\n',
 }
@@ -30,7 +31,7 @@ describe('postSchema', () => {
     expect(post.description).toBeNull()
   })
 
-  it('parses updatedAt as a Date, passes null through, tolerates absence', () => {
+  it('parses updatedAt as a Date, passes null through, rejects absence', () => {
     const withDate = postSchema.parse({ ...CANONICAL_POST, updatedAt: '2025-11-05T00:00:00.000Z' })
     expect(withDate.updatedAt).toBeInstanceOf(Date)
     expect(withDate.updatedAt?.getTime()).toBe(Date.UTC(2025, 10, 5))
@@ -39,9 +40,9 @@ describe('postSchema', () => {
     const withNull = postSchema.parse({ ...CANONICAL_POST, updatedAt: null })
     expect(withNull.updatedAt).toBeNull()
 
-    // absent (API predating the field) must still parse
-    const absent = postSchema.parse(CANONICAL_POST)
-    expect(absent.updatedAt).toBeUndefined()
+    // the API has served the field since 2026-07; a missing key is drift
+    const { updatedAt: _updatedAt, ...withoutUpdatedAt } = CANONICAL_POST
+    expect(() => postSchema.parse(withoutUpdatedAt)).toThrow()
   })
 
   it('rejects a missing or null content (DB nullability must never leak)', () => {
@@ -75,6 +76,7 @@ describe('postSummarySchema', () => {
     description: null,
     author: 'Tianwei Zhang',
     createdAt: '2024-04-15T00:00:00.000Z',
+    updatedAt: null,
   }
 
   it('parses the canonical list payload', () => {
