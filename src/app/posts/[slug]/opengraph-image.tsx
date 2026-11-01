@@ -1,13 +1,22 @@
 /* eslint-disable react-refresh/only-export-components -- Next.js metadata
  * file convention requires exporting size/contentType alongside the image */
 import type { Post } from '@/lib/api'
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
 import { ImageResponse } from 'next/og'
+import { SITE_LOGO_PATH } from '@/components/svgs/siteLogoPath'
 import { getPost, getPosts, isNotFoundError } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
 import { site } from '@/lib/site'
 
 export const size = { width: 1200, height: 630 }
 export const contentType = 'image/png'
+
+// The site's own face, Rubik (SIL OFL, from @fontsource/rubik 5.3.0): satori
+// reads TTF/OTF/WOFF, not the woff2 next/font serves, and without a font it
+// falls back to a single regular weight, so bold titles came out thin.
+// next.config.ts traces these files into the on-demand render's bundle.
+const FONT_DIR = join(process.cwd(), 'src/styles/fonts/sources')
 
 type ImageProps = {
   params: Promise<{ slug: string }>
@@ -43,6 +52,10 @@ export default async function OpengraphImage({ params }: ImageProps) {
   const title = post.title
   const description = post.description ?? ''
   const dateLabel = formatPostDate(post.createdAt)
+  const [regular, bold] = await Promise.all([
+    readFile(join(FONT_DIR, 'rubik-latin-400-normal.woff')),
+    readFile(join(FONT_DIR, 'rubik-latin-700-normal.woff')),
+  ])
 
   return new ImageResponse(
     (
@@ -56,18 +69,14 @@ export default async function OpengraphImage({ params }: ImageProps) {
           padding: 72,
           backgroundColor: '#09090b', // zinc-950
           color: '#fafafa', // zinc-50
-          fontFamily: 'sans-serif',
+          fontFamily: 'Rubik',
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
-          <div
-            style={{
-              width: 20,
-              height: 20,
-              borderRadius: 6,
-              backgroundColor: '#0f766e', // teal-700
-            }}
-          />
+          {/* the header's TZ mark, in teal-600 for the dark card */}
+          <svg viewBox="0 0 2000 1171" width={61} height={36} fill="#009689">
+            <path d={SITE_LOGO_PATH} />
+          </svg>
           <div style={{ fontSize: 32, color: '#a1a1aa' }}>{site.domain}</div>
         </div>
 
@@ -97,7 +106,7 @@ export default async function OpengraphImage({ params }: ImageProps) {
           display: 'flex',
           justifyContent: 'space-between',
           fontSize: 26,
-          color: '#71717a',
+          color: '#a1a1aa', // 7.8:1 on the card, readable when it is shown small
         }}
         >
           <div>{post.author}</div>
@@ -105,6 +114,22 @@ export default async function OpengraphImage({ params }: ImageProps) {
         </div>
       </div>
     ),
-    size,
+    {
+      ...size,
+      fonts: [
+        {
+          name: 'Rubik',
+          data: regular,
+          weight: 400,
+          style: 'normal',
+        },
+        {
+          name: 'Rubik',
+          data: bold,
+          weight: 700,
+          style: 'normal',
+        },
+      ],
+    },
   )
 }

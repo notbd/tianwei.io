@@ -21,6 +21,10 @@ const nextConfig: NextConfig = {
     loader: 'custom',
     loaderFile: './src/lib/cloudinaryLoader.ts',
   },
+  // the OG image route reads its fonts at render time (fs, not import)
+  outputFileTracingIncludes: {
+    '/posts/[slug]/opengraph-image': ['./src/styles/fonts/sources/rubik-*.woff'],
+  },
   async headers() {
     return [
       {
