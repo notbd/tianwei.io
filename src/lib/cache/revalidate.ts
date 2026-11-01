@@ -57,9 +57,10 @@ export async function revalidateAndWarmTags(
         warmed.push(tag)
     }
     catch (error) {
-      errors.push(`Failed to warm tag "${tag}": ${error instanceof Error
+      const message = error instanceof Error
         ? error.message
-        : String(error)}`)
+        : String(error)
+      errors.push(`Failed to warm tag "${tag}": ${message}`)
     }
   }))
   if (errors.length > 0)

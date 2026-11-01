@@ -110,4 +110,16 @@ describe('/api/revalidate payloads', () => {
     expect(res.status).toBe(400)
     expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
+
+  it('500s when revalidation itself throws (a warming failure is a 207, not this)', async () => {
+    revalidateAndWarmTags.mockRejectedValue(new Error('revalidateTag exploded'))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }, `Bearer ${SECRET}`))
+    expect(res.status).toBe(500)
+    expect(await res.json()).toMatchObject({
+      error: 'Internal server error',
+      message: 'revalidateTag exploded',
+    })
+  })
 })
