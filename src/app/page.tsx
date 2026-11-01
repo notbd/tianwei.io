@@ -7,8 +7,11 @@ import { cn } from '@/lib/utils'
 export default function Home() {
   return (
     <>
+      {/* page heading for assistive tech; the name section below is visual only */}
+      <h1 className="sr-only">Tianwei Zhang</h1>
+
       {/* Name */}
-      <HomeSection id="name" className="flex flex-row">
+      <HomeSection id="name" className="flex flex-row" aria-hidden>
         {/* md: first name */}
         <HomeSectionHeader className="hidden font-semibold md:block">
           Tianwei

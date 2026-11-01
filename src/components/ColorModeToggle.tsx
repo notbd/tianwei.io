@@ -49,7 +49,6 @@ export function ColorModeToggle({
       {...props}
       type="button"
       onClick={toggleTheme}
-      aria-label="Color Mode Toggle"
       className={cn(
         'border-zinc-200 text-zinc-600 dark:border-zinc-800 dark:text-zinc-400',
         'size-7 rounded-md border text-center',
@@ -60,6 +59,10 @@ export function ColorModeToggle({
       <LaptopMinimal className="theme-icon theme-icon-system m-auto size-4" />
       <Moon className="theme-icon theme-icon-dark m-auto size-4" />
       <Sun className="theme-icon theme-icon-light m-auto size-4" />
+      {/* accessible name follows the same CSS switch as the icons */}
+      <span className="theme-icon theme-icon-system sr-only">Color theme: system</span>
+      <span className="theme-icon theme-icon-dark sr-only">Color theme: dark</span>
+      <span className="theme-icon theme-icon-light sr-only">Color theme: light</span>
     </button>
   )
 }

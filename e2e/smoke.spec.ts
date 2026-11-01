@@ -25,7 +25,7 @@ test('posts index lists articles and navigates to a post', async ({ page }) => {
 test('theme toggle cycles system -> dark -> light without flash-prone state', async ({ page }) => {
   await page.goto('/')
   const html = page.locator('html')
-  const toggle = page.getByRole('button', { name: 'Color Mode Toggle' })
+  const toggle = page.getByRole('button', { name: /color theme/i })
 
   // pre-paint script default
   await expect(html).toHaveAttribute('data-theme-choice', 'system')
