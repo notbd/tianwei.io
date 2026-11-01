@@ -44,15 +44,11 @@ describe('sitemap', () => {
       .toEqual(new Date('2024-04-15T00:00:00.000Z'))
   })
 
-  it('falls back to the static entries when the API is unavailable', async () => {
+  it('propagates an API failure instead of producing a sitemap without posts', async () => {
+    // a reduced sitemap would be cached until the next content sync;
+    // a throw fails the build or keeps the last good sitemap served
     listAll.mockRejectedValue(new Error('api down'))
 
-    const entries = await sitemap()
-
-    expect(entries).toHaveLength(2)
-    expect(entries.map(entry => entry.url)).toEqual([
-      expect.stringMatching(/\/$/),
-      expect.stringContaining('/posts'),
-    ])
+    await expect(sitemap()).rejects.toThrow('api down')
   })
 })
