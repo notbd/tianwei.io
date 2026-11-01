@@ -10,7 +10,7 @@ export default async function PostsPage() {
   ])
 
   return (
-    <main className="max-w-3xl pb-8">
+    <div className="max-w-3xl pb-8">
 
       {/* header */}
       <header className="mb-12 pb-4 border-b border-gray-200/30 dark:border-gray-800/30">
@@ -38,6 +38,6 @@ export default async function PostsPage() {
       </header>
 
       <PostList posts={posts} />
-    </main>
+    </div>
   )
 }

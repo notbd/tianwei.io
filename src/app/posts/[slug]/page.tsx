@@ -78,7 +78,7 @@ export default async function PostPage({ params }: PageProps) {
   }
 
   return (
-    <main className="max-w-3xl pb-8">
+    <article className="max-w-3xl pb-8">
 
       {/* draft preview banner */}
       {isDraftPreview && (
@@ -130,6 +130,6 @@ export default async function PostPage({ params }: PageProps) {
       {/* content */}
       <MdxContent source={post.content} />
 
-    </main>
+    </article>
   )
 }
