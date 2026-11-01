@@ -52,6 +52,17 @@ test('theme toggle cycles system -> dark -> light without flash-prone state', as
   await expect(html).toHaveClass(/dark/)
 })
 
+test('unknown post, category and path all 404 inside the site layout', async ({ request }) => {
+  for (const path of ['/posts/this-post-does-not-exist', '/categories/not-a-real-category', '/this-page-does-not-exist']) {
+    const response = await request.get(path)
+    expect(response.status(), path).toBe(404)
+    // the root not-found page renders server-side, never Next's bare error shell
+    const body = await response.text()
+    expect(body, path).not.toContain('__next_error__')
+    expect(body, path).toContain('Not Found')
+  }
+})
+
 test('feed.xml serves RSS with every post', async ({ request }) => {
   const response = await request.get('/feed.xml')
   expect(response.status()).toBe(200)
