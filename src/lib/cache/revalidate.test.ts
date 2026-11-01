@@ -9,7 +9,7 @@ vi.mock('@/lib/api', () => ({
   apiClient: { post: { listAll, getBySlug } },
 }))
 
-const { revalidateAndWarmPost, revalidateAndWarmTags } = await import('./revalidate')
+const { revalidateAndWarmTags } = await import('./revalidate')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -66,14 +66,5 @@ describe('revalidateAndWarmTags', () => {
 
     expect(result.success).toBe(false)
     expect(result.warmed).toEqual(['post-hello'])
-  })
-})
-
-describe('revalidateAndWarmPost', () => {
-  it('revalidates both the post tag and the list tag', async () => {
-    await revalidateAndWarmPost('hello')
-
-    expect(revalidateTag).toHaveBeenCalledWith('post-hello', { expire: 0 })
-    expect(revalidateTag).toHaveBeenCalledWith('posts', { expire: 0 })
   })
 })

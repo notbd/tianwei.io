@@ -2,9 +2,8 @@ import type { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const revalidateAndWarmTags = vi.fn()
-const revalidateAndWarmPost = vi.fn()
 
-vi.mock('@/lib/cache', () => ({ revalidateAndWarmTags, revalidateAndWarmPost }))
+vi.mock('@/lib/cache', () => ({ revalidateAndWarmTags }))
 
 const { POST } = await import('./route')
 
@@ -25,7 +24,6 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.stubEnv('REVALIDATION_SECRET', SECRET)
   revalidateAndWarmTags.mockResolvedValue({ success: true, revalidated: ['posts'], warmed: ['posts'] })
-  revalidateAndWarmPost.mockResolvedValue({ success: true, revalidated: ['post-a', 'posts'], warmed: [] })
 })
 
 afterEach(() => {
@@ -56,10 +54,10 @@ describe('pOST /api/revalidate auth', () => {
 })
 
 describe('pOST /api/revalidate payloads', () => {
-  it('handles { slug } via revalidateAndWarmPost', async () => {
+  it('handles { slug } as the post tag plus the list tag', async () => {
     const res = await POST(makeRequest({ slug: 'hello' }, `Bearer ${SECRET}`))
     expect(res.status).toBe(200)
-    expect(revalidateAndWarmPost).toHaveBeenCalledWith('hello')
+    expect(revalidateAndWarmTags).toHaveBeenCalledWith(['post-hello', 'posts'])
   })
 
   it('handles { tags: [...] }', async () => {
