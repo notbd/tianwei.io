@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   poweredByHeader: false,
   allowedDevOrigins: ['127.0.0.1'],
+  // agent instructions live in a hand-maintained AGENTS.md; keep `next dev`
+  // from generating or appending to it
+  agentRules: false,
   // MDX images are served by Cloudinary, so next/image only builds URLs
   images: {
     loader: 'custom',
