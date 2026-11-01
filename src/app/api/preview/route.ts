@@ -1,7 +1,7 @@
 import type { NextRequest } from 'next/server'
 import { draftMode } from 'next/headers'
 import { after, NextResponse } from 'next/server'
-import { BASE_URL } from '@/lib/api/config'
+import { wakeDatabase } from '@/lib/api'
 import { postPath } from '@/lib/paths'
 import { secureEquals } from '@/lib/secureCompare'
 
@@ -29,15 +29,8 @@ export async function GET(request: NextRequest) {
   // Pre-warm the database while the redirect + page render are in flight:
   // this is the one path where a human waits on a possibly-suspended Neon
   // compute, and it only fires AFTER authentication (no public wake lever).
-  // Best-effort by design — see docs/adr/0005-no-speculative-db-warming.md.
-  after(async () => {
-    try {
-      await fetch(`${BASE_URL}/api/categories`, { cache: 'no-store' })
-    }
-    catch {
-      // the actual preview fetch has its own retry; a failed warm is noise
-    }
-  })
+  // Best-effort by design (docs/adr/0005-no-speculative-db-warming.md).
+  after(wakeDatabase)
 
   const draft = await draftMode()
   draft.enable()

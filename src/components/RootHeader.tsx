@@ -16,7 +16,8 @@ export function RootHeader({
 }: PageHeaderProps) {
   const pathname = usePathname()
   const isHome = pathname === '/'
-  const isPosts = pathname.startsWith('/posts')
+  // category pages belong to the Posts section
+  const isPosts = pathname.startsWith('/posts') || pathname.startsWith('/categories')
   const logoTranslation = isHome ? 'md:translate-x-[7.5rem]' : ''
 
   return (
@@ -28,7 +29,8 @@ export function RootHeader({
       )}
     >
       {/* site logo */}
-      <div className={`pr-4 transition ease-out ${logoTranslation}`}>
+      {/* the site's one designed motion: the logo glides over on the home page */}
+      <div className={cn('pr-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none', logoTranslation)}>
         <Link
           href="/"
           tabIndex={-1}
@@ -92,7 +94,7 @@ function NavLink({
         {
           'bg-zinc-200 dark:bg-zinc-800': isSelected,
         },
-        'transition-[color] duration-300', // only text color transition, not bg color
+        'transition-[color] duration-200', // only text color transition, not bg color
         className,
       )}
     >

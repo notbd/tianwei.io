@@ -31,7 +31,7 @@ test('theme toggle cycles system -> dark -> light without flash-prone state', as
   await expect(html).toHaveAttribute('data-theme-choice', 'system')
 
   // first click may race hydration (Playwright doesn't wait for React to
-  // attach handlers) — retry the click until the state actually flips
+  // attach handlers), so retry the click until the state actually flips
   await expect(async () => {
     await toggle.click()
     await expect(html).toHaveAttribute('data-theme-choice', 'dark', { timeout: 1000 })
@@ -46,7 +46,9 @@ test('theme toggle cycles system -> dark -> light without flash-prone state', as
   await expect(html).toHaveAttribute('data-theme-choice', 'system')
 
   // the choice survives a reload via localStorage + pre-paint script
+  // (the switch lands a frame after the click, inside the view transition)
   await toggle.click() // -> dark
+  await expect(html).toHaveAttribute('data-theme-choice', 'dark')
   await page.reload()
   await expect(html).toHaveAttribute('data-theme-choice', 'dark')
   await expect(html).toHaveClass(/dark/)
@@ -63,7 +65,7 @@ test('unknown post, malformed slug, category and path all 404 with the not-found
   for (const path of paths) {
     const response = await request.get(path)
     expect(response.status(), path).toBe(404)
-    expect(await response.text(), path).toContain('<title>Not Found · tianwei.io</title>')
+    expect(await response.text(), path).toContain('<title>Page Not Found · tianwei.io</title>')
   }
 })
 
@@ -74,7 +76,7 @@ test('an unmatched URL renders the not-found page server-side inside the layout'
   const body = await (await request.get('/this-page-does-not-exist')).text()
   expect(body).not.toContain('__next_error__')
   expect(body).toContain('<h1')
-  expect(body).toContain('Not Found')
+  expect(body).toContain('Page Not Found')
 })
 
 test('feed.xml serves RSS with every post', async ({ request }) => {
@@ -100,4 +102,29 @@ test('sitemap includes posts and categories', async ({ request }) => {
   expect(body).toContain('/posts</loc>')
   expect(body).toContain('/categories/')
   expect(body).toContain('/posts/')
+})
+
+test('a code block copy button copies the code and confirms it', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/posts/1password-git-workflow')
+
+  const block = page.locator('[data-code-block]').first()
+  const button = block.getByRole('button', { name: 'Copy code' })
+  await block.hover()
+  // first click may race hydration, as in the theme test
+  await expect(async () => {
+    await button.click()
+    await expect(block.getByRole('button', { name: 'Copied' })).toBeVisible({ timeout: 1000 })
+  }).toPass({ timeout: 10_000 })
+
+  const copied = await page.evaluate(async () => navigator.clipboard.readText())
+  expect(copied).toBe(await block.locator('pre').textContent())
+  expect(copied.length).toBeGreaterThan(0)
+})
+
+test('category pages count as the Posts section in the header', async ({ page }) => {
+  await page.goto('/categories/articles')
+  const nav = page.locator('header nav')
+  await expect(nav.getByRole('link', { name: 'Posts', exact: true })).toHaveAttribute('aria-current', 'true')
+  await expect(nav.getByRole('link', { name: 'Home', exact: true })).not.toHaveAttribute('aria-current')
 })

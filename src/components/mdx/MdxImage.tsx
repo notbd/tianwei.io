@@ -1,5 +1,6 @@
 import type { ImageProps } from 'next/image'
 import Image from 'next/image'
+import { cn } from '@/lib/utils'
 
 const _mdxImageSizeCategories = ['sm', 'md', 'lg', 'xl', '2xl', '3xl'] as const
 type MdxImageSizeCategory = typeof _mdxImageSizeCategories[number]
@@ -30,7 +31,7 @@ export default function MdxImage({
       {/* src is a Cloudinary public id; src/lib/cloudinaryLoader.ts (images.loaderFile) builds the URL */}
       <Image
         sizes={`(max-width: ${maxWidthInRem}rem) 100vw, ${maxWidthInRem}rem`}
-        className={`mx-auto w-full max-w-3xl rounded-md ${tailwindMaxWidthClass}`}
+        className={cn('mx-auto w-full rounded-md', tailwindMaxWidthClass)}
         {...props}
       />
 

@@ -8,7 +8,7 @@ vi.mock('next/headers', () => ({
   draftMode: async () => ({ enable, disable }),
 }))
 
-// after() has no request context in unit tests — run callbacks inline
+// after() has no request context in unit tests, so run callbacks inline
 vi.mock('next/server', async (importOriginal) => {
   const actual = await importOriginal<typeof import('next/server')>()
   return {
@@ -18,9 +18,6 @@ vi.mock('next/server', async (importOriginal) => {
     },
   }
 })
-
-// route imports the API config, which requires this at module load
-vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
 
 const { GET } = await import('./route')
 

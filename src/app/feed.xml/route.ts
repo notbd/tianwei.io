@@ -1,5 +1,6 @@
-import { apiClient } from '@/lib/api'
-import { BasePaths, postPath } from '@/lib/paths'
+import { getPosts } from '@/lib/api'
+import { absoluteUrl, postPath, SITE_URL } from '@/lib/paths'
+import { site } from '@/lib/site'
 
 // Static + tagged data: the feed regenerates through the same on-demand
 // revalidation flow as the pages (content sync -> revalidateTag('posts')).
@@ -15,11 +16,11 @@ function escapeXml(value: string): string {
 }
 
 export async function GET(): Promise<Response> {
-  const posts = await apiClient.post.listAll()
+  const posts = await getPosts()
 
   const items = posts.map((post) => {
-    const url = `${BasePaths.url}${postPath(post.slug)}`
-    const descriptionTag = post.description !== null && post.description !== ''
+    const url = absoluteUrl(postPath(post.slug))
+    const descriptionTag = post.description !== null
       ? `\n      <description>${escapeXml(post.description)}</description>`
       : ''
     return `    <item>
@@ -31,7 +32,7 @@ export async function GET(): Promise<Response> {
     </item>`
   }).join('\n')
 
-  // max over every post's effective date — an OLD post with a NEW
+  // max over every post's effective date: an OLD post with a NEW
   // updatedAt must bump this too, so readers re-poll
   const lastBuildDate = posts.length > 0
     ? new Date(Math.max(...posts.map(post => (post.updatedAt ?? post.createdAt).getTime()))).toUTCString()
@@ -40,12 +41,12 @@ export async function GET(): Promise<Response> {
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>tianwei.io</title>
-    <link>${BasePaths.url}</link>
-    <description>Writings by Tianwei Zhang</description>
+    <title>${site.domain}</title>
+    <link>${SITE_URL}</link>
+    <description>Writings by ${site.name}</description>
     <language>en</language>
     <lastBuildDate>${lastBuildDate}</lastBuildDate>
-    <atom:link href="${BasePaths.url}/feed.xml" rel="self" type="application/rss+xml"/>
+    <atom:link href="${absoluteUrl('/feed.xml')}" rel="self" type="application/rss+xml"/>
 ${items}
   </channel>
 </rss>

@@ -1,17 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const revalidateTag = vi.fn()
-const listAll = vi.fn()
-const getBySlug = vi.fn()
-
-vi.mock('next/cache', () => ({ revalidateTag }))
-vi.mock('@/lib/api', () => ({
-  apiClient: {
-    post: { listAll, getBySlug },
-  },
+const { revalidateTag, listAll, getBySlug } = vi.hoisted(() => ({
+  revalidateTag: vi.fn(),
+  listAll: vi.fn(),
+  getBySlug: vi.fn(),
 }))
 
-const { revalidateAndWarmTags } = await import('./revalidate')
+vi.mock('next/cache', () => ({ revalidateTag }))
+vi.mock('@/lib/api', async importOriginal => ({
+  ...await importOriginal<typeof import('@/lib/api')>(),
+  getPosts: listAll,
+  getPost: getBySlug,
+}))
+
+const { revalidateAndWarmTags } = await import('./cache')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -38,7 +40,7 @@ describe('revalidateAndWarmTags', () => {
     })
   })
 
-  it('routes post-<slug> tags to the prefix warmer with the stripped slug', async () => {
+  it('warms post-<slug> tags by re-fetching that post', async () => {
     const result = await revalidateAndWarmTags(['post-hello-world'])
 
     expect(revalidateTag).toHaveBeenCalledWith('post-hello-world', { expire: 0 })
@@ -46,6 +48,19 @@ describe('revalidateAndWarmTags', () => {
     expect(listAll).not.toHaveBeenCalled()
     expect(result.success).toBe(true)
     expect(result.warmed).toEqual(['post-hello-world'])
+  })
+
+  it('treats a post tag whose post is gone (unpublished, deleted) as warmed', async () => {
+    const { ApiError } = await import('@/lib/api')
+    getBySlug.mockRejectedValue(new ApiError(404, 'Post not found.'))
+
+    const result = await revalidateAndWarmTags(['post-gone'])
+
+    expect(result).toEqual({
+      success: true,
+      revalidated: ['post-gone'],
+      warmed: ['post-gone'],
+    })
   })
 
   it('revalidates unknown tags without warming, still succeeding', async () => {

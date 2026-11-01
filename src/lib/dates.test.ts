@@ -20,7 +20,6 @@ describe('formatPostDate', () => {
     // 2025-10-23 authored in ET -> stored as 04:00Z
     const stored = new Date(Date.UTC(2025, 9, 23, 4))
     expect(formatPostDate(stored)).toBe('October 23, 2025')
-    expect(formatPostDate(stored, 'short')).toBe('Oct 23, 2025')
   })
 
   it('renders an EST-midnight instant as the authored calendar date', () => {

@@ -9,7 +9,7 @@ const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 // format- and quality-negotiated rendition of the Cloudinary public id.
 export default function cloudinaryLoader({ src, width, quality }: ImageLoaderProps): string {
   if (cloudName === undefined || cloudName === '')
-    throw new Error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set — MDX images cannot be resolved')
+    throw new Error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set: MDX images cannot be resolved')
 
   const q = quality === undefined
     ? 'auto'

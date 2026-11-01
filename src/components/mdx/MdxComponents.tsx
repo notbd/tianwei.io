@@ -1,6 +1,7 @@
 import type { MDXComponents } from 'mdx/types'
 import type { ComponentProps } from 'react'
 import Link from 'next/link'
+import { CopyCodeButton } from '@/components/mdx/CopyCodeButton'
 import MdxImage from '@/components/mdx/MdxImage'
 import { cn } from '@/lib/utils'
 
@@ -8,7 +9,7 @@ export const mdxComponents: MDXComponents = {
   h1: ({ className, ...props }: ComponentProps<'h1'>) => (
     <h1
       className={cn(
-        'mt-10 scroll-m-20 text-3xl font-bold tracking-tight',
+        'mt-10 scroll-m-20 text-3xl font-bold tracking-tight text-balance',
         className,
       )}
       {...props}
@@ -17,7 +18,7 @@ export const mdxComponents: MDXComponents = {
   h2: ({ className, ...props }: ComponentProps<'h2'>) => (
     <h2
       className={cn(
-        'mt-10 scroll-m-20 pb-1 text-2xl font-semibold tracking-tight',
+        'mt-10 scroll-m-20 pb-1 text-2xl font-semibold tracking-tight text-balance',
         'border-b border-zinc-200 dark:border-zinc-800',
         className,
       )}
@@ -27,7 +28,7 @@ export const mdxComponents: MDXComponents = {
   h3: ({ className, ...props }: ComponentProps<'h3'>) => (
     <h3
       className={cn(
-        'mt-8 scroll-m-20 text-xl font-semibold tracking-tight',
+        'mt-8 scroll-m-20 text-xl font-semibold tracking-tight text-balance',
         className,
       )}
       {...props}
@@ -61,6 +62,11 @@ export const mdxComponents: MDXComponents = {
     />
   ),
   a: ({ className, href = '', ...props }: ComponentProps<'a'>) => {
+    // rehype-autolink-headings wraps each heading's text in an `.anchor`
+    // link; it keeps the heading's own colour and weight (mdx.tailwind.css)
+    if (className === 'anchor')
+      return <a href={href} className={className} {...props} />
+
     const isExternal
       = href.startsWith('http')
         || href.startsWith('mailto:')
@@ -73,7 +79,7 @@ export const mdxComponents: MDXComponents = {
         rel={isExternal ? 'noopener noreferrer' : undefined}
         className={cn(
           'text-teal-700 hover:text-teal-600 dark:text-teal-600 dark:hover:text-teal-500',
-          'transition-[color] duration-300 font-medium underline underline-offset-4',
+          'transition-[color] duration-200 font-medium underline underline-offset-4',
           className,
         )}
         {...props}
@@ -82,7 +88,7 @@ export const mdxComponents: MDXComponents = {
   },
   p: ({ className, ...props }: ComponentProps<'p'>) => (
     <p
-      className={cn('leading-7', 'not-first:mt-6', className)}
+      className={cn('leading-7 text-pretty', 'not-first:mt-6', className)}
       {...props}
     />
   ),
@@ -113,7 +119,7 @@ export const mdxComponents: MDXComponents = {
   blockquote: ({ className, ...props }: ComponentProps<'blockquote'>) => (
     <blockquote
       className={cn(
-        'mt-6 border-l-2 pl-6 text-zinc-600 dark:text-zinc-400',
+        'mt-6 border-l-2 border-zinc-300 pl-6 text-zinc-600 dark:border-zinc-700 dark:text-zinc-400',
         className,
       )}
       {...props}
@@ -125,10 +131,10 @@ export const mdxComponents: MDXComponents = {
     <img className={cn('rounded-md', className)} alt={alt} {...props} />
   ),
   hr: ({ ...props }: ComponentProps<'hr'>) => (
-    <hr className="my-4 md:my-8" {...props} />
+    <hr className="my-4 border-zinc-200 md:my-8 dark:border-zinc-800" {...props} />
   ),
   table: ({ className, ...props }: ComponentProps<'table'>) => (
-    <div className="my-6 w-full overflow-hidden overflow-y-auto rounded-lg border border-zinc-200 drop-shadow-sm dark:border-zinc-800">
+    <div className="my-6 w-full overflow-x-auto rounded-lg border border-zinc-200 drop-shadow-sm dark:border-zinc-800">
       <table
         className={cn(
           'w-full border-collapse bg-white dark:bg-zinc-950',
@@ -165,14 +171,24 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
+  // the wrapper carries the margins so the copy button can sit in the
+  // block's corner without scrolling away with wide code
   pre: ({ className, ...props }: ComponentProps<'pre'>) => (
-    <pre
-      className={cn(
-        'mb-4 mt-6 overflow-x-auto rounded-lg border border-zinc-300/30 py-4 drop-shadow-sm dark:border-zinc-500/20',
-        className,
-      )}
-      {...props}
-    />
+    <div data-code-block className="group/code relative mb-4 mt-6">
+      <pre
+        className={cn(
+          'overflow-x-auto rounded-lg border border-zinc-300/30 py-4 drop-shadow-sm dark:border-zinc-500/20',
+          className,
+        )}
+        {...props}
+      />
+      <CopyCodeButton
+        className={cn(
+          'absolute right-2 top-2',
+          'opacity-0 focus-visible:opacity-100 group-hover/code:opacity-100 pointer-coarse:opacity-100',
+        )}
+      />
+    </div>
   ),
   code: ({ className, ...props }: ComponentProps<'code'>) => (
     <code
@@ -187,7 +203,11 @@ export const mdxComponents: MDXComponents = {
   MdxImage,
   Link: ({ className, ...props }: ComponentProps<typeof Link>) => (
     <Link
-      className={cn('font-medium underline underline-offset-4', className)}
+      className={cn(
+        'text-teal-700 hover:text-teal-600 dark:text-teal-600 dark:hover:text-teal-500',
+        'transition-[color] duration-200 font-medium underline underline-offset-4',
+        className,
+      )}
       {...props}
     />
   ),

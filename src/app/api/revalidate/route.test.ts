@@ -55,7 +55,7 @@ describe('/api/revalidate auth', () => {
 
   it('fails CLOSED when REVALIDATION_SECRET is unset', async () => {
     // regression: interpolating an unset env var made the expected header
-    // the literal "Bearer undefined" — which an attacker can just send
+    // the literal "Bearer undefined", which an attacker can just send
     vi.stubEnv('REVALIDATION_SECRET', '')
     const res = await POST(makeRequest({
       tags: ['posts'],
@@ -86,9 +86,10 @@ describe('/api/revalidate payloads', () => {
     expect(revalidateAndWarmTags).toHaveBeenCalledWith(['posts'])
   })
 
-  it('400s when no tag, tags, or slug is provided', async () => {
-    const res = await POST(makeRequest({}, `Bearer ${SECRET}`))
-    expect(res.status).toBe(400)
+  it('400s when no tag, tags, or slug is provided, or tags is empty', async () => {
+    expect((await POST(makeRequest({}, `Bearer ${SECRET}`))).status).toBe(400)
+    expect((await POST(makeRequest({ tags: [] }, `Bearer ${SECRET}`))).status).toBe(400)
+    expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
 
   it('207s on partial warming failure (the CI pipeline keys off this)', async () => {

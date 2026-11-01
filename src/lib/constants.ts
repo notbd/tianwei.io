@@ -6,7 +6,7 @@ export type Theme = 'system' | 'dark' | 'light'
 export const DEFAULT_THEME: Theme = 'system'
 
 /**
- * IANA time zone all dates on the site are DISPLAYED in — the single
+ * IANA time zone all dates on the site are DISPLAYED in: the single
  * source of truth for rendering. Storage stays UTC instants.
  *
  * MUST match CONTENT_TIME_ZONE in tianwei-io-content, which anchors

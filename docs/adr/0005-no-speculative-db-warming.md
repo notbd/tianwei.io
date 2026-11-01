@@ -21,25 +21,28 @@ latency, but almost nobody stands in front of it.
 
 Rejected:
 
-- **Homepage warm beacon** — warms the database for visitors who will
+- **Homepage warm beacon**: warms the database for visitors who will
   never query it; each wake keeps compute billed for ≥5 minutes, so
-  sporadic traffic approaches always-on quota burn (~186 of the ~192
-  free compute-hours/month) with zero visitor-visible gain; and an
+  sporadic traffic approaches always-on usage (about 183 CU-hours a
+  month at the 0.25 CU minimum, against the Free plan's 100 CU-hours per
+  project, https://neon.com/pricing, checked 2026-11-01) with zero
+  visitor-visible gain; and an
   unauthenticated "wake my database" endpoint is a cost-amplification
   lever of the same class as the fail-open warming bug fixed in the
   audit.
-- **Cron keep-alive ping** — always-on with extra steps: same quota
-  burn, zero margin under the free allowance, and it defeats
+- **Cron keep-alive ping**: always-on with extra steps: the same usage,
+  which exceeds the free allowance (a project that uses it up is
+  suspended until the next month), and it defeats
   scale-to-zero by deception. If always-warm is ever genuinely needed,
   pay to disable autosuspend instead.
-- **API-level caching** — already forbidden by ADR-0002 (single cache
+- **API-level caching**: already forbidden by ADR-0002 (single cache
   layer).
 
 Accepted (the one targeted exception):
 
 - **Preview-flow pre-warm**: `/api/preview` fires a best-effort,
-  post-response (`after()`) fetch of the cheapest API query once — and
-  only once — authentication has passed. This is the single path where
+  post-response (`after()`) fetch of the cheapest API query once, and
+  only once, authentication has passed. This is the single path where
   a human actively waits on a possibly-cold compute, the redirect +
   render window gives the wake a head start, and the trigger is
   secret-gated so there is no public wake surface.
@@ -51,7 +54,7 @@ Accepted (the one targeted exception):
 - The author's first draft preview after idle gets most of the wake
   hidden inside the redirect; subsequent previews are warm anyway.
 - If a future feature puts the database on a visitor-facing path, this
-  ADR must be revisited — the correct order is "make the path static or
+  ADR must be revisited: the correct order is "make the path static or
   cached first, pre-warm only if a human still waits."
 - Amended 2026-10-31: ADR-0002 now expires tags with `{ expire: 0 }`, so
   the first visit to each page after a sync renders on demand and reaches
