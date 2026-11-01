@@ -1,8 +1,14 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { metadata as rootMetadata } from './metadata'
 
+// A 404 has no canonical URL: the root's './' would resolve to the internal
+// /_not-found route (or to the missing path). A child `alternates` or
+// `openGraph` replaces the root's whole object, hence the spreads.
 export const metadata: Metadata = {
   title: 'Not Found', // root template appends '· tianwei.io'
+  alternates: { ...rootMetadata.alternates, canonical: null },
+  openGraph: { ...rootMetadata.openGraph, url: null },
 }
 
 // Root not-found boundary. Unmatched URLs render it server-side inside the
