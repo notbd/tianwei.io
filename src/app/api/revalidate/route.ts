@@ -1,14 +1,31 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
+import { cacheTags } from '@/lib/api'
 import { revalidateAndWarmTags } from '@/lib/cache'
 import { secureEquals } from '@/lib/secureCompare'
 
+// `{ slug }` refreshes that post plus the list; `{ tags }` and `{ tag }`
+// name cache tags directly. The content engine's deploy sends `{ tags: ['posts'] }`.
 const revalidateBodySchema = z.object({
-  tag: z.string().min(1).optional(),
-  tags: z.array(z.string().min(1)).optional(),
   slug: z.string().min(1).optional(),
+  tags: z.array(z.string().min(1)).min(1).optional(),
+  tag: z.string().min(1).optional(),
 })
+
+function tagsToRevalidate({ slug, tags, tag }: z.infer<typeof revalidateBodySchema>): string[] | undefined {
+  if (slug !== undefined) {
+    return [
+      cacheTags.post(slug),
+      cacheTags.posts,
+    ]
+  }
+  if (tags !== undefined)
+    return tags
+  return tag === undefined
+    ? undefined
+    : [tag]
+}
 
 export async function POST(request: NextRequest) {
   // Fail CLOSED on missing configuration: the old interpolated comparison
@@ -24,27 +41,20 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // an unparsable or invalid body is the caller's error
+  const body = revalidateBodySchema.safeParse(await request.json().catch(() => undefined))
+  const tags = body.success
+    ? tagsToRevalidate(body.data)
+    : undefined
+  if (tags === undefined) {
+    return NextResponse.json(
+      { error: 'Missing tag, tags, or slug' },
+      { status: 400 },
+    )
+  }
+
   try {
-    // an unparsable body is the caller's error, so it lands in the 400 below
-    const parsedBody = revalidateBodySchema.safeParse(await request.json().catch(() => undefined))
-    const { tag, tags, slug }: z.infer<typeof revalidateBodySchema> = parsedBody.success
-      ? parsedBody.data
-      : {}
-
-    // { slug } refreshes that post plus the list; { tags } and { tag } pass through
-    const tagList = slug !== undefined
-      ? [`post-${slug}`, 'posts']
-      : tags ?? (tag !== undefined
-        ? [tag]
-        : undefined)
-    if (tagList === undefined) {
-      return NextResponse.json(
-        { error: 'Missing tag, tags, or slug' },
-        { status: 400 },
-      )
-    }
-
-    const result = await revalidateAndWarmTags(tagList)
+    const result = await revalidateAndWarmTags(tags)
     // 207 Multi-Status: tags were revalidated but warming did not fully succeed
     return NextResponse.json(result, {
       status: result.success ? 200 : 207,
