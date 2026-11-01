@@ -22,10 +22,10 @@ describe('sitemap', () => {
     listAll.mockResolvedValue([
       {
         slug: 'alpha',
-        createdAt: new Date('2025-10-23T00:00:00.000Z'),
-        updatedAt: new Date('2025-11-05T00:00:00.000Z'),
+        createdAt: new Date('2025-10-23T04:00:00.000Z'),
+        updatedAt: new Date('2025-11-05T05:00:00.000Z'),
       },
-      { slug: 'beta', createdAt: new Date('2024-04-15T00:00:00.000Z'), updatedAt: null },
+      { slug: 'beta', createdAt: new Date('2024-04-15T04:00:00.000Z'), updatedAt: null },
     ])
 
     const entries = await sitemap()
@@ -39,9 +39,9 @@ describe('sitemap', () => {
 
     // lastModified prefers updatedAt, falls back to createdAt
     expect(entries.find(entry => entry.url.endsWith('/posts/alpha'))?.lastModified)
-      .toEqual(new Date('2025-11-05T00:00:00.000Z'))
+      .toEqual(new Date('2025-11-05T05:00:00.000Z'))
     expect(entries.find(entry => entry.url.endsWith('/posts/beta'))?.lastModified)
-      .toEqual(new Date('2024-04-15T00:00:00.000Z'))
+      .toEqual(new Date('2024-04-15T04:00:00.000Z'))
   })
 
   it('propagates an API failure instead of producing a sitemap without posts', async () => {
