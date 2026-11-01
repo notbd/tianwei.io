@@ -42,8 +42,8 @@ export type FetchOptions = {
   headers?: Record<string, string>
 }
 
-// Transient failures (network errors, timeouts, 5xx, a 2xx whose body is
-// not JSON) are retried with exponential backoff; 4xx answers are final,
+// Transient failures (network errors, timeouts, 5xx) are retried with
+// exponential backoff; 4xx answers are final,
 // since a retried 404 would only delay a legitimate notFound(). This mainly
 // protects builds: one flaky request during static generation must not
 // drop a page. Each attempt has its own deadline, so a hung API fails the
@@ -93,6 +93,9 @@ async function requestJson(path: string, options: FetchOptions = {}): Promise<un
       continue
     }
 
+    // A 2xx that is not JSON (a proxy's error page) is retried as well, but
+    // for a cached fetch Next has already stored that body, so the retry
+    // reads it back and the request fails loudly rather than recovering.
     try {
       return JSON.parse(body)
     }

@@ -34,7 +34,12 @@ markup:
   the DOM before the snapshot), and next-themes' `disableTransitionOnChange`
   keeps elements from running their own hover transitions during it.
   Browsers without the API, and readers who prefer reduced motion, get an
-  instant switch.
+  instant switch. During the cross-fade Chromium delivers clicks to
+  `<html>` (`::view-transition { pointer-events: none }` does not change
+  that), so two clicks less than about 300 ms apart move the theme one step
+  instead of two (measured: 100 and 250 ms lose the second click, 350 ms
+  does not); accepted rather than patched with a document-level click
+  handler.
 
 ## Consequences
 

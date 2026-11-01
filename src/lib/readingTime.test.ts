@@ -17,6 +17,18 @@ describe('readingMinutes', () => {
     expect(readingMinutes(`${words(460)}\n\n${code}\n\n${tag}`)).toBe(2)
   })
 
+  it('also leaves out fences inside list items and blockquotes', () => {
+    const code = words(2000)
+    expect(readingMinutes(`${words(460)}\n\n- A step:\n\n  \`\`\`sh\n  ${code}\n  \`\`\`\n`)).toBe(2)
+    expect(readingMinutes(`${words(460)}\n\n> \`\`\`ts\n> ${code}\n> \`\`\`\n`)).toBe(2)
+    expect(readingMinutes(`${words(460)}\n\n1. \`\`\`ts\n   ${code}\n   \`\`\`\n`)).toBe(2)
+  })
+
+  it('counts each Chinese or Japanese character as a word', () => {
+    expect(readingMinutes('字'.repeat(690))).toBe(3)
+    expect(readingMinutes(`${'字'.repeat(230)} ${words(230)}`)).toBe(2)
+  })
+
   it('counts words, not punctuation, markdown syntax or contractions twice', () => {
     expect(readingMinutes(`## Heading\n\n- I'm **bold**, [a link](https://x.y/z) and \`code\`.\n`)).toBe(1)
     const sentence = 'It\'s a well-known fact, isn\'t it? '

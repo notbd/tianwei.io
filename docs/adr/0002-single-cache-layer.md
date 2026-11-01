@@ -57,4 +57,6 @@ The **Next.js data cache is the only cache**:
   (the fetcher's deadlines), so the deploy's second revalidation a minute
   later removes any such write. The final page check also renders every
   page once with the new content, so a post the frontend cannot render
-  fails the deploy instead of a visitor's request.
+  turns the deploy red at once. Visitors see that error too until it is
+  fixed (with `{ expire: 0 }` there is no older version to fall back on);
+  the check makes sure the author hears of it first.

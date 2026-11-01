@@ -24,9 +24,11 @@ const WARM_CONCURRENCY = 4
  * https://nextjs.org/docs/app/api-reference/functions/revalidateTag
  *
  * The re-fetch ("warm") is the end-to-end check that the API serves the
- * synced content. Its own cache writes expire with everything else, so it
- * verifies rather than refills. A failed warm is reported, not thrown: the
- * route answers 207 and the content deploy fails on it.
+ * synced content. It verifies rather than refills: Next applies the expiry
+ * when this handler returns, so a warm write that lands earlier expires
+ * and one that lands later stays, both holding the synced data
+ * (docs/adr/0002). A failed warm is reported, not thrown: the route answers
+ * 207 and the content deploy fails on it.
  */
 export async function revalidateAndWarmTags(tags: string[]): Promise<RevalidateResult> {
   for (const tag of tags)

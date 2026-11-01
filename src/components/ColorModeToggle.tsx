@@ -56,10 +56,15 @@ export function ColorModeToggle({
     // The transition snapshots the page when the callback returns, so the
     // new theme must be in the DOM by then: flushSync renders synchronously,
     // and React runs the effects of a synchronous render (next-themes'
-    // class switch, the icon attribute above) before returning.
+    // class switch, the icon attribute above) before returning. Measuring
+    // the body then computes the new styles while next-themes' "no
+    // transitions" rule is still in place (it lifts it a millisecond later),
+    // so no link is caught mid-fade in the snapshot. (A call, because a bare
+    // property read is dropped by the minifier.)
     document.startViewTransition(() => {
       // eslint-disable-next-line react/dom-no-flush-sync -- the snapshot needs the DOM updated synchronously
       flushSync(() => setTheme(next))
+      document.body.getBoundingClientRect()
     })
   }
 
