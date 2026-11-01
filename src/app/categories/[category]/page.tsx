@@ -5,6 +5,7 @@ import { PageHeader } from '@/components/PageHeader'
 import { PostList } from '@/components/PostList'
 import { TextLink } from '@/components/TextLink'
 import { getCategories, getPosts } from '@/lib/api'
+import { categoryLabel } from '@/lib/categories'
 import { site } from '@/lib/site'
 
 type PageProps = {
@@ -28,14 +29,14 @@ function decodeCategoryParam(raw: string): string {
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const category = decodeCategoryParam((await params).category)
-  const description = `Posts in the ${category} category`
+  const label = categoryLabel(decodeCategoryParam((await params).category))
+  const description = `${label} by ${site.name}.`
   return {
-    title: category, // root template appends '· tianwei.io'
+    title: label, // root template appends '· tianwei.io'
     description,
     // a child openGraph/twitter replaces the root's whole object, hence the spreads
-    openGraph: { ...rootMetadata.openGraph, title: category, description },
-    twitter: { ...rootMetadata.twitter, title: `${category} • ${site.domain}`, description },
+    openGraph: { ...rootMetadata.openGraph, title: label, description },
+    twitter: { ...rootMetadata.twitter, title: label, description },
   }
 }
 
@@ -54,7 +55,7 @@ export default async function CategoryPage({ params }: PageProps) {
 
   return (
     <div className="max-w-3xl pb-8">
-      <PageHeader title={category}>
+      <PageHeader title={categoryLabel(category)}>
         <p className="mt-2 text-zinc-500 dark:text-zinc-200">
           {filtered.length}
           {filtered.length === 1

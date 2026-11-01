@@ -4,8 +4,8 @@ import { metadata as rootMetadata } from '@/app/metadata'
 import { PageHeader } from '@/components/PageHeader'
 import { PostList } from '@/components/PostList'
 import { getCategories, getPosts } from '@/lib/api'
+import { categoryLabel } from '@/lib/categories'
 import { categoryPath } from '@/lib/paths'
-import { site } from '@/lib/site'
 
 const description = 'Writings on topics that interest me and things I\'m proud of.'
 
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
   description,
   // a child openGraph/twitter replaces the root's whole object, hence the spreads
   openGraph: { ...rootMetadata.openGraph, title: 'Posts', description },
-  twitter: { ...rootMetadata.twitter, title: `Posts • ${site.domain}`, description },
+  twitter: { ...rootMetadata.twitter, title: 'Posts', description },
 }
 
 export default async function PostsPage() {
@@ -39,7 +39,7 @@ export default async function PostsPage() {
                 href={categoryPath(category)}
                 className="rounded-md border border-zinc-200 px-3 py-0.5 text-sm text-zinc-600 hover:border-teal-600 hover:text-teal-700 dark:border-zinc-800 dark:text-zinc-400 dark:hover:border-teal-600 dark:hover:text-teal-500 transition-colors"
               >
-                {category}
+                {categoryLabel(category)}
               </Link>
             ))}
           </nav>

@@ -7,6 +7,7 @@ import { JsonLd } from '@/components/JsonLd'
 import { MdxContent } from '@/components/mdx/MdxContent'
 import { TextLink } from '@/components/TextLink'
 import { getDraftPost, getPost, getPosts, isNotFoundError } from '@/lib/api'
+import { categoryLabel } from '@/lib/categories'
 import { formatPostDate } from '@/lib/dates'
 import { absoluteUrl, categoryPath, postPath, SITE_URL } from '@/lib/paths'
 import { readingMinutes } from '@/lib/readingTime'
@@ -135,7 +136,7 @@ export default async function PostPage({ params }: PageProps) {
         {/* other attributes */}
         <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
           <time dateTime={post.createdAt.toISOString()}>
-            {formatPostDate(post.createdAt, 'short')}
+            {formatPostDate(post.createdAt)}
           </time>
           {post.updatedAt !== null && (
             <>
@@ -143,7 +144,7 @@ export default async function PostPage({ params }: PageProps) {
               <span>
                 {'Updated '}
                 <time dateTime={post.updatedAt.toISOString()}>
-                  {formatPostDate(post.updatedAt, 'short')}
+                  {formatPostDate(post.updatedAt)}
                 </time>
               </span>
             </>
@@ -152,7 +153,7 @@ export default async function PostPage({ params }: PageProps) {
           <span>{`${readingMinutes(post.content)} min read`}</span>
           <span className="mx-2" aria-hidden>·</span>
           <TextLink href={categoryPath(post.category)}>
-            {post.category}
+            {categoryLabel(post.category)}
           </TextLink>
         </div>
       </header>

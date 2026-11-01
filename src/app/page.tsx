@@ -59,10 +59,35 @@ export default function Home() {
               <ExternalLink href="https://ikalendar.app">
                 ikalendar2
               </ExternalLink>
+              {/* the App Store version, bumped by hand on each release */}
+              <span className="pl-2 text-sm font-normal text-zinc-500 dark:text-zinc-400">
+                v2.4.0
+              </span>
 
               <SubscriptBlock>
-                SwiftUI app for tracking Splatoon 2 in-game rotations
+                Open-source SwiftUI app tracking Splatoon 2 rotations
               </SubscriptBlock>
+            </li>
+
+          </ul>
+        </HomeSectionBody>
+      </HomeSection>
+
+      {/* Currently */}
+      <HomeSection id="currently">
+        <HomeSectionHeader>
+          Currently
+        </HomeSectionHeader>
+
+        <HomeSectionBody>
+          <ul>
+
+            {/* Five Continents International */}
+            <li className="pb-3">
+              <ExternalLink href="https://fivecontinentsintl.com/">
+                Five Continents International
+              </ExternalLink>
+              , Business Systems Analyst
             </li>
 
           </ul>
@@ -104,7 +129,7 @@ export default function Home() {
 
             {/* Illinois */}
             <li className="pb-3">
-              <ExternalLink href="https://siebelschool.illinois.edu/">
+              <ExternalLink href="https://cs.illinois.edu/">
                 Illinois
               </ExternalLink>
               , Computer Science

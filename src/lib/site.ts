@@ -6,9 +6,7 @@
 export const site = {
   name: 'Tianwei Zhang',
   domain: 'tianwei.io',
-  // the name shown as a label rather than a URL (og:site_name, home-screen icon)
-  shortName: 'Tianwei.io',
-  description: 'A software developer.',
+  description: 'Software Engineer in Toronto.',
   email: 'hello@tianwei.io',
   twitter: {
     handle: '@defnotbd',
