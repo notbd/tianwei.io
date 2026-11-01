@@ -2,9 +2,8 @@ import type { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const revalidateAndWarmTags = vi.fn()
-const revalidateAndWarmPost = vi.fn()
 
-vi.mock('@/lib/cache', () => ({ revalidateAndWarmTags, revalidateAndWarmPost }))
+vi.mock('@/lib/cache', () => ({ revalidateAndWarmTags }))
 
 const { POST } = await import('./route')
 
@@ -25,14 +24,13 @@ beforeEach(() => {
   vi.clearAllMocks()
   vi.stubEnv('REVALIDATION_SECRET', SECRET)
   revalidateAndWarmTags.mockResolvedValue({ success: true, revalidated: ['posts'], warmed: ['posts'] })
-  revalidateAndWarmPost.mockResolvedValue({ success: true, revalidated: ['post-a', 'posts'], warmed: [] })
 })
 
 afterEach(() => {
   vi.unstubAllEnvs()
 })
 
-describe('pOST /api/revalidate auth', () => {
+describe('/api/revalidate auth', () => {
   it('401s without an authorization header and touches nothing', async () => {
     const res = await POST(makeRequest({ tags: ['posts'] }))
     expect(res.status).toBe(401)
@@ -55,11 +53,11 @@ describe('pOST /api/revalidate auth', () => {
   })
 })
 
-describe('pOST /api/revalidate payloads', () => {
-  it('handles { slug } via revalidateAndWarmPost', async () => {
+describe('/api/revalidate payloads', () => {
+  it('handles { slug } as the post tag plus the list tag', async () => {
     const res = await POST(makeRequest({ slug: 'hello' }, `Bearer ${SECRET}`))
     expect(res.status).toBe(200)
-    expect(revalidateAndWarmPost).toHaveBeenCalledWith('hello')
+    expect(revalidateAndWarmTags).toHaveBeenCalledWith(['post-hello', 'posts'])
   })
 
   it('handles { tags: [...] }', async () => {
@@ -91,8 +89,9 @@ describe('pOST /api/revalidate payloads', () => {
     expect(await res.json()).toMatchObject({ success: false, error: 'warmer exploded' })
   })
 
-  it('500s on an invalid JSON body', async () => {
+  it('400s on an invalid JSON body (a client error, not a server failure)', async () => {
     const res = await POST(makeRequest('not json{', `Bearer ${SECRET}`))
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(400)
+    expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
 })

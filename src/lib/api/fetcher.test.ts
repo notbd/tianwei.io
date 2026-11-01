@@ -110,11 +110,11 @@ describe('fetchOne', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1)
   })
 
-  it('throws with the message from a 2xx error envelope', async () => {
-    stubFetch({ json: { status: 'error', message: 'Post not found.' } })
+  it('surfaces the API message and the real status from an error envelope', async () => {
+    stubFetch({ status: 404, statusText: 'Not Found', json: { status: 'error', message: 'Post not found.' } })
     const { fetchOne } = await importFetcher()
     await expect(fetchOne('/api/thing', itemSchema)).rejects.toMatchObject({
-      status: 400,
+      status: 404,
       message: 'Post not found.',
     })
   })

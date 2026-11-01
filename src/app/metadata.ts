@@ -14,8 +14,7 @@ export const metadata: Metadata = {
   creator: 'Tianwei Zhang',
   generator: 'Next.js',
   keywords: ['Tianwei Zhang', 'notbd', 'tianwei.io', 'Personal Website'],
-  referrer: 'origin-when-cross-origin',
-  metadataBase: new URL('https://tianwei.io'),
+  metadataBase: new URL(BasePaths.url),
   icons: {
     icon: [
       {
@@ -25,7 +24,7 @@ export const metadata: Metadata = {
       },
       {
         url: AssetPaths.favicon,
-        type: 'image/x-icon',
+        type: 'image/png', // a PNG despite the .ico name
         sizes: '192x192',
       },
     ],
@@ -37,7 +36,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: 'website',
-    url: BasePaths.url,
+    url: './', // resolved against each page's own path (and metadataBase)
     title: 'Tianwei Zhang',
     description: 'A software developer.',
     siteName: 'Tianwei.io',
@@ -58,8 +57,8 @@ export const metadata: Metadata = {
     creatorId: '1110568647041400832',
     images: [BasePaths.url + AssetPaths.twitterImage],
   },
-  manifest: `${BasePaths.url}/manifest.json`,
   alternates: {
+    canonical: './', // same per-page resolution as og:url above
     types: {
       'application/rss+xml': `${BasePaths.url}/feed.xml`,
     },

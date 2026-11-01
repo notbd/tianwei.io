@@ -9,32 +9,26 @@ export type RevalidateResult = {
 }
 
 /**
- * Warms cache for a given tag (exact match or prefix match)
+ * Warms cache for a given tag (exact match or prefix match).
+ * Resolves false when no warmer knows the tag; rejects when warming fails.
  */
 async function warmCacheForTag(tag: string): Promise<boolean> {
-  try {
-    // Check exact match first
-    const exactWarmer = tagWarmers[tag]
-    if (exactWarmer !== undefined) {
-      await exactWarmer()
+  // Check exact match first
+  const exactWarmer = tagWarmers[tag]
+  if (exactWarmer !== undefined) {
+    await exactWarmer()
+    return true
+  }
+
+  // Check prefix matches
+  for (const [prefix, warmer] of Object.entries(prefixWarmers)) {
+    if (tag.startsWith(prefix)) {
+      await warmer(tag.slice(prefix.length))
       return true
     }
-
-    // Check prefix matches
-    for (const [prefix, warmer] of Object.entries(prefixWarmers)) {
-      if (tag.startsWith(prefix)) {
-        const id = tag.slice(prefix.length)
-        await warmer(id)
-        return true
-      }
-    }
-
-    return false
   }
-  catch (error) {
-    console.error(`Failed to warm cache for tag "${tag}":`, error)
-    throw error // Re-throw to ensure we know if warming fails
-  }
+
+  return false
 }
 
 /**
@@ -43,61 +37,36 @@ async function warmCacheForTag(tag: string): Promise<boolean> {
 export async function revalidateAndWarmTags(
   tags: string[],
 ): Promise<RevalidateResult> {
-  const revalidated: string[] = []
+  // Revalidate all tags first (synchronous). `{ expire: 0 }` expires the
+  // tagged entries outright, so the next request blocks on a fresh render
+  // instead of being served the previous version (the 'max' profile is
+  // stale-while-revalidate). This is the documented choice for
+  // invalidations that arrive through a webhook-style Route Handler:
+  // https://nextjs.org/docs/app/api-reference/functions/revalidateTag
+  for (const tag of tags)
+    revalidateTag(tag, { expire: 0 })
+
+  // Warm cache for all tags in parallel, so fresh data is fetched and
+  // cached before users visit. A failed warmer is reported, not thrown:
+  // the route turns it into a 207 that fails the content deploy.
   const warmed: string[] = []
   const errors: string[] = []
-
-  // Revalidate all tags first (synchronous)
-  for (const tag of tags) {
-    revalidateTag(tag, 'max')
-    revalidated.push(tag)
-  }
-
-  // Warm cache for all tags in parallel
-  // This ensures fresh data is fetched and cached before users visit
-  // Parallel execution improves performance when warming multiple tags
-  const warmingResults = await Promise.allSettled(
-    tags.map(async (tag) => {
-      try {
-        const wasWarmed = await warmCacheForTag(tag)
-        return { tag, wasWarmed, success: true }
-      }
-      catch (error) {
-        const errorMsg = `Failed to warm tag "${tag}": ${error instanceof Error ? error.message : String(error)}`
-        console.error(errorMsg)
-        return { tag, wasWarmed: false, success: false, error: errorMsg }
-      }
-    }),
-  )
-
-  // Process results
-  for (const result of warmingResults) {
-    if (result.status === 'fulfilled') {
-      if (result.value.wasWarmed) {
-        warmed.push(result.value.tag)
-      }
-      if (!result.value.success && result.value.error !== undefined) {
-        errors.push(result.value.error)
-      }
+  await Promise.all(tags.map(async (tag) => {
+    try {
+      if (await warmCacheForTag(tag))
+        warmed.push(tag)
     }
-    else {
-      // Promise.allSettled shouldn't reject, but handle just in case
-      errors.push(`Unexpected error warming tags: ${result.reason}`)
+    catch (error) {
+      errors.push(`Failed to warm tag "${tag}": ${error instanceof Error ? error.message : String(error)}`)
     }
-  }
+  }))
+  if (errors.length > 0)
+    console.error(errors.join('; '))
 
   return {
     success: errors.length === 0,
-    revalidated,
+    revalidated: tags,
     warmed,
     ...(errors.length > 0 && { error: errors.join('; ') }),
   }
-}
-
-/**
- * Revalidates a specific post by slug
- * Convenience function that handles both the post tag and list tag
- */
-export async function revalidateAndWarmPost(slug: string): Promise<RevalidateResult> {
-  return revalidateAndWarmTags([`post-${slug}`, 'posts'])
 }

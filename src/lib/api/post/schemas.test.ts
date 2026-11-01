@@ -3,7 +3,9 @@ import { postSchema, postSummarySchema } from './schemas'
 
 // Contract lock: this canonical fixture mirrors exactly what the API
 // serves (columns of the `posts` table, camelCased, Date as ISO string).
-// If parsing this ever fails, the API contract has drifted.
+// If parsing this ever fails, the API contract has drifted. Dates are the
+// instants the content engine stores: midnight America/New_York, i.e.
+// 04:00Z in EDT months and 05:00Z in EST months.
 const CANONICAL_POST = {
   id: 1,
   slug: '1password-git-workflow',
@@ -11,7 +13,8 @@ const CANONICAL_POST = {
   title: 'Integrating 1Password into My Git Workflow',
   description: 'How I use 1Password ssh agent.',
   author: 'Tianwei Zhang',
-  createdAt: '2025-10-23T00:00:00.000Z',
+  createdAt: '2025-10-23T04:00:00.000Z',
+  updatedAt: null,
   isPublished: true,
   content: '# Hello\n\nBody.\n',
 }
@@ -20,7 +23,7 @@ describe('postSchema', () => {
   it('parses the canonical API payload', () => {
     const post = postSchema.parse(CANONICAL_POST)
     expect(post.createdAt).toBeInstanceOf(Date)
-    expect(post.createdAt.getTime()).toBe(Date.UTC(2025, 9, 23))
+    expect(post.createdAt.getTime()).toBe(Date.UTC(2025, 9, 23, 4))
     expect(post.isPublished).toBe(true)
     expect(post.content).toBe('# Hello\n\nBody.\n')
   })
@@ -30,18 +33,18 @@ describe('postSchema', () => {
     expect(post.description).toBeNull()
   })
 
-  it('parses updatedAt as a Date, passes null through, tolerates absence', () => {
-    const withDate = postSchema.parse({ ...CANONICAL_POST, updatedAt: '2025-11-05T00:00:00.000Z' })
+  it('parses updatedAt as a Date, passes null through, rejects absence', () => {
+    const withDate = postSchema.parse({ ...CANONICAL_POST, updatedAt: '2025-11-05T05:00:00.000Z' })
     expect(withDate.updatedAt).toBeInstanceOf(Date)
-    expect(withDate.updatedAt?.getTime()).toBe(Date.UTC(2025, 10, 5))
+    expect(withDate.updatedAt?.getTime()).toBe(Date.UTC(2025, 10, 5, 5))
 
     // null must stay null — never coerce to Date(0)
     const withNull = postSchema.parse({ ...CANONICAL_POST, updatedAt: null })
     expect(withNull.updatedAt).toBeNull()
 
-    // absent (API predating the field) must still parse
-    const absent = postSchema.parse(CANONICAL_POST)
-    expect(absent.updatedAt).toBeUndefined()
+    // the API has served the field since 2026-07; a missing key is drift
+    const { updatedAt: _updatedAt, ...withoutUpdatedAt } = CANONICAL_POST
+    expect(() => postSchema.parse(withoutUpdatedAt)).toThrow()
   })
 
   it('rejects a missing or null content (DB nullability must never leak)', () => {
@@ -74,12 +77,13 @@ describe('postSummarySchema', () => {
     title: 'Integrating 1Password into My Git Workflow',
     description: null,
     author: 'Tianwei Zhang',
-    createdAt: '2024-04-15T00:00:00.000Z',
+    createdAt: '2024-04-15T04:00:00.000Z',
+    updatedAt: null,
   }
 
   it('parses the canonical list payload', () => {
     const summary = postSummarySchema.parse(CANONICAL_SUMMARY)
-    expect(summary.createdAt.getTime()).toBe(Date.UTC(2024, 3, 15))
+    expect(summary.createdAt.getTime()).toBe(Date.UTC(2024, 3, 15, 4))
   })
 
   it('does not require content or isPublished', () => {

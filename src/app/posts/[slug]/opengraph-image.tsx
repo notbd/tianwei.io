@@ -11,6 +11,14 @@ type ImageProps = {
   params: Promise<{ slug: string }>
 }
 
+// Prerender one image per post. The page's generateStaticParams does not
+// carry over to this route, which left every social unfurl paying a cold
+// satori render; a slug outside this list still renders on demand.
+export async function generateStaticParams() {
+  const posts = await apiClient.post.listAll()
+  return posts.map(post => ({ slug: post.slug }))
+}
+
 export default async function OpengraphImage({ params }: ImageProps) {
   const { slug } = await params
 

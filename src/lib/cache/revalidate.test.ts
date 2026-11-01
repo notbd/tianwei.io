@@ -9,7 +9,7 @@ vi.mock('@/lib/api', () => ({
   apiClient: { post: { listAll, getBySlug } },
 }))
 
-const { revalidateAndWarmPost, revalidateAndWarmTags } = await import('./revalidate')
+const { revalidateAndWarmTags } = await import('./revalidate')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -21,7 +21,7 @@ describe('revalidateAndWarmTags', () => {
   it('revalidates every tag and warms the posts warmer', async () => {
     const result = await revalidateAndWarmTags(['posts'])
 
-    expect(revalidateTag).toHaveBeenCalledWith('posts', 'max')
+    expect(revalidateTag).toHaveBeenCalledWith('posts', { expire: 0 })
     expect(listAll).toHaveBeenCalledOnce()
     // the posts warmer re-fetches every individual post
     expect(getBySlug).toHaveBeenCalledWith('alpha')
@@ -32,7 +32,7 @@ describe('revalidateAndWarmTags', () => {
   it('routes post-<slug> tags to the prefix warmer with the stripped slug', async () => {
     const result = await revalidateAndWarmTags(['post-hello-world'])
 
-    expect(revalidateTag).toHaveBeenCalledWith('post-hello-world', 'max')
+    expect(revalidateTag).toHaveBeenCalledWith('post-hello-world', { expire: 0 })
     expect(getBySlug).toHaveBeenCalledWith('hello-world')
     expect(listAll).not.toHaveBeenCalled()
     expect(result.success).toBe(true)
@@ -42,7 +42,7 @@ describe('revalidateAndWarmTags', () => {
   it('revalidates unknown tags without warming, still succeeding', async () => {
     const result = await revalidateAndWarmTags(['mystery'])
 
-    expect(revalidateTag).toHaveBeenCalledWith('mystery', 'max')
+    expect(revalidateTag).toHaveBeenCalledWith('mystery', { expire: 0 })
     expect(result.success).toBe(true)
     expect(result.warmed).toEqual([])
   })
@@ -66,14 +66,5 @@ describe('revalidateAndWarmTags', () => {
 
     expect(result.success).toBe(false)
     expect(result.warmed).toEqual(['post-hello'])
-  })
-})
-
-describe('revalidateAndWarmPost', () => {
-  it('revalidates both the post tag and the list tag', async () => {
-    await revalidateAndWarmPost('hello')
-
-    expect(revalidateTag).toHaveBeenCalledWith('post-hello', 'max')
-    expect(revalidateTag).toHaveBeenCalledWith('posts', 'max')
   })
 })

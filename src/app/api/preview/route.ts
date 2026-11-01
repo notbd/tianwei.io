@@ -2,6 +2,7 @@ import type { NextRequest } from 'next/server'
 import { draftMode } from 'next/headers'
 import { after, NextResponse } from 'next/server'
 import { BASE_URL } from '@/lib/api/config'
+import { postPath } from '@/lib/paths'
 import { secureEquals } from '@/lib/secureCompare'
 
 /**
@@ -41,5 +42,5 @@ export async function GET(request: NextRequest) {
   const draft = await draftMode()
   draft.enable()
 
-  return NextResponse.redirect(new URL(`/posts/${slug}`, request.url))
+  return NextResponse.redirect(new URL(postPath(slug), request.url))
 }

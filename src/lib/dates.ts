@@ -1,4 +1,4 @@
-import { DISPLAY_TIME_ZONE } from '@/lib/constants/constants'
+import { DISPLAY_TIME_ZONE } from '@/lib/constants'
 
 /**
  * The one formatting path for post dates. Every visible date on the

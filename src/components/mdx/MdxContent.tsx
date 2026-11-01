@@ -7,7 +7,7 @@ type MdxContentProps = {
 }
 
 export async function MdxContent({ source }: MdxContentProps) {
-  const { content } = await compileMdxContent(source)
+  const content = await compileMdxContent(source)
 
   return <div className="mdx">{content}</div>
 }

@@ -48,7 +48,7 @@ afterEach(() => {
   vi.unstubAllGlobals()
 })
 
-describe('gET /api/preview', () => {
+describe('/api/preview', () => {
   it('401s with a wrong secret and never enables draft mode', async () => {
     const res = await GET(makeRequest({ secret: 'wrong', slug: 'a-post' }))
     expect(res.status).toBe(401)

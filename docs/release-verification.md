@@ -27,13 +27,12 @@ from `main` → copy its connection string (below: `$STAGING_DB`).
 cd tianwei-io-content   # dev branch
 pnpm install && pnpm lint && pnpm typecheck && pnpm test
 
-DATABASE_URL=$STAGING_DB pnpm db:migrate     # applies 0000..0003
+DATABASE_URL=$STAGING_DB pnpm db:migrate     # applies pending migrations
 DATABASE_URL=$STAGING_DB pnpm sync:prod      # transactional reconcile
 ```
 
-Expect: `Completed: N upserted, M deleted`. Spot-check in the Neon SQL
-console that `posts.updated_at` exists and `created_at` values are
-ET-midnight instants (04:00/05:00 UTC).
+Expect: `Completed: N upserted, M deleted`. Spot-check a row in the Neon
+SQL console: `created_at` values are ET-midnight instants (04:00/05:00 UTC).
 
 ### 2. API → local Worker on the staging DB
 
@@ -45,11 +44,18 @@ pnpm install && pnpm lint && pnpm typecheck && pnpm test
 pnpm dev                 # wrangler dev on http://127.0.0.1:8787
 ```
 
-Contract check against live production (allows the additive updatedAt):
+Contract check against live production. `pnpm smoke` is a byte-for-byte
+diff of two deployments (no field is exempted), so it only passes when this
+release carries no content change; with content changes, run it before
+step 1's sync or read the diff as the expected content delta:
 
 ```shell
 pnpm smoke https://tio.twz.app http://127.0.0.1:8787
 ```
+
+Expect 11/11. One mismatch on `/api/__dev/posts` means the local
+`.dev.vars` has `NODE_ENV=development` (production answers 404 there); run
+`wrangler dev` with `NODE_ENV=production` for a clean comparison.
 
 ### 3. Frontend → against the local Worker
 
@@ -76,13 +82,11 @@ CONTENT_API_URL=http://127.0.0.1:8787 pnpm start      # manual pass
 
 ## 5. Merge — only after sign-off, in this order
 
-1. **tianwei-io-content** → merge → its deploy workflow migrates prod +
-   re-syncs (ET-anchored dates) + revalidates the frontend.
-2. **tianwei-io-api** → merge → Worker deploys (needs the content
-   migration already applied — it selects `updated_at`).
-   Then follow `docs/cutover.md` for the domain switch.
-3. **tianwei.io** → merge → Vercel deploys (ET display pairs with the
-   re-synced data).
+1. **tianwei-io-content** → merge → its deploy workflow migrates prod,
+   re-syncs and revalidates the frontend.
+2. **tianwei-io-api** → merge → Worker deploys. A release that adds a
+   column lands in the content repo first, since the API selects it.
+3. **tianwei.io** → merge → Vercel deploys.
 
 Merging is always a human action on the PR page — CI gates (lint,
 typecheck, tests, build, Playwright) must be green, but green CI is

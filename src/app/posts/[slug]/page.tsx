@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
-import type { Post, PostSummary } from '@/lib/api'
+import type { Post } from '@/lib/api'
 import { draftMode } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { MdxContent } from '@/components/mdx/MdxContent'
 import { apiClient, NetworkRequestError } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
-import { BasePaths } from '@/lib/paths'
+import { BasePaths, categoryPath, postPath } from '@/lib/paths'
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     openGraph: {
       type: 'article',
-      url: `${BasePaths.url}/posts/${post.slug}`,
+      url: `${BasePaths.url}${postPath(post.slug)}`,
       title: post.title,
       description,
       publishedTime: post.createdAt.toISOString(),
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export async function generateStaticParams() {
-  const posts: PostSummary[] = await apiClient.post.listAll()
+  const posts = await apiClient.post.listAll()
 
   // Fail the build loudly rather than silently shipping zero prerendered
   // pages (which would degrade every post visit to on-demand rendering).
@@ -78,7 +78,7 @@ export default async function PostPage({ params }: PageProps) {
   }
 
   return (
-    <main className="max-w-3xl pb-8">
+    <article className="max-w-3xl pb-8">
 
       {/* draft preview banner */}
       {isDraftPreview && (
@@ -102,7 +102,7 @@ export default async function PostPage({ params }: PageProps) {
         )}
 
         {/* other attributes */}
-        <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-500">
+        <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
           <time dateTime={post.createdAt.toISOString()}>
             {formatPostDate(post.createdAt, 'short')}
           </time>
@@ -119,7 +119,7 @@ export default async function PostPage({ params }: PageProps) {
           )}
           <span className="mx-2">·</span>
           <Link
-            href={`/categories/${encodeURIComponent(post.category)}`}
+            href={categoryPath(post.category)}
             className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 dark:decoration-zinc-700 dark:hover:text-zinc-300"
           >
             {post.category}
@@ -130,6 +130,6 @@ export default async function PostPage({ params }: PageProps) {
       {/* content */}
       <MdxContent source={post.content} />
 
-    </main>
+    </article>
   )
 }

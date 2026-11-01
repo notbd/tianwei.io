@@ -25,7 +25,7 @@ test('posts index lists articles and navigates to a post', async ({ page }) => {
 test('theme toggle cycles system -> dark -> light without flash-prone state', async ({ page }) => {
   await page.goto('/')
   const html = page.locator('html')
-  const toggle = page.getByRole('button', { name: 'Color Mode Toggle' })
+  const toggle = page.getByRole('button', { name: /color theme/i })
 
   // pre-paint script default
   await expect(html).toHaveAttribute('data-theme-choice', 'system')
@@ -50,6 +50,24 @@ test('theme toggle cycles system -> dark -> light without flash-prone state', as
   await page.reload()
   await expect(html).toHaveAttribute('data-theme-choice', 'dark')
   await expect(html).toHaveClass(/dark/)
+})
+
+test('unknown post, category and path all 404 with the not-found title', async ({ request }) => {
+  for (const path of ['/posts/this-post-does-not-exist', '/categories/not-a-real-category', '/this-page-does-not-exist']) {
+    const response = await request.get(path)
+    expect(response.status(), path).toBe(404)
+    expect(await response.text(), path).toContain('<title>Not Found · tianwei.io</title>')
+  }
+})
+
+test('an unmatched URL renders the not-found page server-side inside the layout', async ({ request }) => {
+  // notFound() from the post/category pages cannot be asserted this way: without
+  // Cache Components, Next 16 ships a bare shell for it and renders the boundary
+  // on the client (see src/app/not-found.tsx)
+  const body = await (await request.get('/this-page-does-not-exist')).text()
+  expect(body).not.toContain('__next_error__')
+  expect(body).toContain('<h1')
+  expect(body).toContain('Not Found')
 })
 
 test('feed.xml serves RSS with every post', async ({ request }) => {
