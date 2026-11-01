@@ -69,7 +69,7 @@ export async function generateStaticParams() {
   // Fail the build loudly rather than silently shipping zero prerendered
   // pages (which would degrade every post visit to on-demand rendering).
   if (posts.length === 0)
-    throw new Error('generateStaticParams: API returned 0 posts — refusing to build an empty catalog')
+    throw new Error('generateStaticParams: API returned 0 posts; refusing to build an empty catalog')
 
   return posts.map(post => ({ slug: post.slug }))
 }
@@ -85,7 +85,7 @@ export default async function PostPage({ params }: PageProps) {
   catch (error) {
     // Only a slug that names no post (404, or the API's 400 for a malformed
     // slug) becomes a not-found page. Anything else (network hiccup, 500,
-    // schema drift) must propagate — during a build a swallowed error would
+    // schema drift) must propagate: during a build a swallowed error would
     // silently drop the page from the prerendered set.
     if (isNotFoundError(error))
       notFound()

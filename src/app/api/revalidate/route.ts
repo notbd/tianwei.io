@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
   // made an unset secret match the literal header "Bearer undefined".
   const secret = process.env.REVALIDATION_SECRET
   if (secret === undefined || secret === '') {
-    console.error('REVALIDATION_SECRET is not configured — rejecting revalidation request')
+    console.error('REVALIDATION_SECRET is not configured: rejecting revalidation request')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

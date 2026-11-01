@@ -38,7 +38,7 @@ describe('postSchema', () => {
     expect(withDate.updatedAt).toBeInstanceOf(Date)
     expect(withDate.updatedAt?.getTime()).toBe(Date.UTC(2025, 10, 5, 5))
 
-    // null must stay null — never coerce to Date(0)
+    // null must stay null, never coerced to Date(0)
     const withNull = postSchema.parse({ ...CANONICAL_POST, updatedAt: null })
     expect(withNull.updatedAt).toBeNull()
 

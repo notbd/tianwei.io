@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 
-# A force-push supersedes the running check — don't burn minutes finishing it.
+# A force-push supersedes the running check: don't burn minutes finishing it.
 # (Also applies to main: only the latest merge's regression check matters.)
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -51,7 +51,7 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # Regression check only — Vercel performs the real deploy build.
+      # Regression check only; Vercel performs the real deploy build.
       # Hits the public read-only content API at build time (SSG).
       - name: Build
         run: pnpm build

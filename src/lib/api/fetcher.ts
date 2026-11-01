@@ -10,7 +10,7 @@ export function apiUrl(path: string): string {
   const baseUrl = process.env.CONTENT_API_URL
   if (baseUrl === undefined || baseUrl === '') {
     throw new Error(
-      'CONTENT_API_URL is not set — the frontend cannot reach the content API. '
+      'CONTENT_API_URL is not set: the frontend cannot reach the content API. '
       + 'Set it in .env.local (local dev) or the environment (CI workflow env / Vercel env).',
     )
   }

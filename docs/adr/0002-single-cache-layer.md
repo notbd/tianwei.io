@@ -9,7 +9,7 @@ Content changes rarely (git pushes) but must propagate promptly when it
 does. Three places could plausibly cache: Postgres-side, the API edge
 (Cloudflare), and the Next.js data cache. Every additional cache layer
 multiplies invalidation complexity: a sync would need to invalidate all of
-them, in order, atomically-ish — and any missed layer serves stale data
+them, in order, atomically-ish, and any missed layer serves stale data
 with no error anywhere.
 
 ## Decision
@@ -27,7 +27,7 @@ The **Next.js data cache is the only cache**:
   https://nextjs.org/docs/app/api-reference/functions/revalidateTag).
 - The deploy revalidates a second time a minute later, then requests every
   page in the sitemap and fails unless each answers 200.
-- The API sets `Cache-Control: no-store` on `/api/*` — deliberately
+- The API sets `Cache-Control: no-store` on `/api/*`, deliberately
   forbidding edge/browser caching so this decision is enforced, not just
   hoped for.
 - A partial warm returns HTTP 207 and **fails the content deploy**: the

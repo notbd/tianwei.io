@@ -14,7 +14,7 @@ migrate + sync  ────────►  Neon BRANCH database  ◄───�
                                     Playwright + manual ─────┘
 ```
 
-The one piece of infrastructure needed: a **Neon branch** — a
+The one piece of infrastructure needed: a **Neon branch**: a
 copy-on-write fork of the production database (free, instant, safe to
 migrate and wipe). Create once in the Neon console: Branches → New branch
 from `main` → copy its connection string (below: `$STAGING_DB`).
@@ -82,7 +82,7 @@ CONTENT_API_URL=http://127.0.0.1:8787 pnpm start      # manual pass
 - [ ] Revalidation round-trip: re-run step 1's sync with an edited file, then
       `POST /api/revalidate` locally and confirm the page updates
 
-## 5. Merge — only after sign-off, in this order
+## 5. Merge (only after sign-off, in this order)
 
 1. **tianwei-io-content** → merge → its deploy workflow migrates prod,
    re-syncs, revalidates the frontend (again a minute later) and requests
@@ -92,7 +92,7 @@ CONTENT_API_URL=http://127.0.0.1:8787 pnpm start      # manual pass
    column lands in the content repo first, since the API selects it.
 3. **tianwei.io** → merge → Vercel deploys.
 
-Merging is always a human action on the PR page — CI gates (lint,
+Merging is always a human action on the PR page: CI gates (lint,
 typecheck, tests, build, Playwright) must be green, but green CI is
 necessary, not sufficient: this runbook is the sufficient part.
 

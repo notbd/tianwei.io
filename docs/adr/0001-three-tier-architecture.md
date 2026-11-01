@@ -10,7 +10,7 @@ repo with local MDX (the previous Contentlayer setup) renders the same site
 with less latency, less configuration and no cross-repo coordination.
 
 The system was split anyway, for explicitly educational reasons: to
-practice the problems that only exist **between** services — contract
+practice the problems that only exist **between** services: contract
 management, independent deployment, cache invalidation across ownership
 boundaries, schema evolution with live readers.
 

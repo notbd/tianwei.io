@@ -8,7 +8,7 @@ vi.mock('next/headers', () => ({
   draftMode: async () => ({ enable, disable }),
 }))
 
-// after() has no request context in unit tests — run callbacks inline
+// after() has no request context in unit tests, so run callbacks inline
 vi.mock('next/server', async (importOriginal) => {
   const actual = await importOriginal<typeof import('next/server')>()
   return {

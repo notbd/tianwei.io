@@ -18,7 +18,7 @@ The frontend layer of my personal website [tianwei.io](https://tianwei.io).
 
 <h2>Site Architecture</h2>
 
-- **[Frontend](https://github.com/notbd/tianwei.io)**: this repo — a Next.js application rendering content from the API with static generation and on-demand revalidation.
+- **[Frontend](https://github.com/notbd/tianwei.io)**: this repo, a Next.js application rendering content from the API with static generation and on-demand revalidation.
 - **[API Layer](https://github.com/notbd/tianwei-io-api)**: a Hono service on Cloudflare Workers that serves content data from the content engine via REST endpoints.
 - **[Content Engine](https://github.com/notbd/tianwei-io-content)**: a dedicated repo that stores, parses and syncs MDX to a remote PostgreSQL database.
 
@@ -29,9 +29,9 @@ Note: previously this site incorporated [Contentlayer](https://contentlayer.dev)
 Every route is **fully static**:
 
 - Post pages are prerendered at build time (`generateStaticParams`); the posts list and home page are static too.
-- Data fetches use the Next.js data cache with `revalidate: false` + tags — content only changes through **on-demand revalidation** (see below), never by TTL. Revalidation expires the tags outright (`{ expire: 0 }`), so the first request after a content sync renders fresh content instead of a stale copy.
+- Data fetches use the Next.js data cache with `revalidate: false` + tags: content only changes through **on-demand revalidation** (see below), never by TTL. Revalidation expires the tags outright (`{ expire: 0 }`), so the first request after a content sync renders fresh content instead of a stale copy.
 - The theme system is deliberately cookie-free: an inline pre-paint script reads the choice from localStorage and drives both the `dark` class (next-themes) and the toggle icon (CSS on a `data-theme-choice` attribute). No server-side theme state means no dynamic rendering.
-- All dates render in **`DISPLAY_TIME_ZONE`** (`America/New_York`) through the single `formatPostDate()` helper; storage stays UTC instants. Must match the content engine's `CONTENT_TIME_ZONE` — see [ADR-0004](./docs/adr/0004-display-time-zone.md).
+- All dates render in **`DISPLAY_TIME_ZONE`** (`America/New_York`) through the single `formatPostDate()` helper; storage stays UTC instants. Must match the content engine's `CONTENT_TIME_ZONE` (see [ADR-0004](./docs/adr/0004-display-time-zone.md)).
 - `generateStaticParams` refuses to build an empty catalog, and a post page only 404s when the API says the slug names no post (404, or 400 for a malformed slug); any other fetch failure fails the build loudly instead of silently dropping pages. The fetcher (`src/lib/api/fetcher.ts`) retries transient failures (network errors, timeouts, 5xx) with backoff and gives every attempt a 10 s deadline, so a hung API fails a build or render in about 30 s instead of never. The per-attempt signal also opts each retry out of Next's request memoization, without which a retry inside a render would get the first attempt's failure back without a request.
 - `/feed.xml` (RSS), `/categories/[category]` pages, and per-post OG images (`opengraph-image.tsx` has its own `generateStaticParams`) are all statically generated from the same tagged data, so one revalidation refreshes everything.
 - Posts compile with `@mdx-js/mdx` on the server. A post's JavaScript would run there, so `src/lib/mdx.tsx` refuses imports, exports, `{expressions}` and expression props (components take string props); the content engine rejects the same at sync time.

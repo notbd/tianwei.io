@@ -35,7 +35,7 @@ export default function RootLayout(
           `${rubik.variable} ${berkeleyMono.variable}`,
         )}
       >
-        {/* static template literal, zero interpolation — safe by construction */}
+        {/* static template literal, zero interpolation, so safe by construction */}
         {/* eslint-disable-next-line react/dom-no-dangerously-set-innerhtml */}
         <script dangerouslySetInnerHTML={{ __html: themeChoiceScript }} />
 

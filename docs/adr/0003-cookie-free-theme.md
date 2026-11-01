@@ -20,7 +20,7 @@ markup:
 
 - next-themes' inline script keeps applying the `dark` class before paint
   (unchanged).
-- A second tiny inline script — first element in `<body>` — mirrors the
+- A second tiny inline script (the first element in `<body>`) mirrors the
   stored choice from localStorage into `data-theme-choice` on `<html>`
   before first paint.
 - The toggle renders **all three icons**; CSS shows exactly one based on
@@ -45,7 +45,7 @@ markup:
   since 2026-10 the 400 for a malformed slug), and a Playwright test pins
   the toggle cycle + persistence across reload.
 - Users without JavaScript see the system-theme icon and no toggle
-  behavior — acceptable, since theming itself requires JS.
+  behavior, acceptable, since theming itself requires JS.
 - The pattern generalizes: any per-user state read during server render
   of shared layouts silently destroys static rendering. Keep per-user
   state client-side or behind dynamic islands.

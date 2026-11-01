@@ -11,7 +11,7 @@ import { DEFAULT_THEME } from '@/lib/constants'
  * own inline script applies the `dark` class before paint, and a second
  * inline script in the root layout mirrors the stored choice into the
  * `data-theme-choice` attribute that drives the toggle icon via CSS.
- * No cookies — the server renders theme-agnostic markup, which keeps
+ * No cookies: the server renders theme-agnostic markup, which keeps
  * every route statically renderable.
  */
 export function ThemeProvider({ children, ...props }: NextThemeProviderProps) {

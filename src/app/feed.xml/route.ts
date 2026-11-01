@@ -32,7 +32,7 @@ export async function GET(): Promise<Response> {
     </item>`
   }).join('\n')
 
-  // max over every post's effective date — an OLD post with a NEW
+  // max over every post's effective date: an OLD post with a NEW
   // updatedAt must bump this too, so readers re-poll
   const lastBuildDate = posts.length > 0
     ? new Date(Math.max(...posts.map(post => (post.updatedAt ?? post.createdAt).getTime()))).toUTCString()

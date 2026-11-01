@@ -31,7 +31,7 @@ test('theme toggle cycles system -> dark -> light without flash-prone state', as
   await expect(html).toHaveAttribute('data-theme-choice', 'system')
 
   // first click may race hydration (Playwright doesn't wait for React to
-  // attach handlers) — retry the click until the state actually flips
+  // attach handlers), so retry the click until the state actually flips
   await expect(async () => {
     await toggle.click()
     await expect(html).toHaveAttribute('data-theme-choice', 'dark', { timeout: 1000 })

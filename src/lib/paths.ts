@@ -1,7 +1,7 @@
 import { site } from '@/lib/site'
 
-// VERCEL_URL is ALWAYS the generated <deployment>.vercel.app host — even in
-// production — so absolute URLs (sitemap, feed, og:url, canonical, RSS
+// VERCEL_URL is ALWAYS the generated <deployment>.vercel.app host, even in
+// production, so absolute URLs (sitemap, feed, og:url, canonical, RSS
 // guids) use the canonical domain there, and the deployment host only on
 // previews, where links should stay on the preview.
 const vercelUrl = process.env.VERCEL_URL

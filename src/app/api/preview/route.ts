@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
   // Pre-warm the database while the redirect + page render are in flight:
   // this is the one path where a human waits on a possibly-suspended Neon
   // compute, and it only fires AFTER authentication (no public wake lever).
-  // Best-effort by design — see docs/adr/0005-no-speculative-db-warming.md.
+  // Best-effort by design (docs/adr/0005-no-speculative-db-warming.md).
   after(wakeDatabase)
 
   const draft = await draftMode()

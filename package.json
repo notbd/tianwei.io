@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "packageManager": "pnpm@10.34.9",
-  "description": "Personal website of Tianwei Zhang — Next.js frontend for tianwei.io",
+  "description": "Personal website of Tianwei Zhang: Next.js frontend for tianwei.io",
   "author": "Tianwei Zhang",
   "license": "AGPL-3.0-only",
   "engines": {
