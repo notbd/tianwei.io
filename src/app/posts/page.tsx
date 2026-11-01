@@ -1,12 +1,18 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { metadata as rootMetadata } from '@/app/metadata'
 import { PostList } from '@/components/PostList'
 import { apiClient } from '@/lib/api'
 import { categoryPath } from '@/lib/paths'
 
+const description = 'Writings on topics that interest me and things I\'m proud of.'
+
 export const metadata: Metadata = {
   title: 'Posts', // root template appends '· tianwei.io'
-  description: 'Writings on topics that interest me and things I\'m proud of.',
+  description,
+  // a child openGraph/twitter replaces the root's whole object, hence the spreads
+  openGraph: { ...rootMetadata.openGraph, title: 'Posts', description },
+  twitter: { ...rootMetadata.twitter, title: 'Posts • tianwei.io', description },
 }
 
 export default async function PostsPage() {

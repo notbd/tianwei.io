@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { metadata as rootMetadata } from '@/app/metadata'
 import { PostList } from '@/components/PostList'
 import { apiClient } from '@/lib/api'
 
@@ -26,9 +27,13 @@ function decodeCategoryParam(raw: string): string {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const category = decodeCategoryParam((await params).category)
+  const description = `Posts in the ${category} category`
   return {
     title: category, // root template appends '· tianwei.io'
-    description: `Posts in the ${category} category`,
+    description,
+    // a child openGraph/twitter replaces the root's whole object, hence the spreads
+    openGraph: { ...rootMetadata.openGraph, title: category, description },
+    twitter: { ...rootMetadata.twitter, title: `${category} • tianwei.io`, description },
   }
 }
 
