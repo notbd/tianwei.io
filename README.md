@@ -67,7 +67,7 @@ pnpm build
 pnpm test:e2e    # Playwright browser smoke against the production build
 ```
 
-CI (`.github/workflows/ci.yml`) runs all of these on every pull request and on pushes to `main`; the build and smoke steps run against the public API URL set inline in the workflow (`CONTENT_API_URL=https://tio.twz.app`, no secret needed for a read-only API). The vitest suite pins the API contract (exact JSON shapes the frontend parses), the revalidation route's auth and status codes, the cache-warming dispatch logic, the canonical host and the feed; the Playwright suite covers navigation, the theme toggle cycle, the 404 pages, and the feed/sitemap outputs.
+CI (`.github/workflows/ci.yml`) runs all of these on every pull request and on pushes to `main`. The build and smoke steps use the two public values inlined in the workflow (`CONTENT_API_URL=https://tio.twz.app`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), so no Actions secrets are involved and Dependabot and fork pull requests build too. The vitest suite pins the API contract (exact JSON shapes the frontend parses), the revalidation route's auth and status codes, the cache-warming dispatch logic, the canonical host and the feed; the Playwright suite covers navigation, the theme toggle cycle, the 404 pages, and the feed/sitemap outputs.
 
 The manual pre-merge checklist for cross-repo releases lives in [`docs/release-verification.md`](./docs/release-verification.md).
 

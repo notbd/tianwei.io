@@ -45,13 +45,17 @@ pnpm dev                 # wrangler dev on http://127.0.0.1:8787
 ```
 
 Contract check against live production. `pnpm smoke` is a byte-for-byte
-diff of two deployments, so it only passes when this release carries no
-content change; with content changes, run it before step 1's sync or
-read the diff as the expected content delta:
+diff of two deployments (no field is exempted), so it only passes when this
+release carries no content change; with content changes, run it before
+step 1's sync or read the diff as the expected content delta:
 
 ```shell
 pnpm smoke https://tio.twz.app http://127.0.0.1:8787
 ```
+
+Expect 11/11. One mismatch on `/api/__dev/posts` means the local
+`.dev.vars` has `NODE_ENV=development` (production answers 404 there); run
+`wrangler dev` with `NODE_ENV=production` for a clean comparison.
 
 ### 3. Frontend → against the local Worker
 
