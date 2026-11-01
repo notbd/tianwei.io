@@ -10,7 +10,7 @@ The frontend layer of my personal website [tianwei.io](https://tianwei.io).
 
 - **Framework**: [Next.js](https://nextjs.org) (App Router)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com)
-- **MDX Processing**: [next-mdx-remote](https://github.com/hashicorp/next-mdx-remote)
+- **MDX Processing**: [MDX](https://mdxjs.com) (`@mdx-js/mdx`) with remark/rehype plugins and [rehype-pretty-code](https://rehype-pretty.pages.dev)
 - **Data Validation**: [Zod](https://zod.dev)
 - **Image Optimization**: [Cloudinary](https://cloudinary.com)
 - **Testing**: [Vitest](https://vitest.dev) (unit/contract) + [Playwright](https://playwright.dev) (browser smoke)
@@ -32,8 +32,9 @@ Every route is **fully static**:
 - Data fetches use the Next.js data cache with `revalidate: false` + tags — content only changes through **on-demand revalidation** (see below), never by TTL. Revalidation expires the tags outright (`{ expire: 0 }`), so the first request after a content sync renders fresh content instead of a stale copy.
 - The theme system is deliberately cookie-free: an inline pre-paint script reads the choice from localStorage and drives both the `dark` class (next-themes) and the toggle icon (CSS on a `data-theme-choice` attribute). No server-side theme state means no dynamic rendering.
 - All dates render in **`DISPLAY_TIME_ZONE`** (`America/New_York`) through the single `formatPostDate()` helper; storage stays UTC instants. Must match the content engine's `CONTENT_TIME_ZONE` — see [ADR-0004](./docs/adr/0004-display-time-zone.md).
-- `generateStaticParams` refuses to build an empty catalog, and a post page only 404s when the API says the slug names no post (404, or 400 for a malformed slug); any other fetch failure fails the build loudly instead of silently dropping pages. Transient 5xx/network failures are retried with backoff in the fetcher.
+- `generateStaticParams` refuses to build an empty catalog, and a post page only 404s when the API says the slug names no post (404, or 400 for a malformed slug); any other fetch failure fails the build loudly instead of silently dropping pages. The fetcher (`src/lib/api/fetcher.ts`) retries transient failures (network errors, timeouts, 5xx) with backoff and gives every attempt a 10 s deadline, so a hung API fails a build or render in about 30 s instead of never. The per-attempt signal also opts each retry out of Next's request memoization, without which a retry inside a render would get the first attempt's failure back without a request.
 - `/feed.xml` (RSS), `/categories/[category]` pages, and per-post OG images (`opengraph-image.tsx` has its own `generateStaticParams`) are all statically generated from the same tagged data, so one revalidation refreshes everything.
+- Posts compile with `@mdx-js/mdx` on the server. A post's JavaScript would run there, so `src/lib/mdx.tsx` refuses imports, exports, `{expressions}` and expression props (components take string props); the content engine rejects the same at sync time.
 - **Draft preview**: `/api/preview?secret=<PREVIEW_SECRET>&slug=<slug>` enables Next.js draftMode and renders unpublished posts through the API's secret-protected preview endpoint; `/api/preview/disable` exits.
 
 Design records live in [`docs/adr/`](./docs/adr/).
@@ -62,13 +63,13 @@ pnpm dev
 ```shell
 pnpm lint        # type-aware ESLint
 pnpm typecheck
-pnpm test        # vitest: API contract locks, fetcher, config, paths, dates, cache/revalidate, route auth, sitemap, feed
+pnpm test        # vitest: API contract and client, fetcher, paths, dates, reading time, MDX, JSON-LD, cache/revalidate, route auth, sitemap, feed
 pnpm build
 pnpm exec playwright install chromium   # once per Playwright version
 pnpm test:e2e    # Playwright browser smoke against the production build
 ```
 
-CI (`.github/workflows/ci.yml`) runs all of these on every pull request and on pushes to `main`. The build and smoke steps use the two public values inlined in the workflow (`CONTENT_API_URL=https://tio.twz.app`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), so no Actions secrets are involved and Dependabot and fork pull requests build too. The vitest suite pins the API contract (exact JSON shapes the frontend parses), the revalidation route's auth and status codes, the cache-warming dispatch logic, the canonical host and the feed; the Playwright suite covers navigation, the theme toggle cycle, the 404 pages, and the feed/sitemap outputs.
+CI (`.github/workflows/ci.yml`) runs all of these on every pull request and on pushes to `main`. The build and smoke steps use the two public values inlined in the workflow (`CONTENT_API_URL=https://tio.twz.app`, `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`), so no Actions secrets are involved and Dependabot and fork pull requests build too. The vitest suite pins the API contract (exact JSON shapes the frontend parses), the revalidation route's auth and status codes, the cache-warming dispatch logic, the canonical host and the feed; the Playwright suite covers navigation, the theme toggle cycle, the 404 pages, the feed/sitemap outputs, and the code blocks' copy button.
 
 The manual pre-merge checklist for cross-repo releases lives in [`docs/release-verification.md`](./docs/release-verification.md).
 
@@ -122,13 +123,9 @@ Requests must include a `Bearer` token matching `REVALIDATION_SECRET` in the `Au
 
 <h3>Warming Behavior</h3>
 
-Tags are expired with `revalidateTag(tag, { expire: 0 })`: every page and data entry carrying the tag is invalidated outright, so the first request after a sync blocks on a fresh render instead of receiving the previous version (the `'max'` profile would serve it stale once). In the same request the route then re-fetches the tags' data through the API:
+Tags are expired with `revalidateTag(tag, { expire: 0 })`, so the first request after a sync renders fresh content instead of the previous version. In the same request the route re-fetches the tags' data through the API (`posts`: the list and every post, four at a time; `post-{slug}`: that post, where a post that is gone counts as warmed). That re-fetch is the end-to-end check that the API serves the synced content: a failure answers `207` with `success: false`, which fails the content deploy. The cache tags are built in one place, `cacheTags` in `src/lib/api/index.ts`.
 
-- **`posts` tag**: Fetches the posts list and every individual post
-- **`post-{slug}` tags**: Fetches the specific post
-- **Bounded concurrency**: individual post warms run through a small worker pool (4 at a time), so warming can't stampede the origin API or race the function timeout as the catalog grows
-
-The warm is the end-to-end check that the API serves the synced content: a failure surfaces as a `207` response with `success: false`, which the content engine's deploy pipeline treats as a failed deploy. It does not refill the cache: Next applies the expiry after the route handler returns, so the warm's own cache writes expire with everything else. After a sync, the first visit to each affected page renders it fresh and needs the API to be up at that moment (the fetcher retries transient failures).
+The content deploy then revalidates once more a minute later, for any render that read the old rows and stored its result after the first expiry, and requests every page in the sitemap, failing on anything but a 200. The reasoning is in [ADR-0002](./docs/adr/0002-single-cache-layer.md).
 
 <h2>License</h2>
 

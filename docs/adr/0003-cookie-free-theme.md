@@ -25,12 +25,16 @@ markup:
   before first paint.
 - The toggle renders **all three icons**; CSS shows exactly one based on
   `data-theme-choice`. No hydration gate, no cookie, no flash.
-- The toggle's click handler updates both next-themes state and the
-  attribute. (Update 2026-07: the handler only calls `setTheme`; a
-  `useEffect` on next-themes' `theme` writes the attribute, so a change
-  from another tab stays in sync. 2026-10: three `sr-only` labels switched
-  by the same CSS give the button an accessible name that states the
-  current theme.)
+- The toggle's click handler only calls `setTheme`; a `useEffect` on
+  next-themes' `theme` writes the attribute, so a change from another tab
+  stays in sync. Three `sr-only` labels switched by the same CSS give the
+  button an accessible name that states the current theme.
+- The switch cross-fades the page with the View Transitions API
+  (`document.startViewTransition`, with `flushSync` so the new theme is in
+  the DOM before the snapshot), and next-themes' `disableTransitionOnChange`
+  keeps elements from running their own hover transitions during it.
+  Browsers without the API, and readers who prefer reduced motion, get an
+  instant switch.
 
 ## Consequences
 

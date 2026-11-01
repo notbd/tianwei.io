@@ -85,7 +85,9 @@ CONTENT_API_URL=http://127.0.0.1:8787 pnpm start      # manual pass
 ## 5. Merge — only after sign-off, in this order
 
 1. **tianwei-io-content** → merge → its deploy workflow migrates prod,
-   re-syncs and revalidates the frontend.
+   re-syncs, revalidates the frontend (again a minute later) and requests
+   every page in the sitemap; any page that does not answer 200 turns the
+   deploy red.
 2. **tianwei-io-api** → merge → Worker deploys. A release that adds a
    column lands in the content repo first, since the API selects it.
 3. **tianwei.io** → merge → Vercel deploys.
