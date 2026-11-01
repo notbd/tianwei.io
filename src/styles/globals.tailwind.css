@@ -30,3 +30,11 @@
 html:not([data-theme-choice]) .theme-icon-system {
   display: block;
 }
+
+/* Theme switch cross-fade (ColorModeToggle). The browser's default is a
+ * 250 ms cross-fade of the whole page; a little quicker reads as a response
+ * to the click rather than an animation. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+}

@@ -46,7 +46,9 @@ test('theme toggle cycles system -> dark -> light without flash-prone state', as
   await expect(html).toHaveAttribute('data-theme-choice', 'system')
 
   // the choice survives a reload via localStorage + pre-paint script
+  // (the switch lands a frame after the click, inside the view transition)
   await toggle.click() // -> dark
+  await expect(html).toHaveAttribute('data-theme-choice', 'dark')
   await page.reload()
   await expect(html).toHaveAttribute('data-theme-choice', 'dark')
   await expect(html).toHaveClass(/dark/)

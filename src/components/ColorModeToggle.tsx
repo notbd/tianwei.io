@@ -5,6 +5,7 @@ import type { Theme } from '@/lib/constants'
 import { LaptopMinimal, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect } from 'react'
+import { flushSync } from 'react-dom'
 import { DEFAULT_THEME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
@@ -17,7 +18,10 @@ const NEXT_THEME: Record<Theme, Theme> = {
 type ColorModeToggleProps = ComponentProps<'button'>
 
 /**
- * Cycles system -> dark -> light.
+ * Cycles system -> dark -> light, cross-fading the whole page where the
+ * View Transitions API exists and the reader has not asked for reduced
+ * motion. (A colour transition on <body> is not an option: it would also
+ * run on first paint, see the comment in layout.tsx.)
  *
  * All three icons are always in the DOM; CSS shows exactly one based on
  * the `data-theme-choice` attribute on <html>, which an inline script sets
@@ -43,7 +47,20 @@ export function ColorModeToggle({
     const current: Theme = theme === 'dark' || theme === 'light'
       ? theme
       : DEFAULT_THEME
-    setTheme(NEXT_THEME[current])
+    const next = NEXT_THEME[current]
+
+    if (!('startViewTransition' in document) || matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      setTheme(next)
+      return
+    }
+    // The transition snapshots the page when the callback returns, so the
+    // new theme must be in the DOM by then: flushSync renders synchronously,
+    // and React runs the effects of a synchronous render (next-themes'
+    // class switch, the icon attribute above) before returning.
+    document.startViewTransition(() => {
+      // eslint-disable-next-line react/dom-no-flush-sync -- the snapshot needs the DOM updated synchronously
+      flushSync(() => setTheme(next))
+    })
   }
 
   return (
