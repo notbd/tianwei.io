@@ -37,7 +37,7 @@ export function PostList({ posts }: PostListProps) {
                 </p>
               )}
 
-              {/* row 4: click prompt (decorative, the link text is the title) */}
+              {/* row 4: click prompt (decorative, kept out of the link's accessible name) */}
               <div aria-hidden="true" className="text-sm font-medium text-teal-600 dark:text-teal-500 opacity-0 -translate-x-2 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0">
                 {'->'}
               </div>

@@ -9,7 +9,7 @@ export type RevalidateResult = {
 }
 
 /**
- * Warms cache for a given tag (exact match or prefix match).
+ * Re-fetches a tag's data through the API (exact or prefix match).
  * Resolves false when no warmer knows the tag; rejects when warming fails.
  */
 async function warmCacheForTag(tag: string): Promise<boolean> {
@@ -32,7 +32,7 @@ async function warmCacheForTag(tag: string): Promise<boolean> {
 }
 
 /**
- * Revalidates and warms cache for multiple tags
+ * Expires the tags, then re-fetches their data through the API
  */
 export async function revalidateAndWarmTags(
   tags: string[],

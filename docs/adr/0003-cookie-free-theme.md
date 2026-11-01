@@ -37,7 +37,8 @@ markup:
 - `/`, `/posts`, and every post page are prerendered again (post TTFB
   ~3s → ~30ms locally; edge-cached globally on Vercel).
 - Guarded against regression: `generateStaticParams` refuses an empty
-  catalog, post pages only swallow true 404s, and a Playwright test pins
+  catalog, post pages only swallow the API's not-found answers (404, and
+  since 2026-10 the 400 for a malformed slug), and a Playwright test pins
   the toggle cycle + persistence across reload.
 - Users without JavaScript see the system-theme icon and no toggle
   behavior — acceptable, since theming itself requires JS.

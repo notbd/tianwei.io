@@ -27,7 +27,7 @@ export default function MdxImage({
 
   return (
     <figure className="my-8">
-      {/* src is a Cloudinary public id; the loader in next.config.ts builds the URL */}
+      {/* src is a Cloudinary public id; src/lib/cloudinaryLoader.ts (images.loaderFile) builds the URL */}
       <Image
         sizes={`(max-width: ${maxWidthInRem}rem) 100vw, ${maxWidthInRem}rem`}
         className={`mx-auto w-full max-w-3xl rounded-md ${tailwindMaxWidthClass}`}

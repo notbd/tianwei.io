@@ -32,9 +32,10 @@ The **Next.js data cache is the only cache**:
 ## Consequences
 
 - Invalidations have one target; "is it stale?" has one answer.
-- The API pays a DB round trip on every cache-warming request — fine,
-  because real visitors are served from prerendered pages, and the warming
-  fleet is tiny.
+- The API pays a DB round trip on every cache-warming request and on the
+  first visit to each page after a sync (see the amendment below). That
+  is fine: every other visit is served from prerendered pages, and the
+  warming fleet is tiny.
 - If API-level caching is ever added for latency, this ADR must be
   superseded first, with an invalidation path for every layer.
 - Amended 2026-10-31: `{ expire: 0 }` replaced the `'max'` profile, and

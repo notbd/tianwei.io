@@ -32,7 +32,7 @@ Every route is **fully static**:
 - Data fetches use the Next.js data cache with `revalidate: false` + tags — content only changes through **on-demand revalidation** (see below), never by TTL. Revalidation expires the tags outright (`{ expire: 0 }`), so the first request after a content sync renders fresh content instead of a stale copy.
 - The theme system is deliberately cookie-free: an inline pre-paint script reads the choice from localStorage and drives both the `dark` class (next-themes) and the toggle icon (CSS on a `data-theme-choice` attribute). No server-side theme state means no dynamic rendering.
 - All dates render in **`DISPLAY_TIME_ZONE`** (`America/New_York`) through the single `formatPostDate()` helper; storage stays UTC instants. Must match the content engine's `CONTENT_TIME_ZONE` — see [ADR-0004](./docs/adr/0004-display-time-zone.md).
-- `generateStaticParams` refuses to build an empty catalog, and a post page only 404s on a true API 404 — any other fetch failure fails the build loudly instead of silently dropping pages. Transient 5xx/network failures are retried with backoff in the fetcher.
+- `generateStaticParams` refuses to build an empty catalog, and a post page only 404s when the API says the slug names no post (404, or 400 for a malformed slug); any other fetch failure fails the build loudly instead of silently dropping pages. Transient 5xx/network failures are retried with backoff in the fetcher.
 - `/feed.xml` (RSS), `/categories/[category]` pages, and per-post OG images (`opengraph-image.tsx` has its own `generateStaticParams`) are all statically generated from the same tagged data, so one revalidation refreshes everything.
 - **Draft preview**: `/api/preview?secret=<PREVIEW_SECRET>&slug=<slug>` enables Next.js draftMode and renders unpublished posts through the API's secret-protected preview endpoint; `/api/preview/disable` exits.
 
@@ -54,7 +54,7 @@ pnpm dev
 
 > **Notes**:
 >
-> 1. `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` (see `.env.example`) must be set for MDX images to show; `next/image` builds their Cloudinary URLs through `src/lib/cloudinaryLoader.ts`.
+> 1. `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` (see `.env.example`) must be set: `next/image` builds the MDX images' Cloudinary URLs through `src/lib/cloudinaryLoader.ts`, which throws without it, so any post with an `<MdxImage>` fails to render and `pnpm build` fails.
 > 2. Typography and code highlighting are handled by custom React components within `src/components/mdx` and via the `rehype-pretty-code` package respectively.
 
 <h2>Quality Gates</h2>
@@ -64,6 +64,7 @@ pnpm lint        # type-aware ESLint
 pnpm typecheck
 pnpm test        # vitest: API contract locks, fetcher, config, paths, dates, cache/revalidate, route auth, sitemap, feed
 pnpm build
+pnpm exec playwright install chromium   # once per Playwright version
 pnpm test:e2e    # Playwright browser smoke against the production build
 ```
 
@@ -93,7 +94,7 @@ Requests must include a `Bearer` token matching `REVALIDATION_SECRET` in the `Au
   }
   ```
 
-  Invalidates both the post cache tag (`post-{slug}`) and the posts list tag, then warms both.
+  Invalidates `post-{slug}` and `posts`. Every post fetch also carries `posts`, so this expires every page, then re-fetches the list and every post.
 
 - **Revalidate by tag(s)**:
 
@@ -117,7 +118,7 @@ Requests must include a `Bearer` token matching `REVALIDATION_SECRET` in the `Au
   }
   ```
 
-  Invalidates the specified cache tags and warms matching routes.
+  Expires the given tags and re-fetches the data of every tag that has a warmer (`posts`, `post-*`); other tags are only expired.
 
 <h3>Warming Behavior</h3>
 

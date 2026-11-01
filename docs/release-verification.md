@@ -40,7 +40,7 @@ SQL console: `created_at` values are ET-midnight instants (04:00/05:00 UTC).
 cd tianwei-io-api       # dev branch
 pnpm install && pnpm lint && pnpm typecheck && pnpm test
 
-# .dev.vars: DATABASE_URL=$STAGING_DB (+ PREVIEW_SECRET=... to test previews)
+# .dev.vars: DATABASE_URL=$STAGING_DB, NODE_ENV=production (+ PREVIEW_SECRET=... to test previews)
 pnpm dev                 # wrangler dev on http://127.0.0.1:8787
 ```
 
@@ -55,8 +55,9 @@ pnpm smoke https://tio.twz.app http://127.0.0.1:8787
 ```
 
 Expect 11/11. One mismatch on `/api/__dev/posts` means the local
-`.dev.vars` has `NODE_ENV=development` (production answers 404 there); run
-`wrangler dev` with `NODE_ENV=production` for a clean comparison.
+`.dev.vars` has `NODE_ENV=development` (the value `.dev.vars.example` ships
+with; production answers 404 there). Set `NODE_ENV=production` in
+`.dev.vars` and restart `pnpm dev` for a clean comparison.
 
 ### 3. Frontend → against the local Worker
 

@@ -21,7 +21,7 @@ type ColorModeToggleProps = ComponentProps<'button'>
  *
  * All three icons are always in the DOM; CSS shows exactly one based on
  * the `data-theme-choice` attribute on <html>, which an inline script sets
- * before first paint and this handler keeps in sync afterwards. That makes
+ * before first paint and the effect below keeps in sync afterwards. That makes
  * the server-rendered markup theme-agnostic (pages stay static) with no
  * icon flash on load.
  */
