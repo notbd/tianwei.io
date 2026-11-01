@@ -15,12 +15,22 @@ type PageProps = {
   params: Promise<{ slug: string }>
 }
 
+// Draft mode (the author's preview) reads through the API's preview
+// endpoint, which also returns unpublished posts; the metadata and the page
+// must read the same post, or a draft's tab shows the site name.
+async function loadPost(slug: string): Promise<Post> {
+  const { isEnabled } = await draftMode()
+  return isEnabled
+    ? getDraftPost(slug)
+    : getPost(slug)
+}
+
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
 
   let post: Post
   try {
-    post = await getPost(slug)
+    post = await loadPost(slug)
   }
   catch (error) {
     // unknown or malformed slug: the page itself will render notFound()
@@ -70,9 +80,7 @@ export default async function PostPage({ params }: PageProps) {
 
   let post: Post
   try {
-    post = isDraftPreview
-      ? await getDraftPost(slug)
-      : await getPost(slug)
+    post = await loadPost(slug)
   }
   catch (error) {
     // Only a slug that names no post (404, or the API's 400 for a malformed

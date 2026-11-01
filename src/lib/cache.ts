@@ -1,5 +1,5 @@
 import { revalidateTag } from 'next/cache'
-import { cacheTags, getPost, getPosts } from '@/lib/api'
+import { cacheTags, getPost, getPosts, isNotFoundError } from '@/lib/api'
 
 export type RevalidateResult = {
   success: boolean
@@ -73,7 +73,15 @@ async function warm(tag: string): Promise<boolean> {
 
   const slug = cacheTags.slugOf(tag)
   if (slug !== undefined) {
-    await getPost(slug)
+    try {
+      await getPost(slug)
+    }
+    catch (error) {
+      // revalidating an unpublished or deleted post is how it disappears;
+      // its absence is the expected answer, not a failed warm
+      if (!isNotFoundError(error))
+        throw error
+    }
     return true
   }
 

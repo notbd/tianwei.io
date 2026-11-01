@@ -54,6 +54,19 @@ describe('revalidateAndWarmTags', () => {
     expect(result.warmed).toEqual(['post-hello-world'])
   })
 
+  it('treats a post tag whose post is gone (unpublished, deleted) as warmed', async () => {
+    const { ApiError } = await import('@/lib/api')
+    getBySlug.mockRejectedValue(new ApiError(404, 'Post not found.'))
+
+    const result = await revalidateAndWarmTags(['post-gone'])
+
+    expect(result).toEqual({
+      success: true,
+      revalidated: ['post-gone'],
+      warmed: ['post-gone'],
+    })
+  })
+
   it('revalidates unknown tags without warming, still succeeding', async () => {
     const result = await revalidateAndWarmTags(['mystery'])
 

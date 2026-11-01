@@ -93,6 +93,14 @@ describe('fetchOne', () => {
     expect(init.signal).toBeInstanceOf(AbortSignal)
   })
 
+  it('sends every attempt with its own signal, which opts the retry out of Next\'s render memoization', async () => {
+    const fetchMock = stubFetch({ status: 503 })
+    const { fetchOne } = await importFetcher()
+    await expect(fetchOne('/api/thing', itemSchema)).rejects.toMatchObject({ status: 503 })
+    const signals = (fetchMock.mock.calls as unknown as [string, RequestInit][]).map(([, init]) => init.signal)
+    expect(new Set(signals).size).toBe(3)
+  })
+
   it('throws ApiError with status after exhausting retries on 5xx', async () => {
     const fetchMock = stubFetch({ status: 500, statusText: 'Internal Server Error' })
     const { ApiError, fetchOne } = await importFetcher()

@@ -46,6 +46,12 @@ export type FetchOptions = {
 // protects builds: one flaky request during static generation must not
 // drop a page. Each attempt has its own deadline, so a hung API fails the
 // build or the render in about half a minute instead of never.
+//
+// The per-attempt signal also makes the retries real during a render: Next
+// memoizes identical GETs within one render pass, so without a signal a
+// retry would get the first attempt's failure back without a request
+// (https://nextjs.org/docs/app/api-reference/functions/fetch#memoization).
+// The data cache key ignores the signal, so caching is unaffected.
 const ATTEMPTS = 3
 const BACKOFF_BASE_MS = 300
 const ATTEMPT_TIMEOUT_MS = 10_000
