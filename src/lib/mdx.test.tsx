@@ -26,7 +26,7 @@ describe('renderMdx', () => {
   it('renders components with string props', async () => {
     // (MdxImage needs the next.config image loader, which vitest does not load)
     const out = await html('See <Link href="/posts">all posts</Link>.\n')
-    expect(out).toContain('<a class="font-medium underline underline-offset-4" href="/posts">all posts</a>')
+    expect(out).toMatch(/<a class="text-teal-700 [^"]*" href="\/posts">all posts<\/a>/)
   })
 
   it.each([

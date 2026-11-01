@@ -20,7 +20,8 @@ export function ExternalLink({
       rel="noopener noreferrer"
       className={cn(
         'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
-        'transition-colors duration-300',
+        // color only: transition-colors would also fade the focus ring in
+        'transition-[color] duration-200',
         'underline',
         className,
       )}

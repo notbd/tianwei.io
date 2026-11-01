@@ -28,7 +28,7 @@ export function RootFooter({
           <div
             className={cn(
               'absolute bottom-0',
-              'transition-[opacity,translate,visibility] duration-200 ease-out',
+              'transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:transition-none',
               'visible translate-x-0 opacity-100',
               'md:invisible md:translate-x-4 md:opacity-0',
             )}
@@ -58,7 +58,7 @@ export function RootFooter({
           {/* above md width: combined license msg */}
           <FooterSegment
             className={cn(
-              'transition-[opacity,translate,visibility] duration-200 ease-out',
+              'transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:transition-none',
               'invisible -translate-x-4 opacity-0',
               'md:visible md:translate-x-0 md:opacity-100',
             )}
@@ -89,7 +89,9 @@ export function RootFooter({
 
         {/* copyright msg */}
         <FooterSegment>
-          tianwei.io · &copy; 2024-present · Tianwei Zhang
+          tianwei.io · &copy; 2024-present ·
+          {' '}
+          <span className="whitespace-nowrap">Tianwei Zhang</span>
         </FooterSegment>
 
       </div>

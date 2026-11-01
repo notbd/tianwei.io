@@ -32,14 +32,14 @@ export default function Home() {
         </HomeSectionHeader>
 
         {/* md: last name */}
-        <HomeSectionBody className="hidden font-bold text-teal-700 transition-colors duration-500 md:flex">
+        <HomeSectionBody className="hidden font-bold text-teal-700 md:flex">
           Zhang
         </HomeSectionBody>
 
         {/* below md: full name */}
-        <HomeSectionBody className="pl-0 font-semibold text-zinc-500 transition-colors duration-500 md:hidden dark:text-zinc-200">
+        <HomeSectionBody className="pl-0 font-semibold text-zinc-500 md:hidden dark:text-zinc-200">
           Tianwei
-          <span className="font-bold text-teal-700 transition-colors duration-500">
+          <span className="font-bold text-teal-700">
             {' Zhang'}
           </span>
         </HomeSectionBody>

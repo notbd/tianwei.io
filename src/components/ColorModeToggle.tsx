@@ -70,6 +70,7 @@ export function ColorModeToggle({
       onClick={toggleTheme}
       className={cn(
         'border-zinc-200 text-zinc-600 dark:border-zinc-800 dark:text-zinc-400',
+        'transition-[color] duration-200 hover:text-zinc-400 dark:hover:text-zinc-100',
         'size-7 rounded-md border text-center',
         'cursor-pointer',
         className,

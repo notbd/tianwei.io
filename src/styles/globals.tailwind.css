@@ -38,3 +38,15 @@ html:not([data-theme-choice]) .theme-icon-system {
 ::view-transition-new(root) {
   animation-duration: 200ms;
 }
+
+@layer base {
+  /* one keyboard focus ring for the whole site, in the accent colour
+   * (5.1:1 on zinc-50, 5.4:1 on zinc-950) */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-teal-700 dark:outline-teal-600;
+  }
+
+  ::selection {
+    @apply bg-teal-500/25;
+  }
+}

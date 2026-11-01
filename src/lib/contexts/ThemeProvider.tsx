@@ -20,6 +20,9 @@ export function ThemeProvider({ children, ...props }: NextThemeProviderProps) {
       attribute="class"
       defaultTheme={DEFAULT_THEME} // used when the user has no localStorage preference
       enableSystem
+      // colors switch at once, inside the toggle's cross-fade, instead of
+      // each element running its own hover transition
+      disableTransitionOnChange
       {...props}
     >
       {children}

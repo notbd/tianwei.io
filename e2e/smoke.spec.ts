@@ -121,3 +121,10 @@ test('a code block copy button copies the code and confirms it', async ({ page, 
   expect(copied).toBe(await block.locator('pre').textContent())
   expect(copied.length).toBeGreaterThan(0)
 })
+
+test('category pages count as the Posts section in the header', async ({ page }) => {
+  await page.goto('/categories/articles')
+  const nav = page.locator('header nav')
+  await expect(nav.getByRole('link', { name: 'Posts', exact: true })).toHaveAttribute('aria-current', 'true')
+  await expect(nav.getByRole('link', { name: 'Home', exact: true })).not.toHaveAttribute('aria-current')
+})
