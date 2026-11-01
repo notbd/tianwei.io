@@ -44,10 +44,11 @@ pnpm install && pnpm lint && pnpm typecheck && pnpm test
 pnpm dev                 # wrangler dev on http://127.0.0.1:8787
 ```
 
-Contract check against live production. `pnpm smoke` is a byte-for-byte
-diff of two deployments (no field is exempted), so it only passes when this
-release carries no content change; with content changes, run it before
-step 1's sync or read the diff as the expected content delta:
+Contract check against live production. `pnpm smoke` compares the parsed
+JSON of two deployments (key order ignored, the `/health` body skipped), so
+it only passes when this release carries no content change; with content
+changes, run it before step 1's sync or read the diff as the expected
+content delta:
 
 ```shell
 pnpm smoke https://tio.twz.app http://127.0.0.1:8787

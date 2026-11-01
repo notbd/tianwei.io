@@ -20,9 +20,9 @@ The **Next.js data cache is the only cache**:
   content never expires by TTL.
 - The content engine's deploy pipeline calls `POST /api/revalidate`
   (bearer-authenticated) after every sync; the frontend expires the tags
-  (`revalidateTag(tag, { expire: 0 })`) and **warms** them by re-fetching
-  through the API in the same request. The next request to each affected
-  page blocks on a fresh render; no visitor is served the previous version.
+  (`revalidateTag(tag, { expire: 0 })`) and re-fetches them through the
+  API in the same request (the "warm"). The next request to each affected
+  page blocks on a fresh render.
 - The API sets `Cache-Control: no-store` on `/api/*` — deliberately
   forbidding edge/browser caching so this decision is enforced, not just
   hoped for.
@@ -37,9 +37,13 @@ The **Next.js data cache is the only cache**:
   fleet is tiny.
 - If API-level caching is ever added for latency, this ADR must be
   superseded first, with an invalidation path for every layer.
-- Revised 2026-10: the original wording promised that warming spares the
-  first visitor the refill. With the `'max'` profile used until then the
-  first visitor got the *stale* page instead (stale-while-revalidate, see
-  https://nextjs.org/docs/app/api-reference/functions/revalidateTag).
-  `{ expire: 0 }` trades that for one blocking render per page after a
-  sync, which is the freshness this decision was after.
+- Amended 2026-10-31: `{ expire: 0 }` replaced the `'max'` profile, and
+  the warm is a check, not a refill: Next applies the expiry after the
+  route handler returns, so the warm's own cache writes expire with the
+  rest, and the first visit to each affected page after a sync renders
+  fresh and needs the API to be up (the fetcher retries transient
+  failures). `'max'` would have served that visitor the previous version
+  once (stale-while-revalidate, see
+  https://nextjs.org/docs/app/api-reference/functions/revalidateTag) and
+  never errored; this decision is after freshness, so it takes one
+  API-dependent render per page per sync instead.

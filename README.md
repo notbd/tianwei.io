@@ -73,7 +73,7 @@ The manual pre-merge checklist for cross-repo releases lives in [`docs/release-v
 
 <h2>Cache Revalidation & Warming</h2>
 
-The application exposes a revalidation API endpoint at `/api/revalidate` that invalidates Next.js cache tags and warms the cache by pre-fetching fresh data.
+The application exposes a revalidation API endpoint at `/api/revalidate` that expires Next.js cache tags and re-fetches the affected data through the API to verify it (the "warm").
 
 <h3>Authentication</h3>
 
@@ -121,13 +121,13 @@ Requests must include a `Bearer` token matching `REVALIDATION_SECRET` in the `Au
 
 <h3>Warming Behavior</h3>
 
-Tags are expired with `revalidateTag(tag, { expire: 0 })`: every page and data entry carrying the tag is invalidated outright, so the first request after a sync blocks on a fresh render instead of receiving the previous version (the `'max'` profile would serve it stale once). In the same request the route then warms the tags by re-fetching through the API:
+Tags are expired with `revalidateTag(tag, { expire: 0 })`: every page and data entry carrying the tag is invalidated outright, so the first request after a sync blocks on a fresh render instead of receiving the previous version (the `'max'` profile would serve it stale once). In the same request the route then re-fetches the tags' data through the API:
 
 - **`posts` tag**: Fetches the posts list and every individual post
 - **`post-{slug}` tags**: Fetches the specific post
 - **Bounded concurrency**: individual post warms run through a small worker pool (4 at a time), so warming can't stampede the origin API or race the function timeout as the catalog grows
 
-The warm is the end-to-end check that the API serves the synced content: a failure surfaces as a `207` response with `success: false`, which the content engine's deploy pipeline treats as a failed deploy. After it, the first visitor to each affected page pays one render; nobody is served stale content.
+The warm is the end-to-end check that the API serves the synced content: a failure surfaces as a `207` response with `success: false`, which the content engine's deploy pipeline treats as a failed deploy. It does not refill the cache: Next applies the expiry after the route handler returns, so the warm's own cache writes expire with everything else. After a sync, the first visit to each affected page renders it fresh and needs the API to be up at that moment (the fetcher retries transient failures).
 
 <h2>License</h2>
 

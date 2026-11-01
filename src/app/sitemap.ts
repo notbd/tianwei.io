@@ -4,7 +4,8 @@ import { BasePaths, categoryPath, postPath } from '@/lib/paths'
 
 // No fallback on API failure, on purpose. At build time a throw fails the
 // build, like every other page does on a non-404 fetch error. During an
-// on-demand regeneration a throw keeps the last good sitemap in the cache
+// on-demand regeneration the request that hits the failure errors, and the
+// last good sitemap stays cached for the retries that follow
 // (https://nextjs.org/docs/app/guides/incremental-static-regeneration#handling-uncaught-exceptions),
 // whereas returning a reduced list would cache a sitemap without any post
 // until the next content sync.
