@@ -26,7 +26,11 @@ markup:
 - The toggle renders **all three icons**; CSS shows exactly one based on
   `data-theme-choice`. No hydration gate, no cookie, no flash.
 - The toggle's click handler updates both next-themes state and the
-  attribute.
+  attribute. (Update 2026-07: the handler only calls `setTheme`; a
+  `useEffect` on next-themes' `theme` writes the attribute, so a change
+  from another tab stays in sync. 2026-10: three `sr-only` labels switched
+  by the same CSS give the button an accessible name that states the
+  current theme.)
 
 ## Consequences
 
