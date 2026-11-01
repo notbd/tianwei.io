@@ -1,4 +1,4 @@
-import { compileMdxContent } from '@/lib/mdx'
+import { renderMdx } from '@/lib/mdx'
 
 import '@/styles/mdx.tailwind.css'
 
@@ -7,7 +7,5 @@ type MdxContentProps = {
 }
 
 export async function MdxContent({ source }: MdxContentProps) {
-  const content = await compileMdxContent(source)
-
-  return <div className="mdx">{content}</div>
+  return <div className="mdx">{await renderMdx(source)}</div>
 }
