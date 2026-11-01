@@ -146,6 +146,21 @@ describe('fetchOne', () => {
     })
   })
 
+  it('falls back to the status code when the body is not an error envelope', async () => {
+    // an HTTP/2 response has an empty statusText, which must not leave the
+    // message ending in a dangling colon
+    stubFetch({
+      status: 404,
+      statusText: '',
+      json: 'not an envelope',
+    })
+    const { fetchOne } = await importFetcher()
+    await expect(fetchOne('/api/thing', itemSchema)).rejects.toMatchObject({
+      status: 404,
+      message: 'Request failed (404)',
+    })
+  })
+
   it('throws a ZodError on a malformed envelope', async () => {
     stubFetch({
       json: {
