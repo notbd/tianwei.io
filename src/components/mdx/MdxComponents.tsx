@@ -62,6 +62,11 @@ export const mdxComponents: MDXComponents = {
     />
   ),
   a: ({ className, href = '', ...props }: ComponentProps<'a'>) => {
+    // rehype-autolink-headings wraps each heading's text in an `.anchor`
+    // link; it keeps the heading's own colour and weight (mdx.tailwind.css)
+    if (className === 'anchor')
+      return <a href={href} className={className} {...props} />
+
     const isExternal
       = href.startsWith('http')
         || href.startsWith('mailto:')

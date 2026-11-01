@@ -112,16 +112,7 @@ code[data-line-numbers-max-digits='3'] > [data-line]::before {
   content: '·  ';
 }
 
-/* Anchor link styling for headings */
+/* Heading self-links (rehype-autolink-headings): the heading stays as it is */
 .mdx .anchor {
-  @apply no-underline;
-}
-
-.mdx h1 .anchor,
-.mdx h2 .anchor,
-.mdx h3 .anchor,
-.mdx h4 .anchor,
-.mdx h5 .anchor,
-.mdx h6 .anchor {
   @apply text-inherit no-underline;
 }
