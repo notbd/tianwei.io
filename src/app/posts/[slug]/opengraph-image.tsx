@@ -1,7 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- Next.js metadata
  * file convention requires exporting size/contentType alongside the image */
 import { ImageResponse } from 'next/og'
-import { apiClient, NetworkRequestError } from '@/lib/api'
+import { apiClient, isNotFoundError } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
 
 export const size = { width: 1200, height: 630 }
@@ -32,8 +32,8 @@ export default async function OpengraphImage({ params }: ImageProps) {
     dateLabel = formatPostDate(post.createdAt)
   }
   catch (error) {
-    // a nonexistent slug should not get a 200 default card
-    if (error instanceof NetworkRequestError && error.status === 404)
+    // a slug that names no post should not get a 200 default card
+    if (isNotFoundError(error))
       return new Response('Not Found', { status: 404 })
     // transient failure: fall back to the site card rather than failing
     // the build — but never silently (this degraded card stays cached

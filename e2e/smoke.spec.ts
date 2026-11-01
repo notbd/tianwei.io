@@ -52,8 +52,15 @@ test('theme toggle cycles system -> dark -> light without flash-prone state', as
   await expect(html).toHaveClass(/dark/)
 })
 
-test('unknown post, category and path all 404 with the not-found title', async ({ request }) => {
-  for (const path of ['/posts/this-post-does-not-exist', '/categories/not-a-real-category', '/this-page-does-not-exist']) {
+test('unknown post, malformed slug, category and path all 404 with the not-found title', async ({ request }) => {
+  // the API answers 400 for 'Not-A-Slug'; the page must 404 it like an unknown slug, not 500
+  const paths = [
+    '/posts/this-post-does-not-exist',
+    '/posts/Not-A-Slug',
+    '/categories/not-a-real-category',
+    '/this-page-does-not-exist',
+  ]
+  for (const path of paths) {
     const response = await request.get(path)
     expect(response.status(), path).toBe(404)
     expect(await response.text(), path).toContain('<title>Not Found · tianwei.io</title>')

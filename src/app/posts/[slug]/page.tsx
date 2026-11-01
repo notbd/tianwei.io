@@ -4,7 +4,7 @@ import { draftMode } from 'next/headers'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { MdxContent } from '@/components/mdx/MdxContent'
-import { apiClient, NetworkRequestError } from '@/lib/api'
+import { apiClient, isNotFoundError } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
 import { BasePaths, categoryPath, postPath } from '@/lib/paths'
 
@@ -20,8 +20,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     post = await apiClient.post.getBySlug(slug)
   }
   catch (error) {
-    // unknown slug: the page itself will render notFound()
-    if (error instanceof NetworkRequestError && error.status === 404)
+    // unknown or malformed slug: the page itself will render notFound()
+    if (isNotFoundError(error))
       return {}
     throw error
   }
@@ -69,10 +69,11 @@ export default async function PostPage({ params }: PageProps) {
       : await apiClient.post.getBySlug(slug)
   }
   catch (error) {
-    // Only a true 404 becomes a not-found page. Anything else (network
-    // hiccup, 500, schema drift) must propagate — during a build a swallowed
-    // error would silently drop the page from the prerendered set.
-    if (error instanceof NetworkRequestError && error.status === 404)
+    // Only a slug that names no post (404, or the API's 400 for a malformed
+    // slug) becomes a not-found page. Anything else (network hiccup, 500,
+    // schema drift) must propagate — during a build a swallowed error would
+    // silently drop the page from the prerendered set.
+    if (isNotFoundError(error))
       notFound()
     throw error
   }
