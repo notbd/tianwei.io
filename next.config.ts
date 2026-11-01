@@ -23,6 +23,7 @@ const nextConfig: NextConfig = {
   },
   // the OG image route reads its fonts at render time (fs, not import)
   outputFileTracingIncludes: {
+    '/opengraph-image': ['./src/styles/fonts/sources/rubik-*.woff'],
     '/posts/[slug]/opengraph-image': ['./src/styles/fonts/sources/rubik-*.woff'],
   },
   async headers() {

@@ -60,11 +60,15 @@ export const metadata: Metadata = {
     title: site.name,
     description: site.description,
     siteName: openGraphSiteName,
+    // the card app/opengraph-image.tsx generates; named here as well because
+    // pages that set their own openGraph (spreading this one) would lose
+    // the file-based image
     images: [
       {
-        url: absoluteUrl('/assets/icon-square-1024.png'),
-        width: 1024,
-        height: 1024,
+        url: absoluteUrl('/opengraph-image'),
+        width: 1200,
+        height: 630,
+        alt: site.name,
       },
     ],
   },
@@ -74,7 +78,7 @@ export const metadata: Metadata = {
     description: site.description,
     ...twitterAccounts,
     images: [
-      absoluteUrl('/assets/banner-2_1-2048.png'),
+      absoluteUrl('/opengraph-image'),
     ],
   },
   alternates: {
