@@ -69,6 +69,17 @@ export default function Home() {
               </SubscriptBlock>
             </li>
 
+            {/* SimpleHaptics */}
+            <li className="pb-3">
+              <ExternalLink href="https://github.com/notbd/SimpleHaptics">
+                SimpleHaptics
+              </ExternalLink>
+
+              <SubscriptBlock>
+                Swift package for simple haptic feedback on iOS
+              </SubscriptBlock>
+            </li>
+
           </ul>
         </HomeSectionBody>
       </HomeSection>

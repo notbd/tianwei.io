@@ -7,7 +7,7 @@ import { metadata as rootMetadata } from './metadata'
 // /_not-found route (or to the missing path). A child `alternates` or
 // `openGraph` replaces the root's whole object, hence the spreads.
 export const metadata: Metadata = {
-  title: 'Not Found', // root template appends '· tianwei.io'
+  title: 'Page Not Found', // root template appends '· tianwei.io'
   alternates: { ...rootMetadata.alternates, canonical: null },
   openGraph: { ...rootMetadata.openGraph, url: null },
 }
@@ -22,10 +22,13 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <div className="max-w-3xl pb-8">
-      <PageHeader title="Not Found">
+      <PageHeader title="Page Not Found">
         <p className="mt-2 text-zinc-500 dark:text-zinc-200">
-          {'This page does not exist · '}
+          {'The page you\'re looking for doesn\'t exist or may have moved. Go back to the '}
+          <TextLink href="/">home page</TextLink>
+          {', or browse '}
           <TextLink href="/posts">all posts</TextLink>
+          .
         </p>
       </PageHeader>
     </div>

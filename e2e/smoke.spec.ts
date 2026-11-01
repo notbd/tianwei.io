@@ -65,7 +65,7 @@ test('unknown post, malformed slug, category and path all 404 with the not-found
   for (const path of paths) {
     const response = await request.get(path)
     expect(response.status(), path).toBe(404)
-    expect(await response.text(), path).toContain('<title>Not Found · tianwei.io</title>')
+    expect(await response.text(), path).toContain('<title>Page Not Found · tianwei.io</title>')
   }
 })
 
@@ -76,7 +76,7 @@ test('an unmatched URL renders the not-found page server-side inside the layout'
   const body = await (await request.get('/this-page-does-not-exist')).text()
   expect(body).not.toContain('__next_error__')
   expect(body).toContain('<h1')
-  expect(body).toContain('Not Found')
+  expect(body).toContain('Page Not Found')
 })
 
 test('feed.xml serves RSS with every post', async ({ request }) => {
