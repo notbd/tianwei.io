@@ -149,3 +149,9 @@ code[data-line-numbers-max-digits='3'] > [data-line]::before {
 [data-rehype-pretty-code-figure] pre code {
   @apply p-0;
 }
+
+/* Keep a heading with the paragraph it introduces. Outside any cascade
+ * layer, so it wins over the utilities' not-first:mt-6. */
+.mdx :is(h2, h3, h4, h5, h6) + p {
+  @apply mt-4;
+}

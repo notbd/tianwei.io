@@ -112,7 +112,7 @@ export const mdxComponents: MDXComponents = {
   ),
   li: ({ className, ...props }: ComponentProps<'li'>) => (
     <li
-      className={cn('mt-5', '[&>p:not(:first-child)]:mt-3', className)}
+      className={cn('mt-2', '[&>p:not(:first-child)]:mt-3', className)}
       {...props}
     />
   ),
@@ -193,8 +193,7 @@ export const mdxComponents: MDXComponents = {
   code: ({ className, ...props }: ComponentProps<'code'>) => (
     <code
       className={cn(
-        'text-teal-700 dark:text-teal-600',
-        'relative rounded px-[0.3rem] py-[0.2rem] font-mono text-sm',
+        'font-mono text-sm text-teal-700 dark:text-teal-600',
         className,
       )}
       {...props}

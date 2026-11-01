@@ -122,7 +122,7 @@ export default async function PostPage({ params }: PageProps) {
       )}
 
       {/* header */}
-      <header className="mb-16 border-b border-zinc-200/30 pb-4 dark:border-zinc-800/30">
+      <header className="mb-12 border-b border-zinc-200/30 pb-4 dark:border-zinc-800/30">
 
         {/* title */}
         <h1 className="text-2xl font-bold">{post.title}</h1>
