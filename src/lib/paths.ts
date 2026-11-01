@@ -1,4 +1,4 @@
-import type { DeploymentEnv } from '@/lib/types/deploymentTypes'
+type DeploymentEnv = 'development' | 'preview' | 'production'
 
 const CANONICAL_DOMAIN = 'tianwei.io'
 

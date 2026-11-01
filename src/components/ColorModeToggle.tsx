@@ -1,11 +1,11 @@
 'use client'
 
 import type { ComponentProps } from 'react'
-import type { Theme } from '@/lib/types/themeTypes'
+import type { Theme } from '@/lib/constants'
 import { LaptopMinimal, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect } from 'react'
-import { DEFAULT_THEME } from '@/lib/constants/constants'
+import { DEFAULT_THEME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 const NEXT_THEME: Record<Theme, Theme> = {
