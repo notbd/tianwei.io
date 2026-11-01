@@ -14,7 +14,6 @@ export const metadata: Metadata = {
   creator: 'Tianwei Zhang',
   generator: 'Next.js',
   keywords: ['Tianwei Zhang', 'notbd', 'tianwei.io', 'Personal Website'],
-  referrer: 'origin-when-cross-origin',
   metadataBase: new URL(BasePaths.url),
   icons: {
     icon: [
@@ -58,7 +57,6 @@ export const metadata: Metadata = {
     creatorId: '1110568647041400832',
     images: [BasePaths.url + AssetPaths.twitterImage],
   },
-  manifest: `${BasePaths.url}/manifest.json`,
   alternates: {
     canonical: './', // same per-page resolution as og:url above
     types: {
