@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { metadata as rootMetadata } from '@/app/metadata'
+import { PageHeader } from '@/components/PageHeader'
 import { PostList } from '@/components/PostList'
-import { apiClient } from '@/lib/api'
+import { getCategories, getPosts } from '@/lib/api'
 import { categoryPath } from '@/lib/paths'
+import { site } from '@/lib/site'
 
 const description = 'Writings on topics that interest me and things I\'m proud of.'
 
@@ -12,25 +14,20 @@ export const metadata: Metadata = {
   description,
   // a child openGraph/twitter replaces the root's whole object, hence the spreads
   openGraph: { ...rootMetadata.openGraph, title: 'Posts', description },
-  twitter: { ...rootMetadata.twitter, title: 'Posts • tianwei.io', description },
+  twitter: { ...rootMetadata.twitter, title: `Posts • ${site.domain}`, description },
 }
 
 export default async function PostsPage() {
   const [posts, categories] = await Promise.all([
-    apiClient.post.listAll(),
-    apiClient.category.listAll(),
+    getPosts(),
+    getCategories(),
   ])
 
   return (
     <div className="max-w-3xl pb-8">
-
-      {/* header */}
-      <header className="mb-12 pb-4 border-b border-gray-200/30 dark:border-gray-800/30">
-        <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
-          Posts
-        </h1>
+      <PageHeader title="Posts">
         <p className="mt-2 text-zinc-500 dark:text-zinc-200">
-          Writings on topics that interest me and things I'm proud of.
+          {description}
         </p>
 
         {/* category filters */}
@@ -47,7 +44,7 @@ export default async function PostsPage() {
             ))}
           </nav>
         )}
-      </header>
+      </PageHeader>
 
       <PostList posts={posts} />
     </div>

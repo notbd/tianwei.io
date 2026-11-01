@@ -2,11 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const listAll = vi.fn()
 
-vi.mock('@/lib/api', () => ({
-  apiClient: {
-    post: { listAll },
-  },
-}))
+vi.mock('@/lib/api', () => ({ getPosts: listAll }))
 
 const { GET } = await import('./route')
 
@@ -66,7 +62,6 @@ describe('/feed.xml', () => {
   it('omits the item <description> when a post has none', async () => {
     listAll.mockResolvedValue([
       post({ description: null }),
-      post({ slug: 'beta', description: '' }),
     ])
 
     const xml = await feedXml()

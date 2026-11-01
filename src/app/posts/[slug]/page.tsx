@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import type { Post } from '@/lib/api'
 import { draftMode } from 'next/headers'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { MdxContent } from '@/components/mdx/MdxContent'
-import { apiClient, isNotFoundError } from '@/lib/api'
+import { TextLink } from '@/components/TextLink'
+import { getDraftPost, getPost, getPosts, isNotFoundError } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
-import { BasePaths, categoryPath, postPath } from '@/lib/paths'
+import { absoluteUrl, categoryPath, postPath } from '@/lib/paths'
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -17,7 +17,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   let post: Post
   try {
-    post = await apiClient.post.getBySlug(slug)
+    post = await getPost(slug)
   }
   catch (error) {
     // unknown or malformed slug: the page itself will render notFound()
@@ -32,7 +32,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     description,
     openGraph: {
       type: 'article',
-      url: `${BasePaths.url}${postPath(post.slug)}`,
+      url: absoluteUrl(postPath(post.slug)),
       title: post.title,
       description,
       publishedTime: post.createdAt.toISOString(),
@@ -48,7 +48,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export async function generateStaticParams() {
-  const posts = await apiClient.post.listAll()
+  const posts = await getPosts()
 
   // Fail the build loudly rather than silently shipping zero prerendered
   // pages (which would degrade every post visit to on-demand rendering).
@@ -65,8 +65,8 @@ export default async function PostPage({ params }: PageProps) {
   let post: Post
   try {
     post = isDraftPreview
-      ? await apiClient.post.getPreviewBySlug(slug)
-      : await apiClient.post.getBySlug(slug)
+      ? await getDraftPost(slug)
+      : await getPost(slug)
   }
   catch (error) {
     // Only a slug that names no post (404, or the API's 400 for a malformed
@@ -92,13 +92,13 @@ export default async function PostPage({ params }: PageProps) {
       )}
 
       {/* header */}
-      <header className="mb-16 pb-4 border-b border-gray-200/30 dark:border-gray-800/30">
+      <header className="mb-16 border-b border-zinc-200/30 pb-4 dark:border-zinc-800/30">
 
         {/* title */}
         <h1 className="text-2xl font-bold">{post.title}</h1>
 
         {/* (optional) description */}
-        {post.description !== null && post.description !== '' && (
+        {post.description !== null && (
           <p className="mt-2 text-zinc-600 dark:text-zinc-400">{post.description}</p>
         )}
 
@@ -119,12 +119,9 @@ export default async function PostPage({ params }: PageProps) {
             </>
           )}
           <span className="mx-2">·</span>
-          <Link
-            href={categoryPath(post.category)}
-            className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 dark:decoration-zinc-700 dark:hover:text-zinc-300"
-          >
+          <TextLink href={categoryPath(post.category)}>
             {post.category}
-          </Link>
+          </TextLink>
         </div>
       </header>
 

@@ -3,12 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 const listAll = vi.fn()
 const listCategories = vi.fn()
 
-vi.mock('@/lib/api', () => ({
-  apiClient: {
-    post: { listAll },
-    category: { listAll: listCategories },
-  },
-}))
+vi.mock('@/lib/api', () => ({ getPosts: listAll, getCategories: listCategories }))
 
 const sitemap = (await import('./sitemap')).default
 

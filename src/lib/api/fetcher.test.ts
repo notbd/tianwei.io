@@ -19,6 +19,10 @@ async function importFetcher() {
   return import('./fetcher')
 }
 
+function successBody(data: unknown): Response {
+  return new Response(JSON.stringify({ status: 'success', data }), { status: 200 })
+}
+
 beforeEach(() => {
   vi.resetModules()
   vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
@@ -27,6 +31,35 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
+})
+
+describe('configuration', () => {
+  it('exposes API_BASE_URL when CONTENT_API_URL is set', async () => {
+    const { API_BASE_URL } = await importFetcher()
+    expect(API_BASE_URL).toBe('https://api.example.test')
+  })
+
+  it.each([undefined, ''])('throws loudly when CONTENT_API_URL is %j', async (value) => {
+    // regression: an unset value used to surface as a relative-URL fetch
+    // that HANGS `next build` instead of failing
+    vi.stubEnv('CONTENT_API_URL', value)
+    await expect(importFetcher()).rejects.toThrow(/CONTENT_API_URL is not set/)
+  })
+})
+
+describe('isNotFoundError', () => {
+  it('matches the API 404 and the 400 it sends for a malformed slug', async () => {
+    const { ApiError, isNotFoundError } = await importFetcher()
+    expect(isNotFoundError(new ApiError(404, 'Post not found.'))).toBe(true)
+    expect(isNotFoundError(new ApiError(400, 'Validation failed: slug - ...'))).toBe(true)
+  })
+
+  it('leaves every other failure to propagate', async () => {
+    const { ApiError, isNotFoundError } = await importFetcher()
+    expect(isNotFoundError(new ApiError(500, 'Request failed (500)'))).toBe(false)
+    expect(isNotFoundError(new ApiError(401, 'Unauthorized'))).toBe(false)
+    expect(isNotFoundError(new TypeError('fetch failed'))).toBe(false)
+  })
 })
 
 describe('fetchOne', () => {
@@ -53,19 +86,35 @@ describe('fetchOne', () => {
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.example.test/api/thing',
       expect.objectContaining({
-        headers: { 'Content-Type': 'application/json' },
+        headers: { Accept: 'application/json' },
       }),
     )
+    const [, init] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+    expect(init.signal).toBeInstanceOf(AbortSignal)
   })
 
-  it('throws NetworkRequestError with status after exhausting retries on 5xx', async () => {
+  it('throws ApiError with status after exhausting retries on 5xx', async () => {
     const fetchMock = stubFetch({ status: 500, statusText: 'Internal Server Error' })
-    const { fetchOne } = await importFetcher()
-    const { NetworkRequestError } = await import('./errors')
+    const { ApiError, fetchOne } = await importFetcher()
 
     const failure = fetchOne('/api/thing', itemSchema)
-    await expect(failure).rejects.toBeInstanceOf(NetworkRequestError)
+    await expect(failure).rejects.toBeInstanceOf(ApiError)
     expect(fetchMock).toHaveBeenCalledTimes(3)
+  })
+
+  it('gives each attempt a deadline and retries one that times out', async () => {
+    // a hung API must fail the build or render, never stall it
+    const timeout = vi.spyOn(AbortSignal, 'timeout')
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockRejectedValueOnce(new DOMException('The operation was aborted due to timeout', 'TimeoutError'))
+      .mockResolvedValueOnce(successBody({ id: 4 }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { fetchOne } = await importFetcher()
+    expect(await fetchOne('/api/thing', itemSchema)).toEqual({ id: 4 })
+    expect(fetchMock).toHaveBeenCalledTimes(2)
+    expect(timeout).toHaveBeenCalledWith(10_000)
+    timeout.mockRestore()
   })
 
   it('recovers from a transient 5xx (build-time flake protection)', async () => {

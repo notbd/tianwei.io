@@ -1,21 +1,21 @@
 import type { MetadataRoute } from 'next'
-import { AssetPaths } from '@/lib/paths'
+import { site } from '@/lib/site'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Tianwei Zhang',
+    name: site.name,
     short_name: 'Tianwei.io',
-    description: 'Tianwei Zhang\'s personal website',
+    description: `${site.name}'s personal website`,
     start_url: '/',
     display: 'minimal-ui',
     icons: [
       {
-        src: AssetPaths.manifestIcon512,
+        src: '/assets/icon-squircle-512.png',
         type: 'image/png',
         sizes: '512x512',
       },
       {
-        src: AssetPaths.manifestIcon192,
+        src: '/assets/icon-squircle-192.png',
         type: 'image/png',
         sizes: '192x192',
       },

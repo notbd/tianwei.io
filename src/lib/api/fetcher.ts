@@ -1,50 +1,76 @@
 import type { z } from 'zod'
-import {
-  errorResponse,
-  successListResponse,
-  successResponse,
-} from '@/lib/api/responses'
-import { BASE_URL } from './config'
-import { NetworkRequestError } from './errors'
+import { errorEnvelope, listEnvelope, successEnvelope } from './schemas'
 
-// =============================================================================
-// Core Fetch Logic
-// =============================================================================
+const baseUrl = process.env.CONTENT_API_URL
 
-type FetchOptions = {
+// Fail fast and loud: an unset CONTENT_API_URL otherwise surfaces as
+// fetch('/api/...') with a relative URL, which HANGS `next build` at the
+// page-data collection stage instead of erroring.
+if (baseUrl === undefined || baseUrl === '') {
+  throw new Error(
+    'CONTENT_API_URL is not set — the frontend cannot reach the content API. '
+    + 'Set it in .env.local (local dev) or the environment (CI workflow env / Vercel env).',
+  )
+}
+
+export const API_BASE_URL = baseUrl
+
+/** A response the API answered with a non-2xx status (or an unusable body). */
+export class ApiError extends Error {
+  constructor(
+    public status: number,
+    message: string,
+  ) {
+    super(message)
+    this.name = 'ApiError'
+  }
+}
+
+// The API answers 404 for a slug it does not have and 400 for one that fails
+// its slug validation (uppercase, consecutive hyphens, too long). Both mean
+// the URL names no post, so pages render notFound() for both; the fetcher
+// retries neither.
+export function isNotFoundError(error: unknown): boolean {
+  return error instanceof ApiError && (error.status === 404 || error.status === 400)
+}
+
+export type FetchOptions = {
   next?: NextFetchRequestConfig
   cache?: RequestCache
   headers?: Record<string, string>
 }
 
-// Transient failures (network errors, 5xx) are retried with exponential
-// backoff. 4xx responses are semantic — retrying them can't help, and a
-// retried 404 would delay a legitimate notFound(). This mainly protects
-// builds: a single flaky request during SSG must not drop a page.
-const RETRY_ATTEMPTS = 3
-const RETRY_BASE_DELAY_MS = 300
+// Transient failures (network errors, timeouts, 5xx, a 2xx whose body is
+// not JSON) are retried with exponential backoff; 4xx answers are final,
+// since a retried 404 would only delay a legitimate notFound(). This mainly
+// protects builds: one flaky request during static generation must not
+// drop a page. Each attempt has its own deadline, so a hung API fails the
+// build or the render in about half a minute instead of never.
+const ATTEMPTS = 3
+const BACKOFF_BASE_MS = 300
+const ATTEMPT_TIMEOUT_MS = 10_000
 
-async function delay(ms: number): Promise<void> {
-  return new Promise(resolve => setTimeout(resolve, ms))
-}
-
-async function baseFetch(endpoint: string, options?: FetchOptions): Promise<unknown> {
-  const url = `${BASE_URL}${endpoint}`
+async function requestJson(path: string, options: FetchOptions = {}): Promise<unknown> {
+  const url = `${API_BASE_URL}${path}`
 
   let lastError: unknown
-  for (let attempt = 0; attempt < RETRY_ATTEMPTS; attempt++) {
+  for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     if (attempt > 0)
-      await delay(RETRY_BASE_DELAY_MS * 2 ** (attempt - 1))
+      await new Promise(resolve => setTimeout(resolve, BACKOFF_BASE_MS * 2 ** (attempt - 1)))
 
     let response: Response
+    let body: string
     try {
+      // the deadline covers the body too: a stalled stream is a timeout
       response = await fetch(url, {
         ...options,
-        headers: { 'Content-Type': 'application/json', ...options?.headers },
+        headers: { Accept: 'application/json', ...options.headers },
+        signal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),
       })
+      body = await response.text()
     }
-    catch (err) {
-      lastError = err
+    catch (error) {
+      lastError = error
       continue
     }
 
@@ -52,39 +78,27 @@ async function baseFetch(endpoint: string, options?: FetchOptions): Promise<unkn
       // the API's error envelope says why; fall back to the status code
       // when the body is not one (proxy page, empty body). Not statusText:
       // HTTP/2 responses carry none (Node 26's fetch negotiates it).
-      const requestError = new NetworkRequestError(
-        response.status,
-        errorEnvelopeMessage(await response.text()) ?? `Request failed (${response.status})`,
-      )
-      if (response.status >= 500) {
-        lastError = requestError
-        continue
-      }
-      throw requestError
+      const error = new ApiError(response.status, errorMessage(body) ?? `Request failed (${response.status})`)
+      if (response.status < 500)
+        throw error
+      lastError = error
+      continue
     }
 
-    // Parse inside the loop: a 2xx with a non-JSON body (proxy/CDN error
-    // page) is just as transient as a 5xx and must be retried, not
-    // surfaced as a bare SyntaxError that bypasses the retry loop.
-    const rawBody = await response.text()
     try {
-      return JSON.parse(rawBody)
+      return JSON.parse(body)
     }
     catch {
-      lastError = new NetworkRequestError(
-        response.status,
-        `Invalid JSON from ${url} (${response.status}): ${rawBody.slice(0, 120)}`,
-      )
-      continue
+      lastError = new ApiError(response.status, `Invalid JSON from ${url} (${response.status}): ${body.slice(0, 120)}`)
     }
   }
 
   throw lastError
 }
 
-function errorEnvelopeMessage(rawBody: string): string | undefined {
+function errorMessage(body: string): string | undefined {
   try {
-    const envelope = errorResponse.safeParse(JSON.parse(rawBody))
+    const envelope = errorEnvelope.safeParse(JSON.parse(body))
     return envelope.success ? envelope.data.message : undefined
   }
   catch {
@@ -92,40 +106,20 @@ function errorEnvelopeMessage(rawBody: string): string | undefined {
   }
 }
 
-// =============================================================================
-// Public Fetch Functions
-// =============================================================================
-
-/**
- * Fetch a single resource.
- * Validates using backend's { status: 'success', data: schema } response.
- */
+/** GET a single resource: `{ status: 'success', data }`. */
 export async function fetchOne<T>(
-  endpoint: string,
+  path: string,
   schema: z.ZodType<T>,
   options?: FetchOptions,
 ): Promise<T> {
-  const json = await baseFetch(endpoint, options)
-
-  const responseSchema = successResponse(schema)
-  const result = responseSchema.parse(json)
-
-  return result.data
+  return successEnvelope(schema).parse(await requestJson(path, options)).data
 }
 
-/**
- * Fetch a list of resources.
- * Validates using backend's { status: 'success', count, data: schema[] } response.
- */
+/** GET a list: `{ status: 'success', count, data: [] }`. */
 export async function fetchList<T>(
-  endpoint: string,
+  path: string,
   itemSchema: z.ZodType<T>,
   options?: FetchOptions,
 ): Promise<T[]> {
-  const json = await baseFetch(endpoint, options)
-
-  const responseSchema = successListResponse(itemSchema)
-  const result = responseSchema.parse(json)
-
-  return result.data
+  return listEnvelope(itemSchema).parse(await requestJson(path, options)).data
 }

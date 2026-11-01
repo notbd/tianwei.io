@@ -28,9 +28,9 @@ describe('postSchema', () => {
     expect(post.content).toBe('# Hello\n\nBody.\n')
   })
 
-  it('accepts a null description', () => {
-    const post = postSchema.parse({ ...CANONICAL_POST, description: null })
-    expect(post.description).toBeNull()
+  it('accepts a null description and reads an empty one as none', () => {
+    expect(postSchema.parse({ ...CANONICAL_POST, description: null }).description).toBeNull()
+    expect(postSchema.parse({ ...CANONICAL_POST, description: '' }).description).toBeNull()
   })
 
   it('parses updatedAt as a Date, passes null through, rejects absence', () => {

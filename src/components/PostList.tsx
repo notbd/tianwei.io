@@ -31,7 +31,7 @@ export function PostList({ posts }: PostListProps) {
               </h2>
 
               {/* (optional) row 3: description */}
-              {post.description !== null && post.description !== '' && (
+              {post.description !== null && (
                 <p className="text-base text-zinc-600 dark:text-zinc-400 leading-relaxed">
                   {post.description}
                 </p>

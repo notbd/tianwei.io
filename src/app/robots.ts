@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { BasePaths } from '@/lib/paths'
+import { absoluteUrl } from '@/lib/paths'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -10,6 +10,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: '/',
       disallow: '/api/',
     },
-    sitemap: `${BasePaths.url}/sitemap.xml`,
+    sitemap: absoluteUrl('/sitemap.xml'),
   }
 }

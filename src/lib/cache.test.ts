@@ -1,17 +1,23 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-const revalidateTag = vi.fn()
-const listAll = vi.fn()
-const getBySlug = vi.fn()
+const { revalidateTag, listAll, getBySlug } = vi.hoisted(() => {
+  // the real cacheTags come from @/lib/api, whose fetcher needs this at import
+  vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
+  return {
+    revalidateTag: vi.fn(),
+    listAll: vi.fn(),
+    getBySlug: vi.fn(),
+  }
+})
 
 vi.mock('next/cache', () => ({ revalidateTag }))
-vi.mock('@/lib/api', () => ({
-  apiClient: {
-    post: { listAll, getBySlug },
-  },
+vi.mock('@/lib/api', async importOriginal => ({
+  ...await importOriginal<typeof import('@/lib/api')>(),
+  getPosts: listAll,
+  getPost: getBySlug,
 }))
 
-const { revalidateAndWarmTags } = await import('./revalidate')
+const { revalidateAndWarmTags } = await import('./cache')
 
 beforeEach(() => {
   vi.clearAllMocks()
@@ -38,7 +44,7 @@ describe('revalidateAndWarmTags', () => {
     })
   })
 
-  it('routes post-<slug> tags to the prefix warmer with the stripped slug', async () => {
+  it('warms post-<slug> tags by re-fetching that post', async () => {
     const result = await revalidateAndWarmTags(['post-hello-world'])
 
     expect(revalidateTag).toHaveBeenCalledWith('post-hello-world', { expire: 0 })

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
-import Link from 'next/link'
+import { PageHeader } from '@/components/PageHeader'
+import { TextLink } from '@/components/TextLink'
 import { metadata as rootMetadata } from './metadata'
 
 // A 404 has no canonical URL: the root's './' would resolve to the internal
@@ -21,17 +22,12 @@ export const metadata: Metadata = {
 export default function NotFound() {
   return (
     <div className="max-w-3xl pb-8">
-      <header className="mb-12 pb-4 border-b border-gray-200/30 dark:border-gray-800/30">
-        <h1 className="text-2xl font-extrabold tracking-tight text-gray-900 dark:text-gray-100">
-          Not Found
-        </h1>
+      <PageHeader title="Not Found">
         <p className="mt-2 text-zinc-500 dark:text-zinc-200">
           {'This page does not exist · '}
-          <Link href="/posts" className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 dark:decoration-zinc-700 dark:hover:text-zinc-300">
-            all posts
-          </Link>
+          <TextLink href="/posts">all posts</TextLink>
         </p>
-      </header>
+      </PageHeader>
     </div>
   )
 }
