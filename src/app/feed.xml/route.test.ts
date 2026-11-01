@@ -2,7 +2,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const listAll = vi.fn()
 
-vi.mock('@/lib/api', () => ({ apiClient: { post: { listAll } } }))
+vi.mock('@/lib/api', () => ({
+  apiClient: {
+    post: { listAll },
+  },
+}))
 
 const { GET } = await import('./route')
 
@@ -30,7 +34,11 @@ describe('/feed.xml', () => {
   it('serves RSS 2.0 with one item per post and canonical absolute links', async () => {
     listAll.mockResolvedValue([
       post({}),
-      post({ slug: 'beta', title: 'Beta', createdAt: new Date('2024-04-15T04:00:00.000Z') }),
+      post({
+        slug: 'beta',
+        title: 'Beta',
+        createdAt: new Date('2024-04-15T04:00:00.000Z'),
+      }),
     ])
 
     const response = await GET()
@@ -46,7 +54,9 @@ describe('/feed.xml', () => {
   })
 
   it('escapes the five XML special characters in text nodes', async () => {
-    listAll.mockResolvedValue([post({ title: 'Tom & Jerry <"\'>', description: 'a < b' })])
+    listAll.mockResolvedValue([
+      post({ title: 'Tom & Jerry <"\'>', description: 'a < b' }),
+    ])
 
     const xml = await feedXml()
     expect(xml).toContain('<title>Tom &amp; Jerry &lt;&quot;&apos;&gt;</title>')
@@ -54,7 +64,10 @@ describe('/feed.xml', () => {
   })
 
   it('omits the item <description> when a post has none', async () => {
-    listAll.mockResolvedValue([post({ description: null }), post({ slug: 'beta', description: '' })])
+    listAll.mockResolvedValue([
+      post({ description: null }),
+      post({ slug: 'beta', description: '' }),
+    ])
 
     const xml = await feedXml()
     // only the channel-level description remains
@@ -64,8 +77,15 @@ describe('/feed.xml', () => {
   it('sets lastBuildDate to the newest createdAt or updatedAt across all posts', async () => {
     // an OLD post with a NEW updatedAt must bump it, so readers re-poll
     listAll.mockResolvedValue([
-      post({ slug: 'old', createdAt: new Date('2024-04-15T04:00:00.000Z'), updatedAt: new Date('2025-12-01T05:00:00.000Z') }),
-      post({ slug: 'new', createdAt: new Date('2025-10-23T04:00:00.000Z') }),
+      post({
+        slug: 'old',
+        createdAt: new Date('2024-04-15T04:00:00.000Z'),
+        updatedAt: new Date('2025-12-01T05:00:00.000Z'),
+      }),
+      post({
+        slug: 'new',
+        createdAt: new Date('2025-10-23T04:00:00.000Z'),
+      }),
     ])
 
     const xml = await feedXml()

@@ -71,7 +71,9 @@ export default async function OpengraphImage({ params }: ImageProps) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
           <div
             style={{
-              fontSize: title.length > 48 ? 56 : 68,
+              fontSize: title.length > 48
+                ? 56
+                : 68,
               fontWeight: 700,
               lineHeight: 1.15,
               letterSpacing: '-0.02em',
@@ -81,12 +83,20 @@ export default async function OpengraphImage({ params }: ImageProps) {
           </div>
           {description !== '' && (
             <div style={{ fontSize: 30, color: '#a1a1aa', lineHeight: 1.4 }}>
-              {description.length > 120 ? `${description.slice(0, 117)}...` : description}
+              {description.length > 120
+                ? `${description.slice(0, 117)}...`
+                : description}
             </div>
           )}
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 26, color: '#71717a' }}>
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          fontSize: 26,
+          color: '#71717a',
+        }}
+        >
           <div>Tianwei Zhang</div>
           <div>{dateLabel}</div>
         </div>

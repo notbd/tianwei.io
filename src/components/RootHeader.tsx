@@ -57,7 +57,11 @@ export function RootHeader({
         <NavLink
           href="/posts"
           isSelected={isPosts}
-          aria-current={isPosts ? (pathname === '/posts' ? 'page' : 'true') : undefined}
+          aria-current={isPosts
+            ? (pathname === '/posts'
+                ? 'page'
+                : 'true')
+            : undefined}
         >
           Posts
         </NavLink>

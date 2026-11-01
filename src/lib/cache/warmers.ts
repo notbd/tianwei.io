@@ -15,7 +15,9 @@ async function forEachWithConcurrency<T>(
   fn: (item: T) => Promise<void>,
 ): Promise<void> {
   const queue = [...items]
-  const workers = Array.from({ length: Math.min(limit, queue.length) }, async () => {
+  const workers = Array.from({
+    length: Math.min(limit, queue.length),
+  }, async () => {
     for (let item = queue.shift(); item !== undefined; item = queue.shift())
       await fn(item)
   })

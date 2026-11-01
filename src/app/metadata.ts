@@ -13,7 +13,12 @@ export const metadata: Metadata = {
   },
   creator: 'Tianwei Zhang',
   generator: 'Next.js',
-  keywords: ['Tianwei Zhang', 'notbd', 'tianwei.io', 'Personal Website'],
+  keywords: [
+    'Tianwei Zhang',
+    'notbd',
+    'tianwei.io',
+    'Personal Website',
+  ],
   metadataBase: new URL(BasePaths.url),
   icons: {
     icon: [

@@ -6,14 +6,19 @@ const getBySlug = vi.fn()
 
 vi.mock('next/cache', () => ({ revalidateTag }))
 vi.mock('@/lib/api', () => ({
-  apiClient: { post: { listAll, getBySlug } },
+  apiClient: {
+    post: { listAll, getBySlug },
+  },
 }))
 
 const { revalidateAndWarmTags } = await import('./revalidate')
 
 beforeEach(() => {
   vi.clearAllMocks()
-  listAll.mockResolvedValue([{ slug: 'alpha' }, { slug: 'beta' }])
+  listAll.mockResolvedValue([
+    { slug: 'alpha' },
+    { slug: 'beta' },
+  ])
   getBySlug.mockResolvedValue({ slug: 'alpha' })
 })
 
@@ -26,7 +31,11 @@ describe('revalidateAndWarmTags', () => {
     // the posts warmer re-fetches every individual post
     expect(getBySlug).toHaveBeenCalledWith('alpha')
     expect(getBySlug).toHaveBeenCalledWith('beta')
-    expect(result).toEqual({ success: true, revalidated: ['posts'], warmed: ['posts'] })
+    expect(result).toEqual({
+      success: true,
+      revalidated: ['posts'],
+      warmed: ['posts'],
+    })
   })
 
   it('routes post-<slug> tags to the prefix warmer with the stripped slug', async () => {

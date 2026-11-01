@@ -16,14 +16,20 @@ function makeRequest(body: unknown, auth?: string): NextRequest {
       'content-type': 'application/json',
       ...(auth !== undefined && { authorization: auth }),
     },
-    body: typeof body === 'string' ? body : JSON.stringify(body),
+    body: typeof body === 'string'
+      ? body
+      : JSON.stringify(body),
   }) as unknown as NextRequest
 }
 
 beforeEach(() => {
   vi.clearAllMocks()
   vi.stubEnv('REVALIDATION_SECRET', SECRET)
-  revalidateAndWarmTags.mockResolvedValue({ success: true, revalidated: ['posts'], warmed: ['posts'] })
+  revalidateAndWarmTags.mockResolvedValue({
+    success: true,
+    revalidated: ['posts'],
+    warmed: ['posts'],
+  })
 })
 
 afterEach(() => {
@@ -32,13 +38,17 @@ afterEach(() => {
 
 describe('/api/revalidate auth', () => {
   it('401s without an authorization header and touches nothing', async () => {
-    const res = await POST(makeRequest({ tags: ['posts'] }))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }))
     expect(res.status).toBe(401)
     expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
 
   it('401s with a wrong bearer token', async () => {
-    const res = await POST(makeRequest({ tags: ['posts'] }, 'Bearer wrong'))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }, 'Bearer wrong'))
     expect(res.status).toBe(401)
     expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
@@ -47,7 +57,9 @@ describe('/api/revalidate auth', () => {
     // regression: interpolating an unset env var made the expected header
     // the literal "Bearer undefined" — which an attacker can just send
     vi.stubEnv('REVALIDATION_SECRET', '')
-    const res = await POST(makeRequest({ tags: ['posts'] }, 'Bearer undefined'))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }, 'Bearer undefined'))
     expect(res.status).toBe(401)
     expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
@@ -61,7 +73,9 @@ describe('/api/revalidate payloads', () => {
   })
 
   it('handles { tags: [...] }', async () => {
-    const res = await POST(makeRequest({ tags: ['posts', 'post-a'] }, `Bearer ${SECRET}`))
+    const res = await POST(makeRequest({
+      tags: ['posts', 'post-a'],
+    }, `Bearer ${SECRET}`))
     expect(res.status).toBe(200)
     expect(revalidateAndWarmTags).toHaveBeenCalledWith(['posts', 'post-a'])
   })
@@ -84,7 +98,9 @@ describe('/api/revalidate payloads', () => {
       warmed: [],
       error: 'warmer exploded',
     })
-    const res = await POST(makeRequest({ tags: ['posts'] }, `Bearer ${SECRET}`))
+    const res = await POST(makeRequest({
+      tags: ['posts'],
+    }, `Bearer ${SECRET}`))
     expect(res.status).toBe(207)
     expect(await res.json()).toMatchObject({ success: false, error: 'warmer exploded' })
   })

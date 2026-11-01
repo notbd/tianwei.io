@@ -7,7 +7,9 @@ import { DISPLAY_TIME_ZONE } from '@/lib/constants'
 export function formatPostDate(date: Date, style: 'long' | 'short' = 'long'): string {
   return date.toLocaleDateString('en-US', {
     year: 'numeric',
-    month: style === 'long' ? 'long' : 'short',
+    month: style === 'long'
+      ? 'long'
+      : 'short',
     day: 'numeric',
     timeZone: DISPLAY_TIME_ZONE,
   })

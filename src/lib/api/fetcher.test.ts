@@ -4,7 +4,9 @@ import { z } from 'zod'
 // config.ts reads CONTENT_API_URL at import time, so modules are reset and
 // dynamically imported after the env stub is in place.
 
-const itemSchema = z.object({ id: z.number() })
+const itemSchema = z.object({
+  id: z.number(),
+})
 
 function stubFetch(response: { status?: number, statusText?: string, json?: unknown }) {
   const { status = 200, statusText = 'OK', json = {} } = response
@@ -29,18 +31,30 @@ afterEach(() => {
 
 describe('fetchOne', () => {
   it('returns data from a success envelope', async () => {
-    stubFetch({ json: { status: 'success', data: { id: 7 } } })
+    stubFetch({
+      json: {
+        status: 'success',
+        data: { id: 7 },
+      },
+    })
     const { fetchOne } = await importFetcher()
     expect(await fetchOne('/api/thing', itemSchema)).toEqual({ id: 7 })
   })
 
   it('requests BASE_URL + endpoint', async () => {
-    const fetchMock = stubFetch({ json: { status: 'success', data: { id: 1 } } })
+    const fetchMock = stubFetch({
+      json: {
+        status: 'success',
+        data: { id: 1 },
+      },
+    })
     const { fetchOne } = await importFetcher()
     await fetchOne('/api/thing', itemSchema)
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.example.test/api/thing',
-      expect.objectContaining({ headers: { 'Content-Type': 'application/json' } }),
+      expect.objectContaining({
+        headers: { 'Content-Type': 'application/json' },
+      }),
     )
   })
 
@@ -57,7 +71,10 @@ describe('fetchOne', () => {
   it('recovers from a transient 5xx (build-time flake protection)', async () => {
     const responses = [
       new Response('oops', { status: 503, statusText: 'Service Unavailable' }),
-      new Response(JSON.stringify({ status: 'success', data: { id: 9 } }), { status: 200 }),
+      new Response(JSON.stringify({
+        status: 'success',
+        data: { id: 9 },
+      }), { status: 200 }),
     ]
     const fetchMock = vi.fn(async () => responses.shift()!)
     vi.stubGlobal('fetch', fetchMock)
@@ -74,7 +91,10 @@ describe('fetchOne', () => {
         first = false
         throw new TypeError('fetch failed')
       }
-      return new Response(JSON.stringify({ status: 'success', data: { id: 3 } }), { status: 200 })
+      return new Response(JSON.stringify({
+        status: 'success',
+        data: { id: 3 },
+      }), { status: 200 })
     })
     vi.stubGlobal('fetch', fetchMock)
 
@@ -85,7 +105,10 @@ describe('fetchOne', () => {
   it('retries a 2xx with a non-JSON body (CDN error page) and recovers', async () => {
     const responses = [
       new Response('<html>gateway error</html>', { status: 200 }),
-      new Response(JSON.stringify({ status: 'success', data: { id: 5 } }), { status: 200 }),
+      new Response(JSON.stringify({
+        status: 'success',
+        data: { id: 5 },
+      }), { status: 200 }),
     ]
     const fetchMock = vi.fn(async () => responses.shift()!)
     vi.stubGlobal('fetch', fetchMock)
@@ -111,7 +134,11 @@ describe('fetchOne', () => {
   })
 
   it('surfaces the API message and the real status from an error envelope', async () => {
-    stubFetch({ status: 404, statusText: 'Not Found', json: { status: 'error', message: 'Post not found.' } })
+    stubFetch({
+      status: 404,
+      statusText: 'Not Found',
+      json: { status: 'error', message: 'Post not found.' },
+    })
     const { fetchOne } = await importFetcher()
     await expect(fetchOne('/api/thing', itemSchema)).rejects.toMatchObject({
       status: 404,
@@ -120,7 +147,12 @@ describe('fetchOne', () => {
   })
 
   it('throws a ZodError on a malformed envelope', async () => {
-    stubFetch({ json: { status: 'success', data: { id: 'not-a-number' } } })
+    stubFetch({
+      json: {
+        status: 'success',
+        data: { id: 'not-a-number' },
+      },
+    })
     const { fetchOne } = await importFetcher()
     await expect(fetchOne('/api/thing', itemSchema)).rejects.toThrow(z.ZodError)
   })
@@ -128,13 +160,27 @@ describe('fetchOne', () => {
 
 describe('fetchList', () => {
   it('returns the data array from a success list envelope', async () => {
-    stubFetch({ json: { status: 'success', count: 2, data: [{ id: 1 }, { id: 2 }] } })
+    stubFetch({
+      json: {
+        status: 'success',
+        count: 2,
+        data: [
+          { id: 1 },
+          { id: 2 },
+        ],
+      },
+    })
     const { fetchList } = await importFetcher()
-    expect(await fetchList('/api/things', itemSchema)).toEqual([{ id: 1 }, { id: 2 }])
+    expect(await fetchList('/api/things', itemSchema)).toEqual([
+      { id: 1 },
+      { id: 2 },
+    ])
   })
 
   it('rejects an envelope missing count', async () => {
-    stubFetch({ json: { status: 'success', data: [] } })
+    stubFetch({
+      json: { status: 'success', data: [] },
+    })
     const { fetchList } = await importFetcher()
     await expect(fetchList('/api/things', itemSchema)).rejects.toThrow(z.ZodError)
   })

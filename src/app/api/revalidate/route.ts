@@ -27,12 +27,16 @@ export async function POST(request: NextRequest) {
   try {
     // an unparsable body is the caller's error, so it lands in the 400 below
     const parsedBody = revalidateBodySchema.safeParse(await request.json().catch(() => undefined))
-    const { tag, tags, slug }: z.infer<typeof revalidateBodySchema> = parsedBody.success ? parsedBody.data : {}
+    const { tag, tags, slug }: z.infer<typeof revalidateBodySchema> = parsedBody.success
+      ? parsedBody.data
+      : {}
 
     // { slug } refreshes that post plus the list; { tags } and { tag } pass through
     const tagList = slug !== undefined
       ? [`post-${slug}`, 'posts']
-      : tags ?? (tag !== undefined ? [tag] : undefined)
+      : tags ?? (tag !== undefined
+        ? [tag]
+        : undefined)
     if (tagList === undefined) {
       return NextResponse.json(
         { error: 'Missing tag, tags, or slug' },
@@ -42,14 +46,18 @@ export async function POST(request: NextRequest) {
 
     const result = await revalidateAndWarmTags(tagList)
     // 207 Multi-Status: tags were revalidated but warming did not fully succeed
-    return NextResponse.json(result, { status: result.success ? 200 : 207 })
+    return NextResponse.json(result, {
+      status: result.success ? 200 : 207,
+    })
   }
   catch (error) {
     console.error('Revalidation error:', error)
     return NextResponse.json(
       {
         error: 'Internal server error',
-        message: error instanceof Error ? error.message : String(error),
+        message: error instanceof Error
+          ? error.message
+          : String(error),
       },
       { status: 500 },
     )

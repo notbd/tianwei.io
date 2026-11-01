@@ -55,7 +55,9 @@ export default async function CategoryPage({ params }: PageProps) {
         </h1>
         <p className="mt-2 text-zinc-500 dark:text-zinc-200">
           {filtered.length}
-          {filtered.length === 1 ? ' post' : ' posts'}
+          {filtered.length === 1
+            ? ' post'
+            : ' posts'}
           {' in this category · '}
           <Link href="/posts" className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 dark:decoration-zinc-700 dark:hover:text-zinc-300">
             all posts

@@ -40,7 +40,9 @@ export function ColorModeToggle({
   }, [theme])
 
   const toggleTheme = () => {
-    const current: Theme = theme === 'dark' || theme === 'light' ? theme : DEFAULT_THEME
+    const current: Theme = theme === 'dark' || theme === 'light'
+      ? theme
+      : DEFAULT_THEME
     setTheme(NEXT_THEME[current])
   }
 
