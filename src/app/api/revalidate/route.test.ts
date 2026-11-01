@@ -30,7 +30,7 @@ afterEach(() => {
   vi.unstubAllEnvs()
 })
 
-describe('pOST /api/revalidate auth', () => {
+describe('/api/revalidate auth', () => {
   it('401s without an authorization header and touches nothing', async () => {
     const res = await POST(makeRequest({ tags: ['posts'] }))
     expect(res.status).toBe(401)
@@ -53,7 +53,7 @@ describe('pOST /api/revalidate auth', () => {
   })
 })
 
-describe('pOST /api/revalidate payloads', () => {
+describe('/api/revalidate payloads', () => {
   it('handles { slug } as the post tag plus the list tag', async () => {
     const res = await POST(makeRequest({ slug: 'hello' }, `Bearer ${SECRET}`))
     expect(res.status).toBe(200)
