@@ -32,7 +32,7 @@ export function RootHeader({
         <Link
           href="/"
           tabIndex={-1}
-          aria-label="tianwei.io home"
+          aria-label="tianwei.io"
         >
           {/* logo svg imported as component */}
           <SiteLogo
