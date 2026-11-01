@@ -101,3 +101,21 @@ test('sitemap includes posts and categories', async ({ request }) => {
   expect(body).toContain('/categories/')
   expect(body).toContain('/posts/')
 })
+
+test('a code block copy button copies the code and confirms it', async ({ page, context }) => {
+  await context.grantPermissions(['clipboard-read', 'clipboard-write'])
+  await page.goto('/posts/1password-git-workflow')
+
+  const block = page.locator('[data-code-block]').first()
+  const button = block.getByRole('button', { name: 'Copy code' })
+  await block.hover()
+  // first click may race hydration, as in the theme test
+  await expect(async () => {
+    await button.click()
+    await expect(block.getByRole('button', { name: 'Copied' })).toBeVisible({ timeout: 1000 })
+  }).toPass({ timeout: 10_000 })
+
+  const copied = await page.evaluate(async () => navigator.clipboard.readText())
+  expect(copied).toBe(await block.locator('pre').textContent())
+  expect(copied.length).toBeGreaterThan(0)
+})

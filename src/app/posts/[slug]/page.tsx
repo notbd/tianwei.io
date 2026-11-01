@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import type { Post } from '@/lib/api'
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { JsonLd } from '@/components/JsonLd'
 import { MdxContent } from '@/components/mdx/MdxContent'
 import { TextLink } from '@/components/TextLink'
 import { getDraftPost, getPost, getPosts, isNotFoundError } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
-import { absoluteUrl, categoryPath, postPath } from '@/lib/paths'
+import { absoluteUrl, categoryPath, postPath, SITE_URL } from '@/lib/paths'
+import { readingMinutes } from '@/lib/readingTime'
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -78,8 +80,24 @@ export default async function PostPage({ params }: PageProps) {
     throw error
   }
 
+  const url = absoluteUrl(postPath(post.slug))
+
   return (
     <article className="max-w-3xl pb-8">
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        'headline': post.title,
+        'description': post.description ?? undefined,
+        'datePublished': post.createdAt.toISOString(),
+        'dateModified': (post.updatedAt ?? post.createdAt).toISOString(),
+        'author': { '@type': 'Person', 'name': post.author, 'url': SITE_URL },
+        'url': url,
+        'mainEntityOfPage': url,
+        'image': `${url}/opengraph-image`,
+        'articleSection': post.category,
+      }}
+      />
 
       {/* draft preview banner */}
       {isDraftPreview && (
@@ -107,9 +125,9 @@ export default async function PostPage({ params }: PageProps) {
           <time dateTime={post.createdAt.toISOString()}>
             {formatPostDate(post.createdAt, 'short')}
           </time>
-          {post.updatedAt != null && (
+          {post.updatedAt !== null && (
             <>
-              <span className="mx-2">·</span>
+              <span className="mx-2" aria-hidden>·</span>
               <span>
                 {'Updated '}
                 <time dateTime={post.updatedAt.toISOString()}>
@@ -118,7 +136,9 @@ export default async function PostPage({ params }: PageProps) {
               </span>
             </>
           )}
-          <span className="mx-2">·</span>
+          <span className="mx-2" aria-hidden>·</span>
+          <span>{`${readingMinutes(post.content)} min read`}</span>
+          <span className="mx-2" aria-hidden>·</span>
           <TextLink href={categoryPath(post.category)}>
             {post.category}
           </TextLink>

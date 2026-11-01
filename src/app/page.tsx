@@ -1,14 +1,28 @@
 import type { ComponentProps } from 'react'
+import { Fragment } from 'react'
 import { ExternalLink } from '@/components/ExternalLink'
+import { JsonLd } from '@/components/JsonLd'
 import { SubscriptBlock } from '@/components/Subscript'
+import { SITE_URL } from '@/lib/paths'
+import { site } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
 // home page
 export default function Home() {
   return (
     <>
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'Person',
+        'name': site.name,
+        'url': SITE_URL,
+        'email': `mailto:${site.email}`,
+        'sameAs': site.profiles.map(profile => profile.url),
+      }}
+      />
+
       {/* page heading for assistive tech; the name section below is visual only */}
-      <h1 className="sr-only">Tianwei Zhang</h1>
+      <h1 className="sr-only">{site.name}</h1>
 
       {/* Name */}
       <HomeSection id="name" className="flex flex-row" aria-hidden>
@@ -111,33 +125,15 @@ export default function Home() {
         </HomeSectionHeader>
 
         <HomeSectionBody>
-
-          {/* github */}
-          <ExternalLink href="https://github.com/notbd">
-            GitHub
-          </ExternalLink>
-          {', '}
-
-          {/* linkedin */}
-          <ExternalLink href="https://linkedin.com/in/tianwei-z">
-            LinkedIn
-          </ExternalLink>
-          {', '}
-
-          {/* instagram */}
-          <ExternalLink href="https://instagram.com/zhang13music">
-            Instagram
-          </ExternalLink>
-          {', '}
-
-          {/* twitter */}
-          <ExternalLink href="https://twitter.com/defnotbd">
-            Twitter
-          </ExternalLink>
-          {', '}
-
-          {/* email */}
-          <ExternalLink href="mailto:hello@tianwei.io">
+          {site.profiles.map(profile => (
+            <Fragment key={profile.label}>
+              <ExternalLink href={profile.url}>
+                {profile.label}
+              </ExternalLink>
+              {', '}
+            </Fragment>
+          ))}
+          <ExternalLink href={`mailto:${site.email}`}>
             Email
           </ExternalLink>
         </HomeSectionBody>

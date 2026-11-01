@@ -1,6 +1,7 @@
 import type { MDXComponents } from 'mdx/types'
 import type { ComponentProps } from 'react'
 import Link from 'next/link'
+import { CopyCodeButton } from '@/components/mdx/CopyCodeButton'
 import MdxImage from '@/components/mdx/MdxImage'
 import { cn } from '@/lib/utils'
 
@@ -165,14 +166,24 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
+  // the wrapper carries the margins so the copy button can sit in the
+  // block's corner without scrolling away with wide code
   pre: ({ className, ...props }: ComponentProps<'pre'>) => (
-    <pre
-      className={cn(
-        'mb-4 mt-6 overflow-x-auto rounded-lg border border-zinc-300/30 py-4 drop-shadow-sm dark:border-zinc-500/20',
-        className,
-      )}
-      {...props}
-    />
+    <div data-code-block className="group/code relative mb-4 mt-6">
+      <pre
+        className={cn(
+          'overflow-x-auto rounded-lg border border-zinc-300/30 py-4 drop-shadow-sm dark:border-zinc-500/20',
+          className,
+        )}
+        {...props}
+      />
+      <CopyCodeButton
+        className={cn(
+          'absolute right-2 top-2',
+          'opacity-0 focus-visible:opacity-100 group-hover/code:opacity-100 pointer-coarse:opacity-100',
+        )}
+      />
+    </div>
   ),
   code: ({ className, ...props }: ComponentProps<'code'>) => (
     <code
