@@ -25,7 +25,8 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const parsedBody = revalidateBodySchema.safeParse(await request.json())
+    // an unparsable body is the caller's error, so it lands in the 400 below
+    const parsedBody = revalidateBodySchema.safeParse(await request.json().catch(() => undefined))
     const { tag, tags, slug }: z.infer<typeof revalidateBodySchema> = parsedBody.success ? parsedBody.data : {}
 
     // { slug } refreshes that post plus the list; { tags } and { tag } pass through

@@ -89,8 +89,9 @@ describe('pOST /api/revalidate payloads', () => {
     expect(await res.json()).toMatchObject({ success: false, error: 'warmer exploded' })
   })
 
-  it('500s on an invalid JSON body', async () => {
+  it('400s on an invalid JSON body (a client error, not a server failure)', async () => {
     const res = await POST(makeRequest('not json{', `Bearer ${SECRET}`))
-    expect(res.status).toBe(500)
+    expect(res.status).toBe(400)
+    expect(revalidateAndWarmTags).not.toHaveBeenCalled()
   })
 })
