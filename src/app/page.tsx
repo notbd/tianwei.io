@@ -104,7 +104,7 @@ export default function Home() {
 
             {/* Illinois */}
             <li className="pb-3">
-              <ExternalLink href="https://cs.illinois.edu/">
+              <ExternalLink href="https://siebelschool.illinois.edu/">
                 Illinois
               </ExternalLink>
               , Computer Science

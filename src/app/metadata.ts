@@ -33,12 +33,6 @@ export const metadata: Metadata = {
   },
   creator: site.name,
   generator: 'Next.js',
-  keywords: [
-    site.name,
-    'notbd',
-    site.domain,
-    'Personal Website',
-  ],
   metadataBase: new URL(SITE_URL),
   icons: {
     icon: [

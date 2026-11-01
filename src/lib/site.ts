@@ -19,6 +19,6 @@ export const site = {
     { label: 'GitHub', url: 'https://github.com/notbd' },
     { label: 'LinkedIn', url: 'https://linkedin.com/in/tianwei-z' },
     { label: 'Instagram', url: 'https://instagram.com/zhang13music' },
-    { label: 'Twitter', url: 'https://twitter.com/defnotbd' },
+    { label: 'Twitter', url: 'https://x.com/defnotbd' },
   ],
 } as const
