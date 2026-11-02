@@ -45,6 +45,27 @@ export default function Home() {
         </HomeSectionBody>
       </HomeSection>
 
+      {/* Currently */}
+      <HomeSection id="currently">
+        <HomeSectionHeader>
+          Currently
+        </HomeSectionHeader>
+
+        <HomeSectionBody>
+          <ul>
+
+            {/* Five Continents */}
+            <li className="pb-3">
+              <ExternalLink href="https://fivecontinentsintl.com/">
+                Five Continents
+              </ExternalLink>
+              , Business Systems Analyst
+            </li>
+
+          </ul>
+        </HomeSectionBody>
+      </HomeSection>
+
       {/* Projects */}
       <HomeSection id="projects">
         <HomeSectionHeader>
@@ -78,27 +99,6 @@ export default function Home() {
               <SubscriptBlock>
                 Swift package for simple haptic feedback on iOS
               </SubscriptBlock>
-            </li>
-
-          </ul>
-        </HomeSectionBody>
-      </HomeSection>
-
-      {/* Currently */}
-      <HomeSection id="currently">
-        <HomeSectionHeader>
-          Currently
-        </HomeSectionHeader>
-
-        <HomeSectionBody>
-          <ul>
-
-            {/* Five Continents International */}
-            <li className="pb-3">
-              <ExternalLink href="https://fivecontinentsintl.com/">
-                Five Continents International
-              </ExternalLink>
-              , Business Systems Analyst
             </li>
 
           </ul>
