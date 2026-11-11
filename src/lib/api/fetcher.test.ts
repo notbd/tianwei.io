@@ -119,15 +119,16 @@ describe('fetchOne', () => {
   it('cuts the wait before a retry short when the caller\'s signal fires', async () => {
     const caller = new AbortController()
     const fetchMock = vi.fn<typeof fetch>(async () => {
-      setTimeout(() => caller.abort(), 20)
-      return new Response('oops', { status: 503 })
+      throw new TypeError('fetch failed')
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const started = performance.now()
-    await expect(fetchOne('/api/thing', itemSchema, { signal: caller.signal })).rejects.toThrow()
-    // the first backoff is 300 ms
-    expect(performance.now() - started).toBeLessThan(250)
+    const outcome = fetchOne('/api/thing', itemSchema, { signal: caller.signal }).then(() => 'resolved', () => 'rejected')
+    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
+    caller.abort()
+    // the retry would wait 300 ms; the abort ends the wait at once
+    const tooLate = new Promise(resolve => setTimeout(resolve, 100, 'still waiting'))
+    expect(await Promise.race([outcome, tooLate])).toBe('rejected')
     expect(fetchMock).toHaveBeenCalledOnce()
   })
 
