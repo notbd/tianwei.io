@@ -1,3 +1,4 @@
+import type { APIRequestContext } from '@playwright/test'
 import { test as base, expect } from '@playwright/test'
 
 // Every page a test opens reports Content-Security-Policy violations back
@@ -22,6 +23,18 @@ const test = base.extend<{ cspViolations: string[] }>({
     { auto: true },
   ],
 })
+
+/** Paths of the sitemap's URLs that start with `prefix`, in sitemap order. */
+async function sitemapPaths(request: APIRequestContext, prefix: string): Promise<string[]> {
+  const sitemap = await (await request.get('/sitemap.xml')).text()
+  return [
+    ...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g),
+  ]
+    .flatMap(([, url]) => url === undefined
+      ? []
+      : [new URL(url).pathname])
+    .filter(path => path.startsWith(prefix))
+}
 
 test('home page renders with header navigation', async ({ page }) => {
   await page.goto('/')
@@ -118,20 +131,18 @@ test('feed.xml serves RSS with every post', async ({ request }) => {
     expect(body, url).toContain(`<link>${url}</link>`)
 })
 
-test('sitemap includes posts and categories', async ({ request }) => {
-  const response = await request.get('/sitemap.xml')
-  expect(response.status()).toBe(200)
-  const body = await response.text()
-  expect(body).toContain('/posts</loc>')
-  expect(body).toContain('/categories/')
-  expect(body).toContain('/posts/')
-})
-
-test('a code block copy button copies the code and confirms it', async ({ page, context }) => {
+test('a code block copy button copies the code and confirms it', async ({ page, context, request }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.goto('/posts/1password-git-workflow')
 
+  // the first post with a code block in its body
   const block = page.locator('[data-code-block]').first()
+  for (const path of await sitemapPaths(request, '/posts/')) {
+    await page.goto(path)
+    if (await block.count() > 0)
+      break
+  }
+  await expect(block, 'no post has a code block').toBeVisible()
+
   const button = block.getByRole('button', { name: 'Copy code' })
   await block.hover()
   // first click may race hydration, as in the theme test
@@ -145,8 +156,11 @@ test('a code block copy button copies the code and confirms it', async ({ page, 
   expect(copied.length).toBeGreaterThan(0)
 })
 
-test('category pages count as the Posts section in the header', async ({ page }) => {
-  await page.goto('/categories/articles')
+test('category pages count as the Posts section in the header', async ({ page, request }) => {
+  const [category] = await sitemapPaths(request, '/categories/')
+  if (category === undefined)
+    throw new Error('the sitemap lists no category')
+  await page.goto(category)
   const nav = page.locator('header nav')
   await expect(nav.getByRole('link', { name: 'Posts', exact: true })).toHaveAttribute('aria-current', 'true')
   await expect(nav.getByRole('link', { name: 'Home', exact: true })).not.toHaveAttribute('aria-current')
