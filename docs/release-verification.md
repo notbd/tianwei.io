@@ -6,12 +6,17 @@ off**. Nothing here touches production data or production traffic.
 
 ## The staging chain
 
-```
-content (dev branch)          api (dev branch)             frontend (dev branch)
-migrate + sync  ────────►  Neon BRANCH database  ◄────  wrangler dev :8787
-                                                             ▲
-                                    next build + start :3000 │  CONTENT_API_URL
-                                    Playwright + manual ─────┘
+```mermaid
+flowchart LR
+  content["content (dev branch)<br/>pnpm db:migrate<br/>pnpm sync:prod"]
+  db[("Neon branch database")]
+  api["api (dev branch)<br/>wrangler dev :8787"]
+  web["frontend (dev branch)<br/>next build + start :3000<br/>Playwright + manual pass"]
+
+  content -- "DATABASE_URL=$STAGING_DB" --> db
+  api -- "DATABASE_URL in .dev.vars" --> db
+  web -- "CONTENT_API_URL" --> api
+  content -- "FRONTEND_URL, for check:contract<br/>and frontend:revalidate" --> web
 ```
 
 The one piece of infrastructure needed: a **Neon branch**: a
@@ -79,18 +84,26 @@ CONTENT_API_URL=http://127.0.0.1:8787 pnpm start      # manual pass
 - [ ] /categories/<name> filters correctly
 - [ ] A post's `opengraph-image` renders (append `/opengraph-image` to its URL)
 - [ ] Draft preview: `/api/preview?secret=...&slug=<slug>` shows the banner; `/api/preview/disable` exits
-- [ ] Revalidation round-trip: re-run step 1's sync with an edited file, then
-      `POST /api/revalidate` locally and confirm the page updates
+- [ ] Contract: in the content repo,
+      `FRONTEND_URL=http://localhost:3000 pnpm check:contract` passes
+- [ ] Revalidation round-trip: re-run step 1's sync with an edited post,
+      then in the content repo run
+      `FRONTEND_URL=http://localhost:3000 pnpm frontend:revalidate` (its
+      `REVALIDATION_SECRET` must equal the one in this repo's
+      `.env.local`). It revalidates twice, a minute apart, then
+      reconciles, and passes only when each post page shows the synced
+      body
 
-## 5. Merge (only after sign-off, in this order)
+### 5. Merge (only after sign-off)
 
-1. **tianwei-io-content** → merge → its deploy workflow migrates prod,
-   re-syncs, revalidates the frontend (again a minute later) and requests
-   every page in the sitemap; any page that does not answer 200 turns the
-   deploy red.
-2. **tianwei-io-api** → merge → Worker deploys. A release that adds a
-   column lands in the content repo first, since the API selects it.
-3. **tianwei.io** → merge → Vercel deploys.
+Merge one repo at a time, in the order
+[ADR-0006](./adr/0006-cross-repo-releases.md) gives for what the release
+changes, and let each deploy finish before the next merge. A release
+that changes the frontend's contract (a new MDX component, say) merges
+the frontend first, and the content engine only once
+`https://tianwei.io/contract.json` serves the new contract. What the
+content deploy does and checks is in the Deploy section of
+[its README](https://github.com/notbd/tianwei-io-content/blob/main/README.md).
 
 Merging is always a human action on the PR page: CI gates (lint,
 typecheck, tests, build, Playwright) must be green, but green CI is

@@ -20,30 +20,43 @@ The frontend layer of my personal website [tianwei.io](https://tianwei.io).
 
 The site is split into three repos, each deployed on its own:
 
-- **[Frontend](https://github.com/notbd/tianwei.io)** (this repo): a Next.js app that renders every page as static HTML from data it fetches through the API.
+- **[Frontend](https://github.com/notbd/tianwei.io)** (this repo): a Next.js app on Vercel that serves every page as static HTML; the pages that show posts are built from data it fetches through the API.
 - **[API Layer](https://github.com/notbd/tianwei-io-api)**: a read-only REST API on Cloudflare Workers that serves the published posts from Postgres.
 - **[Content Engine](https://github.com/notbd/tianwei-io-content)**: the posts themselves, written in MDX, validated and synced into Postgres on Neon.
 
-A post goes live in three steps:
+```mermaid
+flowchart LR
+  author(["Author"])
+  reader(["Reader"])
+  content["tianwei-io-content<br/>deploy on GitHub Actions"]
+  db[("Postgres on Neon")]
+  api["tianwei-io-api<br/>Hono on Cloudflare Workers<br/>no cache"]
+  web["tianwei.io<br/>Next.js on Vercel<br/>static pages, the only cache"]
 
-1. A push to `main` in the content engine syncs every post into Postgres in one transaction.
-2. The same deploy calls this repo's `/api/revalidate`.
-3. The frontend expires its cached data and renders the pages again through the API.
+  author -- "push to main" --> content
+  content -- "(1) check every post against /contract.json" --> web
+  content -- "(2) migrate, then sync in one transaction" --> db
+  content -- "(3) POST /api/revalidate, then reconcile every page" --> web
+  web -- "reads at build time and before each expiry" --> api
+  api -- "reads published posts" --> db
+  reader -- "static pages" --> web
+```
 
-The frontend's data cache is the only cache in the system (the API does not cache), so step 2 is the one place where new content takes effect. Three services is more than a personal site needs; I split it on purpose, to practice what only exists between services: API contracts, independent deploys and cache invalidation across repos ([ADR-0001](./docs/adr/0001-three-tier-architecture.md)).
+The API does not cache, so the site shows new content once this repo's data cache, the only cache in the system, is expired. The content engine's deploy does that after every sync, and proves the result; its steps are in [its README](https://github.com/notbd/tianwei-io-content/blob/main/README.md) (Deploy). Three services is more than a personal site needs; I split it on purpose, to practice what only exists between services: API contracts, independent deploys and cache invalidation across repos ([ADR-0001](./docs/adr/0001-three-tier-architecture.md)).
 
 <h2>How It Works</h2>
 
-- **Static pages, refreshed on demand**: the home page, the post list, every post and category page, the RSS feed, the sitemap and each post's Open Graph image are generated at build time. Their API fetches are cached under tags (`posts`, `post-<slug>`) that never expire on a timer; only a revalidation refreshes them ([ADR-0002](./docs/adr/0002-single-cache-layer.md)).
-- **Resilient fetching**: every API request has a 10 s deadline and is retried on network errors, timeouts and 5xx (3 attempts with backoff), so a brief API failure delays a render instead of breaking it, and a hung API fails it in about 30 s instead of never. A build refuses an empty post list, and a post page only 404s when the API says the post does not exist.
-- **MDX without code**: posts are compiled on the server with `@mdx-js/mdx`. Imports, exports and `{expressions}` are refused, so a post can never run code on the server; the content engine rejects the same at sync time.
+- **Static pages, refreshed on demand**: the home page, the post list, every post and category page, the RSS feed, the sitemap and each post's Open Graph image are generated at build time. Their API fetches are cached under one tag, `posts`, that never expires on a timer; only a revalidation refreshes them ([ADR-0002](./docs/adr/0002-single-cache-layer.md)).
+- **Resilient fetching**: every API request has a 10 s deadline and is retried on network errors, timeouts and 5xx (3 attempts with backoff), so a brief API failure delays a render instead of breaking it, and a hung API fails it in about 30 s instead of never. A build refuses an empty post list. A post page is a 404 when its slug is not in the cached post list (so a made-up URL never reaches the API) or when the API says the post does not exist; any other failure is an error, not a 404.
+- **Posts hold to a contract**: posts are compiled on the server with `@mdx-js/mdx`. A body is Markdown plus the components listed in [`/contract.json`](https://tianwei.io/contract.json), with string attributes their schemas accept; imports, exports, `{expressions}` and any other JSX are refused, so a post can never run code on the server. The content engine checks every post against the same contract before it syncs ([ADR-0006](./docs/adr/0006-cross-repo-releases.md)).
+- **Each post page reports its body's hash**: a `post-body-sha256` meta tag, which the content deploy compares with the body it just synced ([ADR-0006](./docs/adr/0006-cross-repo-releases.md)).
 - **Cookie-free theme**: an inline script applies the saved light or dark theme before the first paint, so no page has to render per request ([ADR-0003](./docs/adr/0003-cookie-free-theme.md)).
 - **One time zone**: dates display in `America/New_York`, the zone the content engine anchors them to ([ADR-0004](./docs/adr/0004-display-time-zone.md)).
 - **Draft preview**: `/api/preview?secret=<PREVIEW_SECRET>&slug=<slug>` turns on Next.js draft mode and renders an unpublished post through the API's preview endpoint; `/api/preview/disable` turns it off.
 
 <h2>Revalidation API</h2>
 
-`POST /api/revalidate` expires cached data, then fetches it back through the API to prove the API serves the new content. The content engine calls it after every sync:
+`POST /api/revalidate` reads the post list, every post and the categories straight from the API, through the schemas the pages use, and expires the `posts` tag only when every read works ([why](./docs/adr/0006-cross-repo-releases.md)). The content engine's deploy calls it after every sync:
 
 ```shell
 curl -X POST https://tianwei.io/api/revalidate \
@@ -52,8 +65,15 @@ curl -X POST https://tianwei.io/api/revalidate \
   -d '{"tags": ["posts"]}'
 ```
 
-- **Body**: `{"tags": [...]}`, `{"tag": "..."}` or `{"slug": "..."}` (which expires `post-<slug>` and `posts`). Every fetch carries the `posts` tag, so expiring `posts` refreshes the whole site.
-- **Response**: `200` when the tags were expired and their data fetched back; `207` when the tags were expired but a fetch failed (the content deploy fails on it); `401` without the right secret; `400` for a body without `tags`, `tag` or `slug`.
+- **Body**: exactly `{"tags": ["posts"]}`. Every fetch carries the `posts` tag, so expiring it refreshes the whole site.
+- **Response**: any status not listed here counts as a failure.
+
+| Status | Meaning | Body |
+| --- | --- | --- |
+| `200` | `posts` is expired | `{"success": true, "revalidated": ["posts"]}` |
+| `400` | Any other body | `{"error": ...}` |
+| `401` | No bearer, a wrong one, or no `REVALIDATION_SECRET` configured | `{"error": "Unauthorized"}` |
+| `502` | A read failed, or the reads, retries included, took more than 25 s. **Nothing was expired** | `{"error": ..., "message": ...}` |
 
 <h2>Local Run</h2>
 
@@ -80,13 +100,14 @@ pnpm dev
 | `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | The Cloudinary account that hosts post images |
 | `REVALIDATION_SECRET` | Bearer token for `/api/revalidate`; must match the content engine's |
 | `PREVIEW_SECRET` (optional) | Enables draft preview; must match the API's |
+| `REVALIDATE_READ_BUDGET_MS` (local rehearsal only) | Shortens the 25 s budget of the read before an expiry (never lengthens it) |
 
 <h2>Quality Gates</h2>
 
 ```shell
 pnpm lint        # type-aware ESLint
 pnpm typecheck
-pnpm test        # Vitest: API contract, fetcher, cache and revalidation, MDX, feed, sitemap
+pnpm test        # Vitest: unit and contract tests
 pnpm build
 pnpm test:e2e    # Playwright smoke tests against the production build
 ```
@@ -95,10 +116,10 @@ pnpm test:e2e    # Playwright smoke tests against the production build
 
 <h2>Deploy</h2>
 
-Vercel deploys `main` to production and every other branch to a preview URL. Content changes never need a frontend deploy; they arrive through `/api/revalidate`. A change that spans repos ships content → API → frontend, additive first; the release checklist is [`docs/release-verification.md`](./docs/release-verification.md), and design records are in [`docs/adr/`](./docs/adr/).
+Vercel deploys `main` to production and every other branch to a preview URL. Content changes never need a frontend deploy; they arrive through `/api/revalidate`. Which repo ships first when a change spans repos follows the rule in [ADR-0006](./docs/adr/0006-cross-repo-releases.md), which also says how to recover the content deploy after a rollback of this repo; the release checklist is [`docs/release-verification.md`](./docs/release-verification.md), and design records are in [`docs/adr/`](./docs/adr/).
 
 <h2>License</h2>
 
 Source code is licensed under <a href='./LICENSE'>AGPLv3</a>.<br>
-The content is licensed under <a href='https://creativecommons.org/licenses/by-nc-sa/4.0/'>CC BY-NC-SA 4.0</a>.
+Posts (in <a href='https://github.com/notbd/tianwei-io-content'>tianwei-io-content</a>) are licensed under <a href='https://creativecommons.org/licenses/by-nc-sa/4.0/'>CC BY-NC-SA 4.0</a>.
 </samp>
