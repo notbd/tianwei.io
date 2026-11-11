@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import type { Post } from '@/lib/api'
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
+import { cache } from 'react'
 import { openGraphSiteName, twitterAccounts } from '@/app/metadata'
 import { JsonLd } from '@/components/JsonLd'
 import { MdxContent } from '@/components/mdx/MdxContent'
@@ -10,21 +11,23 @@ import { getDraftPost, getPost, getPosts, isNotFoundError } from '@/lib/api'
 import { categoryLabel } from '@/lib/categories'
 import { formatPostDate } from '@/lib/dates'
 import { absoluteUrl, categoryPath, postPath, SITE_URL } from '@/lib/paths'
+import { POST_BODY_HASH_META, postBodyHash } from '@/lib/postBodyHash'
 import { readingMinutes } from '@/lib/readingTime'
 
 type PageProps = {
   params: Promise<{ slug: string }>
 }
 
-// Draft mode (the author's preview) reads through the API's preview
-// endpoint, which also returns unpublished posts; the metadata and the page
-// must read the same post, or a draft's tab shows the site name.
-async function loadPost(slug: string): Promise<Post> {
+// One read per render, shared by the metadata and the page: the body hash
+// in the metadata must describe the body on the page, and a draft's tab
+// must show its title. Draft mode (the author's preview) reads through the
+// API's preview endpoint, which also returns unpublished posts.
+const loadPost = cache(async (slug: string): Promise<Post> => {
   const { isEnabled } = await draftMode()
   return isEnabled
     ? getDraftPost(slug)
     : getPost(slug)
-}
+})
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
@@ -60,6 +63,9 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       ...twitterAccounts,
       title: post.title,
       description,
+    },
+    other: {
+      [POST_BODY_HASH_META]: postBodyHash(post.content),
     },
   }
 }
