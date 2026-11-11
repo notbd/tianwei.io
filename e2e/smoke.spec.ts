@@ -1,4 +1,27 @@
-import { expect, test } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
+
+// Every page a test opens reports Content-Security-Policy violations back
+// to the test process, and the test fails if there were any: the policy
+// must not block anything the site itself does. (Init scripts and exposed
+// bindings run outside the page's CSP.)
+const test = base.extend<{ cspViolations: string[] }>({
+  cspViolations: [
+    async ({ page }, use) => {
+      const violations: string[] = []
+      await page.exposeBinding('reportCspViolation', (_source, violation: string) => {
+        violations.push(violation)
+      })
+      await page.addInitScript({
+        content: `document.addEventListener('securitypolicyviolation', event => {
+        window.reportCspViolation(event.violatedDirective + ' blocked ' + event.blockedURI + ' on ' + location.pathname)
+      })`,
+      })
+      await use(violations)
+      expect(violations).toEqual([])
+    },
+    { auto: true },
+  ],
+})
 
 test('home page renders with header navigation', async ({ page }) => {
   await page.goto('/')
@@ -127,4 +150,21 @@ test('category pages count as the Posts section in the header', async ({ page })
   const nav = page.locator('header nav')
   await expect(nav.getByRole('link', { name: 'Posts', exact: true })).toHaveAttribute('aria-current', 'true')
   await expect(nav.getByRole('link', { name: 'Home', exact: true })).not.toHaveAttribute('aria-current')
+})
+
+test('production responses carry the baseline Content-Security-Policy', async ({ request }) => {
+  const response = await request.get('/')
+  expect(response.headers()['content-security-policy']).toBe([
+    `default-src 'self'`,
+    `script-src 'self' 'unsafe-inline'`,
+    `style-src 'self' 'unsafe-inline'`,
+    `img-src 'self' data: https:`,
+    `font-src 'self'`,
+    `connect-src 'self'`,
+    `object-src 'none'`,
+    `base-uri 'none'`,
+    `form-action 'self'`,
+    `frame-src 'none'`,
+    `frame-ancestors 'none'`,
+  ].join('; '))
 })
