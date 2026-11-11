@@ -86,10 +86,6 @@ describe('postSummarySchema', () => {
     expect(summary.createdAt.getTime()).toBe(Date.UTC(2024, 3, 15, 4))
   })
 
-  it('does not require content or isPublished', () => {
-    expect(() => postSummarySchema.parse(CANONICAL_SUMMARY)).not.toThrow()
-  })
-
   it('strips content when present (omit semantics)', () => {
     const summary = postSummarySchema.parse({ ...CANONICAL_SUMMARY, content: 'x' })
     expect(summary).not.toHaveProperty('content')

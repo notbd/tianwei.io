@@ -1,5 +1,6 @@
-import type { NextRequest } from 'next/server'
+import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { GET } from './route'
 
 const enable = vi.fn()
 const disable = vi.fn()
@@ -19,16 +20,10 @@ vi.mock('next/server', async (importOriginal) => {
   }
 })
 
-const { GET } = await import('./route')
-
 const SECRET = 'a-preview-secret-of-sufficient-length'
 
 function makeRequest(params: Record<string, string>): NextRequest {
-  const url = new URL('https://tianwei.io/api/preview')
-  for (const [key, value] of Object.entries(params))
-    url.searchParams.set(key, value)
-  const request = new Request(url)
-  return Object.assign(request, { nextUrl: url }) as unknown as NextRequest
+  return new NextRequest(`https://tianwei.io/api/preview?${new URLSearchParams(params)}`)
 }
 
 const fetchMock = vi.fn(async () => new Response('{}', { status: 200 }))

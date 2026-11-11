@@ -16,21 +16,12 @@ afterAll(() => {
 })
 
 describe('formatPostDate', () => {
-  it('renders an EDT-midnight instant as the authored calendar date', () => {
-    // 2025-10-23 authored in ET -> stored as 04:00Z
-    const stored = new Date(Date.UTC(2025, 9, 23, 4))
-    expect(formatPostDate(stored)).toBe('October 23, 2025')
-  })
-
-  it('renders an EST-midnight instant as the authored calendar date', () => {
-    // 2025-01-31 authored in ET -> stored as 05:00Z
-    const stored = new Date(Date.UTC(2025, 0, 31, 5))
-    expect(formatPostDate(stored)).toBe('January 31, 2025')
-  })
-
-  it('renders the ET date on a machine west of ET', () => {
+  it.each([
+    ['an EDT midnight', '2025-10-23T04:00:00.000Z', 'October 23, 2025'],
+    ['an EST midnight', '2025-01-31T05:00:00.000Z', 'January 31, 2025'],
     // 2024-06-15 00:00 ET is 2024-06-14 21:00 in Los Angeles
-    const stored = new Date(Date.UTC(2024, 5, 15, 4))
-    expect(formatPostDate(stored)).toBe('June 15, 2024')
+    ['a summer ET midnight', '2024-06-15T04:00:00.000Z', 'June 15, 2024'],
+  ])('renders %s as the authored calendar date', (_name, stored, shown) => {
+    expect(formatPostDate(new Date(stored))).toBe(shown)
   })
 })
