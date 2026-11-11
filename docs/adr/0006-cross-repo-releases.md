@@ -146,7 +146,8 @@ writing side produces.** It holds on every edge between the repos:
 - what the frontend gives the content deploy: `/contract.json`, the
   revalidate body and its `revalidated` answer, `post-body-sha256`, and
   the addresses the reconcile reads (`/sitemap.xml` and every page it
-  lists, `/feed.xml`, each post's `/opengraph-image`, a 404 for a draft).
+  lists, with post pages at `/posts/<slug>`, `/feed.xml`, each post's
+  `/opengraph-image`, a 404 for a draft).
 
 The test for a change has two questions. Once this side's change is
 live, can every other live side its data flows to (not only the next
@@ -212,13 +213,14 @@ workflow): the changes it stopped reach the database only that way.
 6. A breaking API change turns red only at the next content deploy or
    frontend build.
 7. The two Drizzle schemas (the content engine's and the API's copy) are
-   kept identical by hand. Between the two releases that drop a column
-   they differ on purpose.
-8. The API deploy is the exception above. If the rollback command itself
-   fails, the runner dies, or the job is cancelled by force, the bad
-   version stays live, as before this decision. The log names the version
-   that was live before the deploy and, when it was the rollback command
-   that failed, the command that restores it by hand.
+   kept identical by hand. Between the two releases of a column change
+   (adding or dropping one, table above) they differ on purpose.
+8. The API deploy is the exception above. If the restore step fails (it
+   cannot read the live version, or the rollback does not take), the
+   runner dies, or the job is cancelled by force, the bad version stays
+   live, as before this decision. The log names the version that was
+   live before the deploy and, if the restore step failed, the command
+   that restores it by hand.
 9. The reconcile does not request the page of a post whose file was
    deleted. The sitemap no longer lists it, but the page's own 404 is not
    checked by that deploy.

@@ -65,6 +65,9 @@ The **Next.js data cache is the only cache**:
 - The same expiry makes a race possible: a page that was rendering when
   the sync committed can read the old rows and store its result after
   the expiry, and it would stay until the next sync (reproduced against
-  `next start` in 2026-11). Renders give up after about 30 s (the
-  fetcher's deadlines), so the deploy's second revalidation a minute
-  later removes any such write.
+  `next start` in 2026-11). Such a render ends within about 40 s of the
+  sync: a page reads the API in two steps at most (a post page reads the
+  list, then the post), the read in flight when the sync commits returns
+  within its 10 s attempt, and the step after it gives up after about
+  30 s (the fetcher's deadlines). So the deploy's second revalidation a
+  minute later removes any such write.
