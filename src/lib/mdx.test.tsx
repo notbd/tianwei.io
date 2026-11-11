@@ -35,7 +35,7 @@ describe('post rules', () => {
   it.each([
     ['a plain <MdxImage>', `<MdxImage ${image} />\n`, /<figure class="my-8"><img alt="A cover"[^>]* width="1200" height="630"/],
     ['an empty <MdxImage></MdxImage>, same as self-closing', `<MdxImage ${image}></MdxImage>\n`, /<figure class="my-8"><img alt="A cover"/],
-    ['a <Link>', 'See <Link href="/posts">文字</Link>.\n', /<a class="text-teal-700 [^"]*" href="\/posts">文字<\/a>/],
+    ['a <Link>', 'See <Link href="/posts">文字</Link>.\n', /<a class="[^"]*text-teal-700[^"]*" href="\/posts">文字<\/a>/],
     ['a <Link> around Markdown', '<Link href="/posts">**粗体** 和 _斜体_</Link>\n', /<a [^>]*href="\/posts"><strong>粗体<\/strong> 和 <em>斜体<\/em><\/a>/],
   ])('accepts and renders %s', async (_name, source, rendered) => {
     expect(await html(source)).toMatch(rendered)

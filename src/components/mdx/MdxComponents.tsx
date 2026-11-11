@@ -4,6 +4,7 @@ import type { z } from 'zod'
 import { CopyCodeButton } from '@/components/mdx/CopyCodeButton'
 import { MdxImage } from '@/components/mdx/MdxImage'
 import { MdxLink } from '@/components/mdx/MdxLink'
+import { PROSE_LINK } from '@/components/mdx/proseLink'
 import { linkAttributesSchema, mdxImageAttributesSchema } from '@/components/mdx/schemas'
 import { cn } from '@/lib/utils'
 
@@ -82,11 +83,7 @@ const markdownElements = {
         href={href}
         target={isExternal ? '_blank' : undefined}
         rel={isExternal ? 'noopener noreferrer' : undefined}
-        className={cn(
-          'text-teal-700 hover:text-teal-600 dark:text-teal-600 dark:hover:text-teal-500',
-          'transition-[color] duration-200 font-medium underline underline-offset-4',
-          className,
-        )}
+        className={cn(PROSE_LINK, className)}
         {...props}
       />
     )
@@ -135,7 +132,7 @@ const markdownElements = {
     // eslint-disable-next-line next/no-img-element
     <img className={cn('rounded-md', className)} alt={alt} {...props} />
   ),
-  hr: ({ ...props }: ComponentProps<'hr'>) => (
+  hr: (props: ComponentProps<'hr'>) => (
     <hr className="my-4 border-zinc-200 md:my-8 dark:border-zinc-800" {...props} />
   ),
   table: ({ className, ...props }: ComponentProps<'table'>) => (
