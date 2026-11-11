@@ -131,6 +131,16 @@ test('feed.xml serves RSS with every post', async ({ request }) => {
     expect(body, url).toContain(`<link>${url}</link>`)
 })
 
+test('every post page carries exactly one post-body-sha256 meta tag', async ({ page, request }) => {
+  // the content deploy reads this tag from each post page and fails on any other count
+  const paths = await sitemapPaths(request, '/posts/')
+  expect(paths.length).toBeGreaterThan(0)
+  for (const path of paths) {
+    await page.goto(path)
+    await expect(page.locator('meta[name="post-body-sha256"]'), path).toHaveCount(1)
+  }
+})
+
 test('a code block copy button copies the code and confirms it', async ({ page, context, request }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
 
