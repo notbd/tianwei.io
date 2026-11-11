@@ -44,9 +44,10 @@ export function ColorModeToggle({
   }, [theme])
 
   const toggleTheme = () => {
-    const next = NEXT_THEME[isTheme(theme)
+    const current = isTheme(theme)
       ? theme
-      : DEFAULT_THEME]
+      : DEFAULT_THEME
+    const next = NEXT_THEME[current]
 
     if (!('startViewTransition' in document) || matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setTheme(next)
