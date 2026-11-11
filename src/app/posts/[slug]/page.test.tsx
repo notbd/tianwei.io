@@ -2,16 +2,16 @@ import type { Post } from '@/lib/api'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { generateMetadata } from './page'
 
-const { draftMode, getDraftPost, getPost } = vi.hoisted(() => ({
+const { draftMode, findPost, getDraftPost } = vi.hoisted(() => ({
   draftMode: vi.fn(),
+  findPost: vi.fn(),
   getDraftPost: vi.fn(),
-  getPost: vi.fn(),
 }))
 vi.mock('next/headers', () => ({ draftMode }))
 vi.mock('@/lib/api', async importOriginal => ({
   ...await importOriginal<typeof import('@/lib/api')>(),
+  findPost,
   getDraftPost,
-  getPost,
 }))
 
 const alpha: Post = {
@@ -36,7 +36,7 @@ function props(slug: string) {
 beforeEach(() => {
   vi.clearAllMocks()
   draftMode.mockResolvedValue({ isEnabled: false })
-  getPost.mockResolvedValue(alpha)
+  findPost.mockResolvedValue(alpha)
 })
 
 describe('post page metadata', () => {
@@ -47,12 +47,17 @@ describe('post page metadata', () => {
     })
   })
 
-  it('reads a draft through the preview endpoint in draft mode', async () => {
+  it('is a not-found page for a slug that names no published post', async () => {
+    findPost.mockResolvedValue(undefined)
+    await expect(generateMetadata(props('nope'))).rejects.toMatchObject({ digest: 'NEXT_HTTP_ERROR_FALLBACK;404' })
+  })
+
+  it('reads a draft through the preview endpoint in draft mode, without the list', async () => {
     draftMode.mockResolvedValue({ isEnabled: true })
     getDraftPost.mockResolvedValue({ ...alpha, isPublished: false })
 
     expect(await generateMetadata(props('alpha'))).toMatchObject({ title: 'Alpha' })
     expect(getDraftPost).toHaveBeenCalledWith('alpha')
-    expect(getPost).not.toHaveBeenCalled()
+    expect(findPost).not.toHaveBeenCalled()
   })
 })

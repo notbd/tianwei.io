@@ -7,7 +7,7 @@ import { openGraphSiteName, twitterAccounts } from '@/app/metadata'
 import { JsonLd } from '@/components/JsonLd'
 import { MdxContent } from '@/components/mdx/MdxContent'
 import { TextLink } from '@/components/TextLink'
-import { getDraftPost, getPost, getPosts, isNotFoundError } from '@/lib/api'
+import { findPost, getDraftPost, getPosts, isNotFoundError } from '@/lib/api'
 import { categoryLabel } from '@/lib/categories'
 import { formatPostDate } from '@/lib/dates'
 import { absoluteUrl, categoryPath, postPath, SITE_URL } from '@/lib/paths'
@@ -21,28 +21,28 @@ type PageProps = {
 // One read per render, shared by the metadata and the page: the body hash
 // in the metadata must describe the body on the page, and a draft's tab
 // must show its title. Draft mode (the author's preview) reads through the
-// API's preview endpoint, which also returns unpublished posts.
+// API's preview endpoint, which also returns unpublished posts, and skips
+// the list. Only a slug that names no post becomes a not-found page; any
+// other failure (network hiccup, 500, schema drift) propagates, since
+// during a build a swallowed error would silently drop the page from the
+// prerendered set.
 const loadPost = cache(async (slug: string): Promise<Post> => {
   const { isEnabled } = await draftMode()
-  return isEnabled
-    ? getDraftPost(slug)
-    : getPost(slug)
+  if (!isEnabled)
+    return await findPost(slug) ?? notFound()
+
+  try {
+    return await getDraftPost(slug)
+  }
+  catch (error) {
+    if (isNotFoundError(error))
+      notFound()
+    throw error
+  }
 })
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params
-
-  let post: Post
-  try {
-    post = await loadPost(slug)
-  }
-  catch (error) {
-    // unknown or malformed slug: the page itself will render notFound()
-    if (isNotFoundError(error))
-      return {}
-    throw error
-  }
-
+  const post = await loadPost((await params).slug)
   const description = post.description ?? undefined
   return {
     title: post.title, // root template appends '· tianwei.io'
@@ -82,22 +82,8 @@ export async function generateStaticParams() {
 }
 
 export default async function PostPage({ params }: PageProps) {
-  const { slug } = await params
+  const post = await loadPost((await params).slug)
   const { isEnabled: isDraftPreview } = await draftMode()
-
-  let post: Post
-  try {
-    post = await loadPost(slug)
-  }
-  catch (error) {
-    // Only a slug that names no post (404, or the API's 400 for a malformed
-    // slug) becomes a not-found page. Anything else (network hiccup, 500,
-    // schema drift) must propagate: during a build a swallowed error would
-    // silently drop the page from the prerendered set.
-    if (isNotFoundError(error))
-      notFound()
-    throw error
-  }
 
   const url = absoluteUrl(postPath(post.slug))
 

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { getCategories, getPost, getPosts } from './index'
+import { findPost, getCategories, getPost, getPosts } from './index'
 
 const fetchMock = vi.fn<typeof fetch>()
 
@@ -61,5 +61,75 @@ describe('endpoints', () => {
       url: 'https://api.example.test/api/posts',
       cache: 'no-store',
     })
+  })
+})
+
+describe('findPost', () => {
+  const listed = (...slugs: string[]) => ({
+    status: 'success',
+    count: slugs.length,
+    data: slugs.map((slug, i) => ({
+      id: i + 1,
+      slug,
+      category: 'articles',
+      title: slug,
+      description: null,
+      author: 'Tianwei Zhang',
+      createdAt: '2025-10-23T04:00:00.000Z',
+      updatedAt: null,
+    })),
+  })
+  const post = (slug: string) => ({
+    status: 'success',
+    data: {
+      ...listed(slug).data[0],
+      isPublished: true,
+      content: `# ${slug}\n`,
+    },
+  })
+
+  /** Serves `list` at /api/posts and each post in it; any other post is a 404. */
+  function serve(list: ReturnType<typeof listed>) {
+    fetchMock.mockImplementation(async (input) => {
+      const path = new URL(String(input)).pathname
+      if (path === '/api/posts')
+        return new Response(JSON.stringify(list))
+      const slug = path.slice('/api/post/'.length)
+      return list.data.some(entry => entry.slug === slug)
+        ? new Response(JSON.stringify(post(slug)))
+        : new Response('{"status":"error","message":"Post not found."}', { status: 404 })
+    })
+  }
+
+  const paths = () => fetchMock.mock.calls.map(([input]) => new URL(String(input)).pathname)
+
+  it('reads a post the list has', async () => {
+    serve(listed('alpha'))
+    expect(await findPost('alpha')).toMatchObject({ slug: 'alpha', content: '# alpha\n' })
+    expect(paths()).toEqual(['/api/posts', '/api/post/alpha'])
+  })
+
+  it('answers undefined for a slug the list lacks without asking the API for it, and finds it once the list has it', async () => {
+    serve(listed('alpha'))
+    expect(await findPost('beta')).toBeUndefined()
+    expect(paths()).toEqual(['/api/posts'])
+
+    // beta is published and `posts` expired: the next list read has it
+    fetchMock.mockClear()
+    serve(listed('beta', 'alpha'))
+    expect(await findPost('beta')).toMatchObject({ slug: 'beta' })
+    expect(paths()).toEqual(['/api/posts', '/api/post/beta'])
+  })
+
+  it('answers undefined for a listed post the API no longer has', async () => {
+    fetchMock.mockImplementation(async input => String(input).endsWith('/api/posts')
+      ? new Response(JSON.stringify(listed('alpha')))
+      : new Response('{"status":"error","message":"Post not found."}', { status: 404 }))
+    expect(await findPost('alpha')).toBeUndefined()
+  })
+
+  it('throws, rather than answering undefined, when the list cannot be read', async () => {
+    fetchMock.mockResolvedValue(new Response('{"status":"error","message":"Bad request"}', { status: 400 }))
+    await expect(findPost('alpha')).rejects.toMatchObject({ status: 400 })
   })
 })

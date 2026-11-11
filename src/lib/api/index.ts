@@ -1,7 +1,7 @@
 import type { FetchOptions } from './fetcher'
 import type { Post, PostSummary } from './schemas'
 import { z } from 'zod'
-import { apiUrl, fetchList, fetchOne } from './fetcher'
+import { apiUrl, fetchList, fetchOne, isNotFoundError } from './fetcher'
 import { postSchema, postSummarySchema } from './schemas'
 
 export { ApiError, isNotFoundError } from './fetcher'
@@ -47,6 +47,27 @@ export async function getPost(slug: string, uncached?: UncachedRead): Promise<Po
   // encoded so a crafted URL segment (`a?b`, `a/b`) reaches the API as one
   // invalid slug instead of a different path or query
   return fetchOne(`/api/post/${encodeURIComponent(slug)}`, postSchema, readOptions(uncached))
+}
+
+/**
+ * The published post a page shows, or undefined when the slug names none.
+ * The cached list is the door: a slug missing from it never reaches the
+ * API, so made-up URLs cost no API call and no database query, and a new
+ * post joins the list in the same revalidation that publishes it. A list
+ * that cannot be read throws, like any other failed read.
+ */
+export async function findPost(slug: string): Promise<Post | undefined> {
+  if (!(await getPosts()).some(post => post.slug === slug))
+    return undefined
+  try {
+    return await getPost(slug)
+  }
+  catch (error) {
+    // listed, but gone from the API since the list was cached
+    if (isNotFoundError(error))
+      return undefined
+    throw error
+  }
 }
 
 /** Categories of published posts, alphabetical. Derived from posts, so it shares their tag. */
