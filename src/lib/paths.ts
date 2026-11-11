@@ -15,7 +15,8 @@ export function absoluteUrl(path: string): string {
 }
 
 // Route paths, built in one place so every link, sitemap entry and feed
-// item encodes them the same way (slugs are ASCII; categories may not be).
+// item encodes them the same way. The content engine slugifies both slugs
+// and categories to [a-z0-9-], so encoding the category is belt and braces.
 export function postPath(slug: string): string {
   return `/posts/${slug}`
 }

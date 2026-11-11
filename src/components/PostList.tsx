@@ -18,8 +18,8 @@ export function PostList({ posts }: PostListProps) {
           <Link href={postPath(post.slug)} className="group block rounded-md">
             <article className="flex flex-col gap-1">
 
-              {/* row 1: time + category */}
-              <div className="flex items-center text-sm text-zinc-500 dark:text-zinc-400">
+              {/* row 1: date */}
+              <div className="text-sm text-zinc-500 dark:text-zinc-400">
                 <time dateTime={post.createdAt.toISOString()}>
                   {formatPostDate(post.createdAt)}
                 </time>
