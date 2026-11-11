@@ -2,10 +2,6 @@ import antfu from '@antfu/eslint-config'
 
 export default antfu(
   {
-    stylistic: {
-      indent: 2,
-      quotes: 'single',
-    },
     typescript: {
       tsconfigPath: 'tsconfig.json',
     },
@@ -28,6 +24,7 @@ export default antfu(
         },
       ],
       'ts/consistent-type-definitions': ['error', 'type'],
+      // Next inlines NEXT_PUBLIC_* only through the global process.env
       'n/prefer-global/process': ['error', 'always'],
     },
   },
