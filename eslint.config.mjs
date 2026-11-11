@@ -31,4 +31,12 @@ export default antfu(
       'n/prefer-global/process': ['error', 'always'],
     },
   },
+
+  {
+    // a test asserts what it got instead of asserting it is there
+    files: ['src/**/*.test.{ts,tsx}', 'e2e/**'],
+    rules: {
+      'ts/no-non-null-assertion': 'error',
+    },
+  },
 )
