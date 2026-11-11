@@ -1,11 +1,16 @@
 import type { MDXComponents } from 'mdx/types'
-import type { ComponentProps } from 'react'
-import Link from 'next/link'
+import type { ComponentProps, ComponentType } from 'react'
+import type { z } from 'zod'
 import { CopyCodeButton } from '@/components/mdx/CopyCodeButton'
-import MdxImage from '@/components/mdx/MdxImage'
+import { MdxImage } from '@/components/mdx/MdxImage'
+import { MdxLink } from '@/components/mdx/MdxLink'
+import { linkAttributesSchema, mdxImageAttributesSchema } from '@/components/mdx/schemas'
 import { cn } from '@/lib/utils'
 
-export const mdxComponents: MDXComponents = {
+// Styles for the HTML elements Markdown produces. A post cannot name these
+// as JSX: the syntax-tree check (src/lib/mdx.tsx) only lets through the
+// components in authorComponents below.
+const markdownElements = {
   h1: ({ className, ...props }: ComponentProps<'h1'>) => (
     <h1
       className={cn(
@@ -200,15 +205,28 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  MdxImage,
-  Link: ({ className, ...props }: ComponentProps<typeof Link>) => (
-    <Link
-      className={cn(
-        'text-teal-700 hover:text-teal-600 dark:text-teal-600 dark:hover:text-teal-500',
-        'transition-[color] duration-200 font-medium underline underline-offset-4',
-        className,
-      )}
-      {...props}
-    />
-  ),
+} satisfies MDXComponents
+
+type AuthorComponent = {
+  component: ComponentType<never>
+  /** Every attribute the component accepts; strict, so no other gets through */
+  attributes: z.ZodObject<z.ZodRawShape, z.core.$strict>
+  /** Whether the component takes content between its tags */
+  children: boolean
+}
+
+/**
+ * The components a post may use, by the name it writes them with. The
+ * syntax-tree check enforces this table and /contract.json publishes it,
+ * so the content engine applies the same rules before it syncs a post.
+ * A new component starts here (docs/adr/0006 says which deploy goes first).
+ */
+export const authorComponents = {
+  MdxImage: { component: MdxImage, attributes: mdxImageAttributesSchema, children: false },
+  Link: { component: MdxLink, attributes: linkAttributesSchema, children: true },
+} satisfies Record<string, AuthorComponent>
+
+export const mdxComponents: MDXComponents = {
+  ...markdownElements,
+  ...Object.fromEntries(Object.entries(authorComponents).map(([name, { component }]) => [name, component])),
 }
