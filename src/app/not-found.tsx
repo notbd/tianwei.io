@@ -21,16 +21,19 @@ export const metadata: Metadata = {
 // when cacheComponents is on). The shell still carries this file's metadata.
 export default function NotFound() {
   return (
-    <div className="max-w-3xl pb-8">
-      <PageHeader title="Page Not Found">
-        <p className="mt-2 text-zinc-500 dark:text-zinc-200">
-          {'The page you\'re looking for doesn\'t exist or may have moved. Go back to the '}
-          <TextLink href="/">home page</TextLink>
-          {', or browse '}
-          <TextLink href="/posts">all posts</TextLink>
-          .
-        </p>
-      </PageHeader>
+    <div className="pb-8">
+      <PageHeader
+        title="Page Not Found"
+        description={(
+          <>
+            {'The page you\'re looking for doesn\'t exist or may have moved. Go back to the '}
+            <TextLink href="/">home page</TextLink>
+            {', or browse '}
+            <TextLink href="/posts">all posts</TextLink>
+            .
+          </>
+        )}
+      />
     </div>
   )
 }

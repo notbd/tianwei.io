@@ -1,6 +1,5 @@
-import type { Metadata } from 'next'
 import Link from 'next/link'
-import { metadata as rootMetadata } from '@/app/metadata'
+import { pageMetadata } from '@/app/metadata'
 import { PageHeader } from '@/components/PageHeader'
 import { PostList } from '@/components/PostList'
 import { getCategories, getPosts } from '@/lib/api'
@@ -9,13 +8,7 @@ import { categoryPath } from '@/lib/paths'
 
 const description = 'Writings on topics that interest me and things I\'m proud of.'
 
-export const metadata: Metadata = {
-  title: 'Posts', // root template appends '· tianwei.io'
-  description,
-  // a child openGraph/twitter replaces the root's whole object, hence the spreads
-  openGraph: { ...rootMetadata.openGraph, title: 'Posts', description },
-  twitter: { ...rootMetadata.twitter, title: 'Posts', description },
-}
+export const metadata = pageMetadata('Posts', description)
 
 export default async function PostsPage() {
   const [posts, categories] = await Promise.all([
@@ -24,12 +17,8 @@ export default async function PostsPage() {
   ])
 
   return (
-    <div className="max-w-3xl pb-8">
-      <PageHeader title="Posts">
-        <p className="mt-2 text-zinc-500 dark:text-zinc-200">
-          {description}
-        </p>
-
+    <div className="pb-8">
+      <PageHeader title="Posts" description={description}>
         {/* category filters */}
         {categories.length > 1 && (
           <nav aria-label="Categories" className="mt-4 flex flex-wrap gap-2">

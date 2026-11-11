@@ -3,7 +3,7 @@ import type { Post } from '@/lib/api'
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { cache } from 'react'
-import { openGraphSiteName, twitterAccounts } from '@/app/metadata'
+import { twitterAccounts } from '@/app/metadata'
 import { JsonLd } from '@/components/JsonLd'
 import { MdxContent } from '@/components/mdx/MdxContent'
 import { TextLink } from '@/components/TextLink'
@@ -13,6 +13,7 @@ import { formatPostDate } from '@/lib/dates'
 import { absoluteUrl, categoryPath, postPath, SITE_URL } from '@/lib/paths'
 import { POST_BODY_HASH_META, postBodyHash } from '@/lib/postBodyHash'
 import { readingMinutes } from '@/lib/readingTime'
+import { site } from '@/lib/site'
 
 type PageProps = {
   params: Promise<{ slug: string }>
@@ -50,7 +51,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // no images here: the route's opengraph-image.tsx supplies the card
     openGraph: {
       type: 'article',
-      siteName: openGraphSiteName,
+      siteName: site.domain,
       url: absoluteUrl(postPath(post.slug)),
       title: post.title,
       description,
@@ -88,7 +89,7 @@ export default async function PostPage({ params }: PageProps) {
   const url = absoluteUrl(postPath(post.slug))
 
   return (
-    <article className="max-w-3xl pb-8">
+    <article className="pb-8">
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
