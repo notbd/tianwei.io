@@ -105,9 +105,11 @@ the frontend first, and the content engine only once
 content deploy does and checks is in the Deploy section of
 [its README](https://github.com/notbd/tianwei-io-content/blob/main/README.md).
 
-Merging is always a human action on the PR page: CI gates (lint,
-typecheck, tests, build, Playwright) must be green, but green CI is
-necessary, not sufficient: this runbook is the sufficient part.
+Merging is always a human action on the PR page. Each repo's CI must be
+green: lint, typecheck and tests in all three, plus the build and
+Playwright in the frontend, the contract check in the content engine and
+the deploy script's check in the API. Green CI is necessary, not
+sufficient: this runbook is the sufficient part.
 
 Optional hardening: GitHub → Settings → Branches → protect `main`
 (require PR + passing checks) on all three repos, so nothing can land

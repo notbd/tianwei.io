@@ -37,7 +37,7 @@ flowchart LR
   content -- "(1) check every post against /contract.json" --> web
   content -- "(2) migrate, then sync in one transaction" --> db
   content -- "(3) POST /api/revalidate, then reconcile every page" --> web
-  web -- "reads at build time and before each expiry" --> api
+  web -- "reads at build time, before each expiry, and when pages re-render after one" --> api
   api -- "reads published posts" --> db
   reader -- "static pages" --> web
 ```

@@ -82,8 +82,8 @@ The frontend reads the post list, every post on it and the categories
 straight from the API (`cache: 'no-store'`), through the schemas its
 pages use, four requests at a time and within 25 s in all, retries
 included. Only when every read works does it expire the `posts` tag
-(ADR-0002); otherwise it answers 502 and expires nothing. The statuses
-and bodies are in this repo's README (Revalidation API).
+(ADR-0002); otherwise it expires nothing. Its statuses and bodies are in
+[this repo's README](../../README.md) (Revalidation API).
 
 Expiring first would leave every page to render against an API that may
 not answer. On Vercel an existing page then keeps its previous version,
@@ -100,21 +100,11 @@ the hash describes the body on the page. Static regeneration stores a
 page only when its whole render succeeds, so a body that fails to render
 leaves the previous page, and its previous hash, in place.
 
-After its second revalidation the content deploy parses its posts once
-and checks the frontend against them:
-
-- the sitemap lists exactly the published posts;
-- every URL in the sitemap answers 200, and each post page's hash equals
-  the hash of the body just synced;
-- `/feed.xml` and every published post's `/opengraph-image` answer 200;
-- every draft's `/posts/<slug>` answers 404.
-
-Each request has 60 s, the whole body included. A round collects every
-problem; if there is any, the round runs again 5 s later, three rounds in
-all. A failure names the URL and whether the page answered an error,
-timed out, or still shows a previous version (with the expected and the
-reported hash). The deploy log keeps `x-vercel-cache` and `age` for every
-request.
+After its second revalidation the content deploy reconciles: it requests
+every page the sitemap lists and compares each post page's hash with the
+body it just synced. The full list of checks, with their timeouts and
+retries, is in [tianwei-io-content's README](https://github.com/notbd/tianwei-io-content/blob/main/README.md)
+(Deploy).
 
 The hash covers only the body: the body is the part that can fail to
 render, while the title and description differ between the files and
@@ -169,7 +159,7 @@ releases: add the new one, then remove the old one.
 | Drop a wire field | The frontend stops reading it, then the API drops it | API first: its own deploy verification passes; the next content deploy's read before expiry (502) or the next frontend build fails |
 | Remove an MDX component, or tighten its attributes | The posts stop using it or meet the new rule, then the frontend changes | Frontend first: its own pull request's build fails, since it renders every published post. When only a draft uses it, that build is green (it does not render drafts), and the next content deploy stops at the contract gate with the database untouched |
 | Widen a value's range (a field may be null, an enum gains a value) | The reader accepts it, then the writer produces it | Writer first. Table: the same content deploy's read before expiry fails (502), with the database written and the site unchanged. Wire: the API deploy is green; the next content deploy's read before expiry (502) or the next frontend build fails. MDX attribute: the content pull request's `check:contract` fails, and the deploy is refused before writing |
-| Narrow a value's range (no longer null, one enum value fewer; table or wire) | The writer stops producing the old values and clears the stored ones, then the reader tightens | Reader first: green at the time, red only when the writer next produces an old value (the read before expiry fails with 502, or a frontend build fails). Only this rule prevents it |
+| Narrow a value's range (no longer null, one enum value fewer; table or wire) | The writer stops producing the old values and clears the stored ones, then the reader tightens | Reader first. If a stored value is already old, a frontend that tightens fails at once, in its own pull request's build against the production API. Otherwise the reader stays green until the writer next produces an old value; then the read before expiry fails (502) or a frontend build fails. The API does not validate the rows it reads, so narrowing only the table is never caught. Only this rule prevents it |
 | Rename `/contract.json`, the revalidate body or `post-body-sha256` | Before their first release, both sides together; after it, as a rename | The content deploy's contract gate, the revalidation (400) or the reconcile fails |
 
 ### Rolling the frontend back
@@ -180,11 +170,11 @@ deploy before it migrates. To recover:
 
 - Rolled back with `git revert`: merge a fix that restores the contract;
   Vercel deploys it as usual.
-- Rolled back with Vercel's Instant Rollback: Vercel turns off automatic
-  production deploys, so merging a fix does not put it live. Once the
-  fix's production build is Ready, promote that deployment (the Manage
-  button on the project's production deployment, or
-  `vercel promote <deployment URL>`), which turns automatic deploys back
+- Rolled back with Vercel's Instant Rollback: Vercel stops assigning the
+  production domain to new deployments, so a merged fix builds but does
+  not go live. Once the fix's production build is Ready, promote that
+  deployment (the Manage button on the project's production deployment,
+  or `vercel promote <deployment URL>`), which turns that assignment back
   on. Do not pick the deployment that was rolled back.
   (https://vercel.com/docs/instant-rollback)
 
@@ -243,8 +233,9 @@ workflow): the changes it stopped reach the database only that way.
   component table with a strict attribute schema, and the frontend ships
   first (table above).
 - The content repo's pull-request check reads the production frontend,
-  and only warns when it cannot; its deploy needs the frontend, as it did
-  before.
+  and only warns when the frontend has no contract to give (a 404 or a
+  network error, Decision 1); any other failure fails it. Its deploy needs
+  the frontend, as it did before.
 - The content deploy's frontend is a constant (`https://tianwei.io`), not
   a secret, so it cannot be pointed at another environment by mistake.
 - This decision itself shipped frontend first: the content deploy's gate

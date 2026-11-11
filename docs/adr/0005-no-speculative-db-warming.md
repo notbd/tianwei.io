@@ -11,10 +11,12 @@ considered, including a beacon fired on homepage load so the database is
 warm "by the time it's needed."
 
 The deciding fact: **visitors almost never need it**. Every visitor-facing
-route is prerendered (ADR-0003); the database is only touched by CI builds,
-the API read the frontend makes before it expires its cache after a sync
-(where the sync itself has already woken the compute), the first visit to
-each page after a content sync (ADR-0002), and the author's draft preview.
+route is prerendered (ADR-0003); the database is only touched by builds,
+the API deploy's verification, the API read the frontend makes before it
+expires its cache after a sync (where the sync itself has already woken
+the compute), the renders right after that expiry (ADR-0002; the content
+deploy's reconcile requests every page, see Consequences), and the
+author's draft preview.
 Cold start is a real latency, but almost nobody stands in front of it.
 
 ## Decision
@@ -48,13 +50,15 @@ Accepted (the one targeted exception):
 
 ## Consequences
 
-- Visitor latency is governed by the CDN, except on the first visit to
-  each page after a content sync. ADR-0002 expires the cache with
-  `{ expire: 0 }` (since 2026-10-31), so that visit renders on demand and
-  reaches the database through the API, and a visitor who arrives after
-  the compute has suspended pays the wake on top of that render.
-  Accepted as the price of freshness; warming for it would take a beacon
-  or a keep-alive, which stay rejected for the reasons above.
+- Visitor latency is governed by the CDN. After a content sync, ADR-0002
+  expires the cache with `{ expire: 0 }` (since 2026-10-31), so each page
+  renders once more, through the API. The content deploy's reconcile
+  requests every page right after its second revalidation, while the sync
+  and the reads before expiry have the compute awake, so its requests,
+  not visitors, pay for those renders. Only a visitor who opens a page
+  between the first revalidation and the reconcile's request for it
+  renders that page on demand, with the compute already awake. Accepted
+  as the price of freshness.
 - The author's first draft preview after idle gets most of the wake
   hidden inside the redirect; subsequent previews are warm anyway.
 - If a future feature puts the database on a visitor-facing path, this
