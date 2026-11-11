@@ -1,7 +1,7 @@
 import { RootFooter } from '@/components/RootFooter'
 import { RootHeader } from '@/components/RootHeader'
+import { ThemeProvider } from '@/components/ThemeProvider'
 import { DEFAULT_THEME, THEMES } from '@/lib/constants'
-import { ThemeProvider } from '@/lib/contexts/ThemeProvider'
 import { cn } from '@/lib/utils'
 import { berkeleyMono, rubik } from '@/styles/fonts'
 import { metadata, viewport } from './metadata'

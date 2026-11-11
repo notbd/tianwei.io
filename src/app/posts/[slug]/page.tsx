@@ -19,6 +19,8 @@ type PageProps = {
   params: Promise<{ slug: string }>
 }
 
+const metaSeparator = <span className="mx-2" aria-hidden>·</span>
+
 // One read per render, shared by the metadata and the page: the body hash
 // in the metadata must describe the body on the page, and a draft's tab
 // must show its title. Draft mode (the author's preview) reads through the
@@ -133,7 +135,7 @@ export default async function PostPage({ params }: PageProps) {
           </time>
           {post.updatedAt !== null && (
             <>
-              <span className="mx-2" aria-hidden>·</span>
+              {metaSeparator}
               <span className="whitespace-nowrap">
                 {'Updated '}
                 <time dateTime={post.updatedAt.toISOString()}>
@@ -142,9 +144,9 @@ export default async function PostPage({ params }: PageProps) {
               </span>
             </>
           )}
-          <span className="mx-2" aria-hidden>·</span>
+          {metaSeparator}
           <span className="whitespace-nowrap">{`${readingMinutes(post.content)} min read`}</span>
-          <span className="mx-2" aria-hidden>·</span>
+          {metaSeparator}
           <TextLink href={categoryPath(post.category)} className="whitespace-nowrap">
             {categoryLabel(post.category)}
           </TextLink>

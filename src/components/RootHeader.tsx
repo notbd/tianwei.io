@@ -1,19 +1,19 @@
 'use client'
 
-import type { LinkProps } from 'next/link'
 import type { ComponentProps } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ColorModeToggle } from '@/components/ColorModeToggle'
-import { SiteLogo } from '@/components/svgs'
+import { SiteLogo } from '@/components/svgs/SiteLogo'
+import { site } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
-type PageHeaderProps = ComponentProps<'header'>
+type RootHeaderProps = ComponentProps<'header'>
 
 export function RootHeader({
   className,
   ...props
-}: PageHeaderProps) {
+}: RootHeaderProps) {
   const pathname = usePathname()
   const isHome = pathname === '/'
   // category pages belong to the Posts section
@@ -34,7 +34,7 @@ export function RootHeader({
         <Link
           href="/"
           tabIndex={-1}
-          aria-label="tianwei.io"
+          aria-label={site.domain}
         >
           {/* logo svg imported as component */}
           <SiteLogo
@@ -74,7 +74,7 @@ export function RootHeader({
   )
 }
 
-type NavLinkProps = ComponentProps<'a'> & LinkProps & {
+type NavLinkProps = ComponentProps<typeof Link> & {
   isSelected: boolean
   children: React.ReactNode
 }
