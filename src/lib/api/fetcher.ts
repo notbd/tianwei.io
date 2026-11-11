@@ -1,4 +1,5 @@
 import type { z } from 'zod'
+import { setTimeout as sleep } from 'node:timers/promises'
 import { errorEnvelope, listEnvelope, successEnvelope } from './schemas'
 
 /**
@@ -40,6 +41,8 @@ export type FetchOptions = {
   next?: NextFetchRequestConfig
   cache?: RequestCache
   headers?: Record<string, string>
+  /** The caller's deadline over every attempt and the waits between them. */
+  signal?: AbortSignal
 }
 
 // Transient failures (network errors, timeouts, 5xx) are retried with
@@ -54,18 +57,23 @@ export type FetchOptions = {
 // retry would get the first attempt's failure back without a request
 // (https://nextjs.org/docs/app/api-reference/functions/fetch#memoization).
 // The data cache key ignores the signal, so caching is unaffected.
+//
+// A caller's signal joins each attempt's deadline and also cuts the wait
+// before a retry short; once it has fired, no further attempt starts.
 const ATTEMPTS = 3
 const BACKOFF_BASE_MS = 300
 const ATTEMPT_TIMEOUT_MS = 10_000
 
-async function requestJson(path: string, options: FetchOptions = {}): Promise<unknown> {
+async function requestJson(path: string, { signal, ...options }: FetchOptions = {}): Promise<unknown> {
   const url = apiUrl(path)
 
   let lastError: unknown
   for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
     if (attempt > 0)
-      await new Promise(resolve => setTimeout(resolve, BACKOFF_BASE_MS * 2 ** (attempt - 1)))
+      await sleep(BACKOFF_BASE_MS * 2 ** (attempt - 1), undefined, { signal })
+    signal?.throwIfAborted()
 
+    const attemptDeadline = AbortSignal.timeout(ATTEMPT_TIMEOUT_MS)
     let response: Response
     let body: string
     try {
@@ -73,11 +81,14 @@ async function requestJson(path: string, options: FetchOptions = {}): Promise<un
       response = await fetch(url, {
         ...options,
         headers: { Accept: 'application/json', ...options.headers },
-        signal: AbortSignal.timeout(ATTEMPT_TIMEOUT_MS),
+        signal: signal === undefined
+          ? attemptDeadline
+          : AbortSignal.any([signal, attemptDeadline]),
       })
       body = await response.text()
     }
     catch (error) {
+      signal?.throwIfAborted()
       lastError = error
       continue
     }

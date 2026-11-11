@@ -128,6 +128,44 @@ describe('fetchOne', () => {
     timeout.mockRestore()
   })
 
+  it('joins the caller\'s signal to each attempt and retries nothing once it fires', async () => {
+    const caller = new AbortController()
+    const fetchMock = vi.fn<typeof fetch>(async (_url, init) => new Promise((_resolve, reject) => {
+      init?.signal?.addEventListener('abort', () => reject(init.signal?.reason))
+      caller.abort(new Error('deadline'))
+    }))
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { fetchOne } = await importFetcher()
+    await expect(fetchOne('/api/thing', itemSchema, { signal: caller.signal })).rejects.toThrow('deadline')
+    expect(fetchMock).toHaveBeenCalledOnce()
+  })
+
+  it('cuts the wait before a retry short when the caller\'s signal fires', async () => {
+    const caller = new AbortController()
+    const fetchMock = vi.fn<typeof fetch>(async () => {
+      setTimeout(() => caller.abort(), 20)
+      return new Response('oops', { status: 503 })
+    })
+    vi.stubGlobal('fetch', fetchMock)
+
+    const { fetchOne } = await importFetcher()
+    const started = performance.now()
+    await expect(fetchOne('/api/thing', itemSchema, { signal: caller.signal })).rejects.toThrow()
+    // the first backoff is 300 ms
+    expect(performance.now() - started).toBeLessThan(250)
+    expect(fetchMock).toHaveBeenCalledOnce()
+  })
+
+  it('starts no request once the caller\'s signal has fired', async () => {
+    const fetchMock = stubFetch({})
+    const { fetchOne } = await importFetcher()
+    await expect(fetchOne('/api/thing', itemSchema, {
+      signal: AbortSignal.abort(),
+    })).rejects.toThrow()
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
   it('recovers from a transient 5xx (build-time flake protection)', async () => {
     const responses = [
       new Response('oops', { status: 503, statusText: 'Service Unavailable' }),
