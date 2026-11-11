@@ -59,10 +59,10 @@ export async function renderMdx(source: string): Promise<React.ReactElement> {
 
 type MdxNode = {
   type: string
-  name?: string | null
-  children?: MdxNode[]
-  attributes?: { type: string, name?: string, value?: unknown }[]
-  position?: { start: { line: number } }
+  name?: string | null | undefined
+  children?: MdxNode[] | undefined
+  attributes?: { type: string, name?: string | undefined, value?: unknown }[] | undefined
+  position?: { start: { line: number } } | undefined
 }
 
 const JAVASCRIPT_NODES = new Set(['mdxjsEsm', 'mdxFlowExpression', 'mdxTextExpression'])
