@@ -33,4 +33,4 @@ The author wants everything presented in US Eastern time.
   display-layer-only change.
 - Deploy coupling: the content re-sync (ET-anchored instants) must land
   before or with this change, or legacy UTC-midnight rows display one
-  day early.
+  day early. (Done in the 2026-07 release.)
