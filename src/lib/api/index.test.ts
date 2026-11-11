@@ -1,12 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { getCategories, getPost, getPosts } from './index'
 
-vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
-
-const { cacheTags, getCategories, getPost, getPosts } = await import('./index')
-
-const fetchMock = vi.fn()
+const fetchMock = vi.fn<typeof fetch>()
 
 beforeEach(() => {
+  vi.stubEnv('CONTENT_API_URL', 'https://api.example.test')
   fetchMock.mockReset()
   vi.stubGlobal('fetch', fetchMock)
 })
@@ -16,21 +14,12 @@ function respond(data: unknown) {
 }
 
 function requested() {
-  const [url, init] = fetchMock.mock.calls[0] as [string, { next?: { revalidate?: unknown, tags?: string[] } }]
-  return { url, next: init.next }
+  const [url, init] = fetchMock.mock.calls[0] ?? []
+  return { url, next: init?.next, cache: init?.cache }
 }
 
-describe('cache tags', () => {
-  it('builds post tags and reads the slug back, and nothing else', () => {
-    expect(cacheTags.post('hello-world')).toBe('post-hello-world')
-    expect(cacheTags.slugOf(cacheTags.post('hello-world'))).toBe('hello-world')
-    expect(cacheTags.slugOf(cacheTags.posts)).toBeUndefined()
-    expect(cacheTags.slugOf('mystery')).toBeUndefined()
-  })
-})
-
 describe('endpoints', () => {
-  it('caches lists under the posts tag until revalidated', async () => {
+  it('caches lists under the posts tag until it is expired', async () => {
     respond([])
     await getPosts()
     expect(requested()).toEqual({
@@ -53,15 +42,24 @@ describe('endpoints', () => {
     })
   })
 
-  it('tags a post with the list tag and its own, and encodes the slug into one path segment', async () => {
+  it('caches a post under the same tag, and encodes the slug into one path segment', async () => {
     fetchMock.mockResolvedValue(new Response('{"status":"error","message":"Validation failed"}', { status: 400 }))
     await expect(getPost('a?b/c')).rejects.toMatchObject({ status: 400 })
     expect(requested()).toEqual({
       url: 'https://api.example.test/api/post/a%3Fb%2Fc',
       next: {
         revalidate: false,
-        tags: ['posts', 'post-a?b/c'],
+        tags: ['posts'],
       },
+    })
+  })
+
+  it('reads past the cache with plain no-store when given a deadline', async () => {
+    respond([])
+    await getPosts({ signal: new AbortController().signal })
+    expect(requested()).toEqual({
+      url: 'https://api.example.test/api/posts',
+      cache: 'no-store',
     })
   })
 })
