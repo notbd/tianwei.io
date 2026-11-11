@@ -140,14 +140,17 @@ Invariant: **at every moment, the reading side accepts whatever the
 writing side produces.** It holds on every edge between the repos: the
 table schema (the content engine writes, the API reads), the wire format
 (the API writes, the frontend reads), the MDX contract (posts are written
-in the content engine, the frontend renders them), and the three
-protocols the frontend gives the content deploy (`/contract.json`, the
-revalidate body, `post-body-sha256`).
+in the content engine, the frontend renders them), and what the frontend
+gives the content deploy: `/contract.json`, the revalidate body and its
+`revalidated` answer, `post-body-sha256`, and the addresses the
+reconcile reads (the sitemap's `/posts/<slug>` pages, `/feed.xml`, each
+post's `/opengraph-image`, a 404 for a draft).
 
 The test for a change: once this side's change is live, can every other
 live side its data flows to (not only the next one) keep working with
-what this side produces, now and later? If yes, this side ships first. If
-no, the other side changes first. A rename or a type change is two
+what this side produces, now and later? And can this side keep working
+with what the live sides it reads from produce today? If both are yes,
+this side ships first. If either is no, the other side changes first. A rename or a type change is two
 releases: add the new one, then remove the old one.
 
 | Change | Ships first | If the order is wrong, who notices and when |
@@ -160,7 +163,7 @@ releases: add the new one, then remove the old one.
 | Remove an MDX component, or tighten its attributes | The posts stop using it or meet the new rule, then the frontend changes | Frontend first: its own pull request's build fails, since it renders every published post. When only a draft uses it, that build is green (it does not render drafts), and the next content deploy stops at the contract gate with the database untouched |
 | Widen a value's range (a field may be null, an enum gains a value) | The reader accepts it, then the writer produces it | Writer first. Table: the same content deploy's read before expiry fails (502), with the database written and the site unchanged. Wire: the API deploy is green; the next content deploy's read before expiry (502) or the next frontend build fails. MDX attribute: the content pull request's `check:contract` fails, and the deploy is refused before writing |
 | Narrow a value's range (no longer null, one enum value fewer; table or wire) | The writer stops producing the old values and clears the stored ones, then the reader tightens | Reader first. If a stored value is already old, a frontend that tightens fails at once, in its own pull request's build against the production API. Otherwise the reader stays green until the writer next produces an old value; then the read before expiry fails (502) or a frontend build fails. The API does not validate the rows it reads, so narrowing only the table is never caught. Only this rule prevents it |
-| Rename `/contract.json`, the revalidate body or `post-body-sha256` | Before their first release, both sides together; after it, as a rename | The content deploy's contract gate, the revalidation (400) or the reconcile fails |
+| Rename `/contract.json`, the revalidate body or `post-body-sha256`, or change an address the reconcile reads | Before their first release, both sides together; after it, as a rename | The content deploy's contract gate, the revalidation (400) or the reconcile fails |
 
 ### Rolling the frontend back
 
