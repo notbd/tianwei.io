@@ -9,5 +9,7 @@ export default defineConfig({
   },
   test: {
     include: ['src/**/*.test.{ts,tsx}'],
+    // the first MDX render loads Shiki's grammars; on a loaded machine that passes the 5 s default
+    testTimeout: 20_000,
   },
 })
