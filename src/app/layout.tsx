@@ -1,5 +1,6 @@
 import { RootFooter } from '@/components/RootFooter'
 import { RootHeader } from '@/components/RootHeader'
+import { DEFAULT_THEME, THEMES } from '@/lib/constants'
 import { ThemeProvider } from '@/lib/contexts/ThemeProvider'
 import { cn } from '@/lib/utils'
 import { berkeleyMono, rubik } from '@/styles/fonts'
@@ -11,7 +12,7 @@ export { metadata, viewport } // declared in metadata.ts
 // Mirrors the stored theme choice (next-themes' localStorage key) into a
 // data attribute BEFORE first paint, so the toggle icon is correct without
 // any server-side state. Runs synchronously as the first thing in <body>.
-const themeChoiceScript = `(function(){var c='system';try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')c=t}catch(e){}document.documentElement.setAttribute('data-theme-choice',c)})()`
+const themeChoiceScript = `(function(){var c=${JSON.stringify(DEFAULT_THEME)};try{var t=localStorage.getItem('theme');if(${JSON.stringify(THEMES)}.indexOf(t)>=0)c=t}catch(e){}document.documentElement.setAttribute('data-theme-choice',c)})()`
 
 type RootLayoutProps = { children: React.ReactNode }
 
@@ -35,7 +36,7 @@ export default function RootLayout(
           `${rubik.variable} ${berkeleyMono.variable}`,
         )}
       >
-        {/* static template literal, zero interpolation, so safe by construction */}
+        {/* only constants are interpolated, as JSON, so safe by construction */}
         {/* eslint-disable-next-line react/dom-no-dangerously-set-innerhtml */}
         <script dangerouslySetInnerHTML={{ __html: themeChoiceScript }} />
 
