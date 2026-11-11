@@ -127,13 +127,13 @@ export default async function PostPage({ params }: PageProps) {
 
         {/* other attributes */}
         <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-          <time dateTime={post.createdAt.toISOString()}>
+          <time dateTime={post.createdAt.toISOString()} className="whitespace-nowrap">
             {formatPostDate(post.createdAt)}
           </time>
           {post.updatedAt !== null && (
             <>
               <span className="mx-2" aria-hidden>·</span>
-              <span>
+              <span className="whitespace-nowrap">
                 {'Updated '}
                 <time dateTime={post.updatedAt.toISOString()}>
                   {formatPostDate(post.updatedAt)}
@@ -142,9 +142,9 @@ export default async function PostPage({ params }: PageProps) {
             </>
           )}
           <span className="mx-2" aria-hidden>·</span>
-          <span>{`${readingMinutes(post.content)} min read`}</span>
+          <span className="whitespace-nowrap">{`${readingMinutes(post.content)} min read`}</span>
           <span className="mx-2" aria-hidden>·</span>
-          <TextLink href={categoryPath(post.category)}>
+          <TextLink href={categoryPath(post.category)} className="whitespace-nowrap">
             {categoryLabel(post.category)}
           </TextLink>
         </div>

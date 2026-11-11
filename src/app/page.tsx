@@ -231,7 +231,7 @@ function HomeSectionBody({
     <div
       {...props}
       className={cn(
-        'grow pl-2 font-semibold transition-[padding] duration-300 ease-out md:pl-4',
+        'grow pl-2 font-semibold transition-[padding] duration-300 ease-out motion-reduce:transition-none md:pl-4',
         className,
       )}
     >

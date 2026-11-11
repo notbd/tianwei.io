@@ -60,7 +60,7 @@ const markdownElements = {
   h6: ({ className, ...props }: ComponentProps<'h6'>) => (
     <h6
       className={cn(
-        'mt-8 scroll-m-20 text-base font-semibold tracking-tight opacity-60',
+        'mt-8 scroll-m-20 text-base font-semibold tracking-tight text-zinc-500 dark:text-zinc-400',
         className,
       )}
       {...props}
@@ -176,8 +176,10 @@ const markdownElements = {
       {...props}
     />
   ),
-  // the wrapper carries the margins so the copy button can sit in the
-  // block's corner without scrolling away with wide code
+  // the wrapper lets the copy button sit in the block's corner without
+  // scrolling away with wide code. Its margins space a block without a
+  // language; rehype-pretty-code puts every other block in a figure, whose
+  // my-8 they collapse into
   pre: ({ className, ...props }: ComponentProps<'pre'>) => (
     <div data-code-block className="group/code relative mb-4 mt-6">
       <pre

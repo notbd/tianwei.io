@@ -7,5 +7,5 @@ type MdxContentProps = {
 }
 
 export async function MdxContent({ source }: MdxContentProps) {
-  return <div className="mdx">{await renderMdx(source)}</div>
+  return <div className="mdx wrap-break-word">{await renderMdx(source)}</div>
 }

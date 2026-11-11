@@ -4,7 +4,7 @@
 
 /* Code block title styling */
 [data-rehype-pretty-code-title] {
-  @apply mt-4 px-4 py-2 text-sm font-medium font-mono;
+  @apply px-4 py-2 text-sm font-medium font-mono;
 }
 
 [data-rehype-pretty-code-title] + [data-code-block] {
@@ -105,8 +105,9 @@ code[data-line-numbers-max-digits='3'] > [data-line]::before {
   width: 3rem;
 }
 
-/* Line highlighting */
-[data-highlighted-line] {
+/* Line highlighting (scoped to the figure to outrank the transparent
+ * background on `code span` above) */
+[data-rehype-pretty-code-figure] [data-highlighted-line] {
   @apply bg-teal-500/10;
 }
 

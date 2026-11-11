@@ -52,7 +52,7 @@ export default function RootLayout(
 
             {/* top: header + main */}
             <div
-              className="flex flex-col gap-y-12 transition-[row-gap] ease-out md:gap-y-14"
+              className="flex flex-col gap-y-12 transition-[row-gap] ease-out motion-reduce:transition-none md:gap-y-14"
             >
 
               {/* header */}
