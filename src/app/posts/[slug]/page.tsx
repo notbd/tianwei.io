@@ -19,7 +19,15 @@ type PageProps = {
   params: Promise<{ slug: string }>
 }
 
-const metaSeparator = <span className="mx-2" aria-hidden>·</span>
+// The items around it do not wrap, so the line may only break after a
+// separator: the <wbr> is that one opportunity (without it a line with an
+// Updated date cannot break at all and overflows a phone).
+const metaSeparator = (
+  <>
+    <span className="mx-2" aria-hidden>·</span>
+    <wbr />
+  </>
+)
 
 // One read per render, shared by the metadata and the page: the body hash
 // in the metadata must describe the body on the page, and a draft's tab
