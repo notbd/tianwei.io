@@ -77,19 +77,15 @@ describe('fetchOne', () => {
     expect(init?.signal).toBeInstanceOf(AbortSignal)
   })
 
-  it('sends every attempt with its own signal, which opts the retry out of Next\'s render memoization', async () => {
+  it('throws ApiError with the status after three attempts on a 5xx, each with its own signal', async () => {
     const fetchMock = stubFetch({ status: 503 })
-    await expect(fetchOne('/api/thing', itemSchema)).rejects.toMatchObject({ status: 503 })
-    const signals = fetchMock.mock.calls.map(([, init]) => init?.signal)
-    expect(new Set(signals).size).toBe(3)
-  })
-
-  it('throws ApiError with status after exhausting retries on 5xx', async () => {
-    const fetchMock = stubFetch({ status: 500 })
 
     const failure = fetchOne('/api/thing', itemSchema)
     await expect(failure).rejects.toBeInstanceOf(ApiError)
-    expect(fetchMock).toHaveBeenCalledTimes(3)
+    await expect(failure).rejects.toMatchObject({ status: 503 })
+    // its own signal opts each retry out of Next's render memoization
+    const signals = fetchMock.mock.calls.map(([, init]) => init?.signal)
+    expect(new Set(signals).size).toBe(3)
   })
 
   it('gives each attempt a deadline and retries one that times out', async () => {
@@ -154,41 +150,28 @@ describe('fetchOne', () => {
     expect(fetchMock).toHaveBeenCalledOnce()
   })
 
-  it('recovers from a transient 5xx (build-time flake protection)', async () => {
-    const responses = [
-      new Response('oops', { status: 503 }),
-      successBody({ id: 9 }),
-    ]
-    const fetchMock = vi.fn(async () => responses.shift()!)
+  it.each([
+    [
+      'a transient 5xx (build-time flake protection)',
+      async () => new Response('oops', { status: 503 }),
+    ],
+    [
+      'a thrown network error',
+      async () => {
+        throw new TypeError('fetch failed')
+      },
+    ],
+    [
+      'a 2xx with a non-JSON body (CDN error page)',
+      async () => new Response('<html>gateway error</html>', { status: 200 }),
+    ],
+  ])('retries %s and recovers', async (_name, fail) => {
+    const fetchMock = vi.fn<typeof fetch>()
+      .mockImplementationOnce(fail)
+      .mockResolvedValueOnce(successBody({ id: 9 }))
     vi.stubGlobal('fetch', fetchMock)
 
     expect(await fetchOne('/api/thing', itemSchema)).toEqual({ id: 9 })
-    expect(fetchMock).toHaveBeenCalledTimes(2)
-  })
-
-  it('recovers from a thrown network error', async () => {
-    let first = true
-    const fetchMock = vi.fn(async () => {
-      if (first) {
-        first = false
-        throw new TypeError('fetch failed')
-      }
-      return successBody({ id: 3 })
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    expect(await fetchOne('/api/thing', itemSchema)).toEqual({ id: 3 })
-  })
-
-  it('retries a 2xx with a non-JSON body (CDN error page) and recovers', async () => {
-    const responses = [
-      new Response('<html>gateway error</html>', { status: 200 }),
-      successBody({ id: 5 }),
-    ]
-    const fetchMock = vi.fn(async () => responses.shift()!)
-    vi.stubGlobal('fetch', fetchMock)
-
-    expect(await fetchOne('/api/thing', itemSchema)).toEqual({ id: 5 })
     expect(fetchMock).toHaveBeenCalledTimes(2)
   })
 
