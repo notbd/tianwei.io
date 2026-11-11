@@ -1,5 +1,6 @@
 import type { Root } from 'mdast'
 import type { Options as RehypePrettyCodeOptions } from 'rehype-pretty-code'
+import type { ShikiTransformer } from 'shiki'
 import { evaluate } from '@mdx-js/mdx'
 import * as runtime from 'react/jsx-runtime'
 import rehypeAutolinkHeadings from 'rehype-autolink-headings'
@@ -8,12 +9,27 @@ import rehypeSlug from 'rehype-slug'
 import remarkGfm from 'remark-gfm'
 import { authorComponents, mdxComponents } from '@/components/mdx/MdxComponents'
 
+// Shiki stops colouring a line after 500 ms (tokenizeTimeLimit) and says
+// nothing, so a machine under load renders the same source with fewer
+// colours, and two builds of one post differ. No limit, no difference: a
+// post's code is the author's own and small, so nothing here can run away.
+const noTokenizeTimeLimit: ShikiTransformer = {
+  name: 'no-tokenize-time-limit',
+  preprocess(_code, options) {
+    options.tokenizeTimeLimit = 0
+  },
+}
+
 const rehypePrettyCodeOptions: RehypePrettyCodeOptions = {
   theme: {
     dark: 'vitesse-dark',
     light: 'vitesse-light',
   },
   keepBackground: true,
+  // a fence without a language is highlighted as plain text, so every block
+  // gets the same markup (figure, line spans) and with it the same styles
+  defaultLang: { block: 'plaintext' },
+  transformers: [noTokenizeTimeLimit],
 }
 
 /** Compiles a post's MDX source (frontmatter already stripped by the content engine) into React elements. */

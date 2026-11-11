@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import { renderMdx } from './mdx'
 
 async function html(source: string): Promise<string> {
@@ -21,6 +21,23 @@ describe('renderMdx', () => {
     expect(out).toContain('data-rehype-pretty-code-title')
     expect(out).toContain('data-code-block')
     expect(out).toContain('aria-label="Copy code"')
+  })
+
+  it('renders a fence without a language like a plaintext one', async () => {
+    expect(await html('```\nls -la\n```\n')).toBe(await html('```plaintext\nls -la\n```\n'))
+  })
+
+  it('colours code the same on a machine too slow for Shiki\'s per-line time limit', async () => {
+    const source = '```ts\nconst answer: number = 42\n```\n'
+    const expected = await html(source)
+    let now = Date.now()
+    const clock = vi.spyOn(Date, 'now').mockImplementation(() => (now += 600))
+    try {
+      expect(await html(source)).toBe(expected)
+    }
+    finally {
+      clock.mockRestore()
+    }
   })
 })
 
