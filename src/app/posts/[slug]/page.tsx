@@ -29,9 +29,10 @@ const metaSeparator = (
   </>
 )
 
-// One read per render, shared by the metadata and the page: the body hash
-// in the metadata must describe the body on the page, and a draft's tab
-// must show its title. Draft mode (the author's preview) reads through the
+// One read per render, shared by the metadata and the page, so the page
+// costs one lookup and a draft's tab shows its title. Nothing depends on the
+// sharing for correctness: the body hash is rendered by the page, from the
+// post it renders. Draft mode (the author's preview) reads through the
 // API's preview endpoint, which also returns unpublished posts, and skips
 // the list. Only a slug that names no post becomes a not-found page; any
 // other failure (network hiccup, 500, schema drift) propagates, since
@@ -75,9 +76,6 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title: post.title,
       description,
     },
-    other: {
-      [POST_BODY_HASH_META]: postBodyHash(post.content),
-    },
   }
 }
 
@@ -100,6 +98,11 @@ export default async function PostPage({ params }: PageProps) {
 
   return (
     <article className="pb-8">
+      {/* The hash of the body rendered below, taken from the same `post`, so
+          the two cannot describe different reads. React hoists the tag into
+          <head>; the content deploy's reconcile reads it from the page. */}
+      <meta name={POST_BODY_HASH_META} content={postBodyHash(post.content)} />
+
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',

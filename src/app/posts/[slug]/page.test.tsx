@@ -1,6 +1,8 @@
+import type { ReactElement, ReactNode } from 'react'
 import type { Post } from '@/lib/api'
+import { isValidElement } from 'react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { generateMetadata } from './page'
+import PostPage, { generateMetadata } from './page'
 
 const { draftMode, findPost, getDraftPost } = vi.hoisted(() => ({
   draftMode: vi.fn(),
@@ -33,20 +35,35 @@ function props(slug: string) {
   }
 }
 
+type ElementProps = { children?: ReactNode, name?: unknown, content?: unknown }
+
+/** Every element of a tree as returned, without calling a component in it. */
+function elementsIn(node: ReactNode): ReactElement<ElementProps>[] {
+  if (isValidElement<ElementProps>(node))
+    return [node].concat(elementsIn(node.props.children))
+  if (typeof node === 'object' && node !== null && Symbol.iterator in node)
+    return Array.from(node).flatMap(child => elementsIn(child))
+  return []
+}
+
 beforeEach(() => {
   vi.clearAllMocks()
   draftMode.mockResolvedValue({ isEnabled: false })
   findPost.mockResolvedValue(alpha)
 })
 
-describe('post page metadata', () => {
-  it('reports the SHA-256 of the post body in the post-body-sha256 meta tag', async () => {
-    const metadata = await generateMetadata(props('alpha'))
-    expect(metadata.other).toEqual({
-      'post-body-sha256': '3c57f811de53a11a4341201a1927be6cca8210507f79ea7e7a6b4c15969f995e',
-    })
-  })
+describe('post page', () => {
+  it('renders exactly one post-body-sha256 meta tag, the SHA-256 of the post body', async () => {
+    const hashTags = elementsIn(await PostPage(props('alpha')))
+      .filter(element => element.type === 'meta' && element.props.name === 'post-body-sha256')
 
+    expect(hashTags.map(tag => tag.props.content)).toEqual([
+      '3c57f811de53a11a4341201a1927be6cca8210507f79ea7e7a6b4c15969f995e',
+    ])
+  })
+})
+
+describe('post page metadata', () => {
   it('is a not-found page for a slug that names no published post', async () => {
     findPost.mockResolvedValue(undefined)
     await expect(generateMetadata(props('nope'))).rejects.toMatchObject({ digest: 'NEXT_HTTP_ERROR_FALLBACK;404' })
