@@ -9,6 +9,10 @@ const { draftMode, findPost, getDraftPost } = vi.hoisted(() => ({
   findPost: vi.fn(),
   getDraftPost: vi.fn(),
 }))
+// next/font only exists inside Next's compiler
+vi.mock('@/styles/fonts/mono', () => ({
+  berkeleyMono: { variable: 'font-berkeley-mono' },
+}))
 vi.mock('next/headers', () => ({ draftMode }))
 vi.mock('@/lib/api', async importOriginal => ({
   ...await importOriginal<typeof import('@/lib/api')>(),
