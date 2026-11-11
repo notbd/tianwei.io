@@ -11,12 +11,7 @@
   @apply mt-0;
 }
 
-/* Pre and code base styling */
-pre {
-  overflow-x: auto;
-  padding: 1rem 0;
-}
-
+/* Code lines: the block's horizontal padding (the <pre> has vertical only) */
 pre [data-line] {
   padding: 0 1rem;
 }
@@ -43,6 +38,11 @@ pre [data-line] {
   @apply bg-transparent;
 }
 
+/* Inline-code padding stays inline: block code is spaced by [data-line] */
+[data-rehype-pretty-code-figure] pre code {
+  @apply p-0;
+}
+
 /* Code text styling - dark mode */
 .dark [data-rehype-pretty-code-figure] code,
 .dark [data-rehype-pretty-code-figure] code span {
@@ -67,12 +67,10 @@ mark[data-highlighted-chars] span {
 }
 
 .dark [data-highlighted-chars] {
-  @apply rounded bg-transparent;
   box-shadow: 0 0 0 0.2rem var(--color-zinc-800);
 }
 
 .dark mark[data-highlighted-chars] span {
-  @apply rounded;
   background-color: var(--color-zinc-800);
 }
 
@@ -144,9 +142,4 @@ code[data-line-numbers-max-digits='3'] > [data-line]::before {
 /* GFM footnotes: set apart from the post body */
 .mdx .footnotes {
   @apply mt-12 border-t border-zinc-200 pt-4 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400;
-}
-
-/* Inline-code padding stays inline: block code is spaced by [data-line] */
-[data-rehype-pretty-code-figure] pre code {
-  @apply p-0;
 }
