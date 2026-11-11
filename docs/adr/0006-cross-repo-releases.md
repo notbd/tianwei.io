@@ -108,10 +108,10 @@ retries, is in [tianwei-io-content's README](https://github.com/notbd/tianwei-io
 
 The hash covers only the body: the body is the part that can fail to
 render, while the title and description differ between the files and
-the API in ways that do not matter (an empty description is `null` on the
-wire) and would raise false alarms. The reconcile never uses draft mode,
-whose responses stream: there, a render that fails late cannot change a
-200 already sent.
+the pages in ways that do not matter (the frontend reads an empty
+description as `null`) and would raise false alarms. The reconcile never
+uses draft mode, whose responses stream: there, a render that fails late
+cannot change a 200 already sent.
 
 ### The exception: the API deploy
 
@@ -137,21 +137,24 @@ locally either.
 ## Decision 2: which repo ships first
 
 Invariant: **at every moment, the reading side accepts whatever the
-writing side produces.** It holds on every edge between the repos: the
-table schema (the content engine writes, the API reads), the wire format
-(the API writes, the frontend reads), the MDX contract (posts are written
-in the content engine, the frontend renders them), and what the frontend
-gives the content deploy: `/contract.json`, the revalidate body and its
-`revalidated` answer, `post-body-sha256`, and the addresses the
-reconcile reads (the sitemap's `/posts/<slug>` pages, `/feed.xml`, each
-post's `/opengraph-image`, a 404 for a draft).
+writing side produces.** It holds on every edge between the repos:
 
-The test for a change: once this side's change is live, can every other
-live side its data flows to (not only the next one) keep working with
-what this side produces, now and later? And can this side keep working
-with what the live sides it reads from produce today? If both are yes,
-this side ships first. If either is no, the other side changes first. A rename or a type change is two
-releases: add the new one, then remove the old one.
+- the table schema: the content engine writes, the API reads;
+- the wire format: the API writes, the frontend reads;
+- the MDX contract: posts are written in the content engine, the
+  frontend renders them;
+- what the frontend gives the content deploy: `/contract.json`, the
+  revalidate body and its `revalidated` answer, `post-body-sha256`, and
+  the addresses the reconcile reads (`/sitemap.xml` and every page it
+  lists, `/feed.xml`, each post's `/opengraph-image`, a 404 for a draft).
+
+The test for a change has two questions. Once this side's change is
+live, can every other live side its data flows to (not only the next
+one) keep working with what this side produces, now and later? And can
+this side keep working with what the live sides it reads from (directly
+or through another side) can produce today? If both are yes, this side
+ships first. If either is no, the other side changes first. A rename or
+a type change is two releases: add the new one, then remove the old one.
 
 | Change | Ships first | If the order is wrong, who notices and when |
 | --- | --- | --- |
@@ -163,7 +166,7 @@ releases: add the new one, then remove the old one.
 | Remove an MDX component, or tighten its attributes | The posts stop using it or meet the new rule, then the frontend changes | Frontend first: its own pull request's build fails, since it renders every published post. When only a draft uses it, that build is green (it does not render drafts), and the next content deploy stops at the contract gate with the database untouched |
 | Widen a value's range (a field may be null, an enum gains a value) | The reader accepts it, then the writer produces it | Writer first. Table: the same content deploy's read before expiry fails (502), with the database written and the site unchanged. Wire: the API deploy is green; the next content deploy's read before expiry (502) or the next frontend build fails. MDX attribute: the content pull request's `check:contract` fails, and the deploy is refused before writing |
 | Narrow a value's range (no longer null, one enum value fewer; table or wire) | The writer stops producing the old values and clears the stored ones, then the reader tightens | Reader first. If a stored value is already old, a frontend that tightens fails at once, in its own pull request's build against the production API. Otherwise the reader stays green until the writer next produces an old value; then the read before expiry fails (502) or a frontend build fails. The API does not validate the rows it reads, so narrowing only the table is never caught. Only this rule prevents it |
-| Rename `/contract.json`, the revalidate body or `post-body-sha256`, or change an address the reconcile reads | Before their first release, both sides together; after it, as a rename | The content deploy's contract gate, the revalidation (400) or the reconcile fails |
+| Rename or change anything the frontend gives the content deploy (the last item of the list above) | Before their first release, both sides together; after it, as a rename | The content deploy's contract gate, the revalidation (a 400, or a 200 without `posts` in `revalidated`) or the reconcile fails |
 
 ### Rolling the frontend back
 
@@ -209,11 +212,13 @@ workflow): the changes it stopped reach the database only that way.
 6. A breaking API change turns red only at the next content deploy or
    frontend build.
 7. The two Drizzle schemas (the content engine's and the API's copy) are
-   kept identical by hand.
+   kept identical by hand. Between the two releases that drop a column
+   they differ on purpose.
 8. The API deploy is the exception above. If the rollback command itself
    fails, the runner dies, or the job is cancelled by force, the bad
-   version stays live, as before this decision; the log names the saved
-   version and the command that restores it by hand.
+   version stays live, as before this decision. The log names the version
+   that was live before the deploy and, when it was the rollback command
+   that failed, the command that restores it by hand.
 9. The reconcile does not request the page of a post whose file was
    deleted. The sitemap no longer lists it, but the page's own 404 is not
    checked by that deploy.
@@ -241,7 +246,7 @@ workflow): the changes it stopped reach the database only that way.
   the frontend, as it did before.
 - The content deploy's frontend is a constant (`https://tianwei.io`), not
   a secret, so it cannot be pointed at another environment by mistake.
-- This decision itself shipped frontend first: the content deploy's gate
+- This decision itself ships frontend first: the content deploy's gate
   reads the frontend's `/contract.json`.
 - Not chosen: a shared package (ADR-0001 says why), and running all
   three repos together in each pull request, which is deferred; it would
