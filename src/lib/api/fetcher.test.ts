@@ -22,6 +22,8 @@ beforeEach(() => {
 })
 
 afterEach(() => {
+  vi.useRealTimers()
+  vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
 })
@@ -101,43 +103,55 @@ describe('fetchOne', () => {
     expect(await fetchOne('/api/thing', itemSchema)).toEqual({ id: 4 })
     expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(timeout).toHaveBeenCalledWith(10_000)
-    timeout.mockRestore()
   })
 
-  it('joins the caller\'s signal to each attempt and retries nothing once it fires', async () => {
-    const caller = new AbortController()
-    const fetchMock = vi.fn<typeof fetch>(async (_url, init) => new Promise((_resolve, reject) => {
-      init?.signal?.addEventListener('abort', () => reject(init.signal?.reason))
-      caller.abort(new Error('deadline'))
-    }))
-    vi.stubGlobal('fetch', fetchMock)
+  it.each([
+    ['its own limit without a deadline', undefined, 10_000],
+    ['its own limit when the deadline is further away', 60_000, 10_000],
+    ['the time left when that is less', 2_500.5, 2_501],
+    ['1 ms when less than that is left', 0.4, 1],
+  ])('times an attempt at %s', async (_name, msLeft, timeoutMs) => {
+    vi.spyOn(performance, 'now').mockReturnValue(1_000)
+    const timeout = vi.spyOn(AbortSignal, 'timeout')
+    stubFetch({
+      json: {
+        status: 'success',
+        data: { id: 1 },
+      },
+    })
 
-    await expect(fetchOne('/api/thing', itemSchema, { signal: caller.signal })).rejects.toThrow('deadline')
-    expect(fetchMock).toHaveBeenCalledOnce()
+    await fetchOne('/api/thing', itemSchema, msLeft === undefined
+      ? {}
+      : { deadline: 1_000 + msLeft })
+
+    expect(timeout).toHaveBeenCalledExactlyOnceWith(timeoutMs)
   })
 
-  it('cuts the wait before a retry short when the caller\'s signal fires', async () => {
-    const caller = new AbortController()
+  it('starts no request at or past the deadline', async () => {
+    const fetchMock = stubFetch({})
+    await expect(fetchOne('/api/thing', itemSchema, {
+      deadline: performance.now(),
+    })).rejects.toThrow('No time left to request https://api.example.test/api/thing')
+    expect(fetchMock).not.toHaveBeenCalled()
+  })
+
+  it('waits before a retry only until the deadline, and does not retry past it', async () => {
+    // on a fake clock: a real timer may fire a fraction of a millisecond early
+    vi.useFakeTimers({
+      toFake: ['performance', 'setTimeout'],
+    })
     const fetchMock = vi.fn<typeof fetch>(async () => {
       throw new TypeError('fetch failed')
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const outcome = fetchOne('/api/thing', itemSchema, { signal: caller.signal }).then(() => 'resolved', () => 'rejected')
-    await vi.waitFor(() => expect(fetchMock).toHaveBeenCalledOnce())
-    caller.abort()
-    // the retry would wait 300 ms; the abort ends the wait at once
-    const tooLate = new Promise(resolve => setTimeout(resolve, 100, 'still waiting'))
-    expect(await Promise.race([outcome, tooLate])).toBe('rejected')
-    expect(fetchMock).toHaveBeenCalledOnce()
-  })
+    const settled = fetchOne('/api/thing', itemSchema, { deadline: performance.now() + 50 })
+      .then(() => 'resolved', (error: unknown) => String(error))
+    // the retry would have waited 300 ms
+    await vi.advanceTimersByTimeAsync(50)
 
-  it('starts no request once the caller\'s signal has fired', async () => {
-    const fetchMock = stubFetch({})
-    await expect(fetchOne('/api/thing', itemSchema, {
-      signal: AbortSignal.abort(),
-    })).rejects.toThrow()
-    expect(fetchMock).not.toHaveBeenCalled()
+    expect(await settled).toContain('No time left to request')
+    expect(fetchMock).toHaveBeenCalledOnce()
   })
 
   it('recovers from a transient 5xx (build-time flake protection)', async () => {

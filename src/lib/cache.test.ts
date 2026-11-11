@@ -147,12 +147,11 @@ describe('revalidatePosts', () => {
   })
 
   it.each(['/api/posts', '/api/post/beta', '/api/categories'])('gives up when %s outlasts the budget, expiring nothing and starting no request after', async (slowPath) => {
-    vi.stubEnv('REVALIDATE_READ_BUDGET_MS', '100')
     const api = stubApi(['alpha', 'beta'], async (path, init, answer) => path === slowPath
       ? hang(init)
       : answer())
 
-    expect(await revalidatePosts()).toEqual({ ok: false, message: 'reading the content API took longer than 100 ms' })
+    expect(await revalidatePosts({ budgetMs: 100 })).toEqual({ ok: false, message: 'reading the content API took longer than 100 ms' })
     expect(revalidateTag).not.toHaveBeenCalled()
 
     // longer than the fetcher's waits between retries
@@ -160,20 +159,130 @@ describe('revalidatePosts', () => {
     await new Promise(resolve => setTimeout(resolve, 1000))
     expect(api.mock.calls.length).toBe(requests)
   })
+})
+
+// The budget on the clock alone. The clock is fake and only the API stub
+// moves it, so each row is exact; it moves performance.now() and the wait
+// before a retry together. AbortSignal.timeout is not faked and never
+// fires here, so nothing below is the timers' doing.
+describe('revalidatePosts, with the budget running out between requests', () => {
+  const BUDGET_MS = 1_000
+  const OUT_OF_TIME = { ok: false, message: 'reading the content API took longer than 1000 ms' }
+
+  beforeEach(() => {
+    vi.useFakeTimers({
+      toFake: ['performance', 'setTimeout'],
+    })
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
+  })
+
+  /** The outcome of a run in which each request takes `cost(path)` ms on the clock. */
+  async function runWith(slugs: string[], handle: Handler) {
+    const api = stubApi(slugs, handle)
+    const outcome = revalidatePosts({ budgetMs: BUDGET_MS })
+    await vi.runAllTimersAsync()
+    return { api, result: await outcome }
+  }
+
+  /** `respond`, after `ms` on the clock. */
+  const taking = (ms: number, respond: () => Response) => {
+    vi.advanceTimersByTime(ms)
+    return respond()
+  }
+
+  it('expires nothing when the last read ends exactly at the deadline', async () => {
+    const { api, result } = await runWith(['alpha'], (path, _init, answer) => taking(path === '/api/categories'
+      ? 0
+      : 500, answer))
+
+    expect(result).toEqual(OUT_OF_TIME)
+    expect(pathsOf(api)).toEqual(['/api/posts', '/api/categories', '/api/post/alpha'])
+    expect(revalidateTag).not.toHaveBeenCalled()
+  })
+
+  it('requests no post once the list has used the budget up', async () => {
+    const { api, result } = await runWith(['alpha', 'beta'], (_path, _init, answer) => taking(BUDGET_MS, answer))
+
+    expect(result).toEqual(OUT_OF_TIME)
+    expect(pathsOf(api)).toEqual(['/api/posts'])
+    expect(revalidateTag).not.toHaveBeenCalled()
+  })
+
+  it('requests nothing more once one read has used the budget up, and waits for the reads in flight', async () => {
+    let inFlight = 0
+    const slugs = Array.from({ length: 9 }, (_, i) => `post-${i + 1}`)
+    const { api, result } = await runWith(slugs, async (path, _init, answer) => {
+      if (path === '/api/posts')
+        return answer()
+      inFlight++
+      // the four that start together are all in flight before any ends
+      await Promise.resolve()
+      inFlight--
+      return taking(path === '/api/post/post-1'
+        ? BUDGET_MS
+        : 0, answer)
+    })
+
+    expect(result).toEqual(OUT_OF_TIME)
+    expect(pathsOf(api)).toEqual([
+      '/api/posts',
+      '/api/categories',
+      '/api/post/post-1',
+      '/api/post/post-2',
+      '/api/post/post-3',
+    ])
+    expect(inFlight).toBe(0)
+    expect(revalidateTag).not.toHaveBeenCalled()
+  })
 
   it.each([
-    [undefined, 25_000],
-    ['999999', 25_000],
-    ['not a number', 25_000],
-    ['50', 50],
-  ])('takes REVALIDATE_READ_BUDGET_MS=%j only to shorten the 25 s budget', async (override, budgetMs) => {
-    vi.stubEnv('REVALIDATE_READ_BUDGET_MS', override)
-    const timeout = vi.spyOn(AbortSignal, 'timeout')
-    stubApi(['alpha'])
+    [
+      'a 5xx',
+      () => new Response('oops', { status: 503 }),
+    ],
+    [
+      'a 2xx that is not JSON',
+      () => new Response('<html>gateway error</html>'),
+    ],
+    [
+      'a network error',
+      () => {
+        throw new TypeError('fetch failed')
+      },
+    ],
+  ])('does not retry %s once the budget is used up', async (_name, fail) => {
+    const { api, result } = await runWith(['alpha'], () => taking(BUDGET_MS, fail))
 
-    await revalidatePosts()
+    expect(result).toEqual(OUT_OF_TIME)
+    expect(pathsOf(api)).toEqual(['/api/posts'])
+    expect(revalidateTag).not.toHaveBeenCalled()
+  })
 
-    expect(timeout).toHaveBeenNthCalledWith(1, budgetMs)
-    timeout.mockRestore()
+  it('sends no second request when the deadline passes during the wait before the retry', async () => {
+    // 200 ms are left after the failure; the wait before a retry is 300 ms
+    const { api, result } = await runWith(['alpha'], () => taking(BUDGET_MS - 200, () => new Response('oops', { status: 503 })))
+
+    expect(result).toEqual(OUT_OF_TIME)
+    expect(pathsOf(api)).toEqual(['/api/posts'])
+    expect(revalidateTag).not.toHaveBeenCalled()
+  })
+
+  it('retries within the budget, and expires the tag when the retry reads', async () => {
+    let listAnswers = 0
+    const { api, result } = await runWith(['alpha'], (path, _init, answer) => path === '/api/posts' && listAnswers++ === 0
+      ? taking(100, () => new Response('oops', { status: 503 }))
+      : answer())
+
+    expect(result).toEqual({ ok: true })
+    expect(pathsOf(api)).toEqual([
+      '/api/posts',
+      '/api/posts',
+      '/api/categories',
+      '/api/post/alpha',
+    ])
+    expect(revalidateTag).toHaveBeenCalledOnce()
   })
 })

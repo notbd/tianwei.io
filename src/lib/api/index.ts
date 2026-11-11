@@ -29,12 +29,12 @@ const CACHED: FetchOptions = {
  * Plain `cache: 'no-store'`, nothing else: Next drops both settings, with a
  * warning, when it meets one next to `next.revalidate`.
  */
-export type UncachedRead = { signal: AbortSignal }
+export type UncachedRead = { deadline: number }
 
 function readOptions(uncached: UncachedRead | undefined): FetchOptions {
   return uncached === undefined
     ? CACHED
-    : { cache: 'no-store', signal: uncached.signal }
+    : { cache: 'no-store', deadline: uncached.deadline }
 }
 
 /** Published posts, newest first, without their content. */
