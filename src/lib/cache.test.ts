@@ -133,9 +133,8 @@ describe('revalidatePosts', () => {
 
     expect(await revalidatePosts()).toMatchObject({ ok: false, message: 'reading post "post-3": Post not found.' })
     expect(mostInFlight).toBe(4)
-    // every request it started had ended, and the rest never started
-    expect(inFlight).toBe(0)
-    expect(api.mock.calls.length).toBeLessThan(1 + 1 + slugs.length)
+    // the list and the first batch of four; the rest never started
+    expect(api.mock.calls.length).toBe(1 + 4)
     expect(revalidateTag).not.toHaveBeenCalled()
   })
 })

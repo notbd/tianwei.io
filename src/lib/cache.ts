@@ -35,57 +35,28 @@ export async function revalidatePosts(): Promise<{ ok: true } | { ok: false, mes
 
 async function readEverything(): Promise<void> {
   const posts = await getPosts('uncached')
-  await forEachConcurrently([
-    {
-      what: 'the categories',
-      read: async () => getCategories('uncached'),
-    },
-    ...posts.map(post => ({
-      what: `post "${post.slug}"`,
-      read: async () => getPost(post.slug, 'uncached'),
-    })),
-  ], READ_CONCURRENCY, async ({ what, read }) => {
-    try {
-      await read()
-    }
-    catch (error) {
-      throw new Error(`reading ${what}: ${messageOf(error)}`, { cause: error })
-    }
-  })
+  const reads = [
+    async () => reading('the categories', getCategories('uncached')),
+    ...posts.map(post => async () => reading(`post "${post.slug}"`, getPost(post.slug, 'uncached'))),
+  ]
+  // a batch at a time: a failed read rejects its batch at once, and no later batch starts
+  for (let first = 0; first < reads.length; first += READ_CONCURRENCY)
+    await Promise.all(reads.slice(first, first + READ_CONCURRENCY).map(async start => start()))
   console.info(`[revalidate] read the list, ${posts.length} posts and the categories`)
+}
+
+/** Waits for a read under way; its failure says what was being read. */
+async function reading(what: string, pending: Promise<unknown>): Promise<void> {
+  try {
+    await pending
+  }
+  catch (error) {
+    throw new Error(`reading ${what}: ${messageOf(error)}`, { cause: error })
+  }
 }
 
 function messageOf(error: unknown): string {
   return error instanceof Error
     ? error.message
     : String(error)
-}
-
-/**
- * Runs `task` over `items` with at most `limit` in flight. After the first
- * failure no further item starts; the tasks already running are waited
- * for, then that failure is thrown.
- */
-async function forEachConcurrently<T>(
-  items: readonly T[],
-  limit: number,
-  task: (item: T) => Promise<void>,
-): Promise<void> {
-  const queue = [...items]
-  const failures: unknown[] = []
-  const worker = async () => {
-    for (let item = queue.shift(); item !== undefined && failures.length === 0; item = queue.shift()) {
-      try {
-        await task(item)
-      }
-      catch (error) {
-        failures.push(error)
-      }
-    }
-  }
-  await Promise.all(Array.from({
-    length: Math.min(limit, queue.length),
-  }, worker))
-  if (failures.length > 0)
-    throw failures[0]
 }
