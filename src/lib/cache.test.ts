@@ -179,7 +179,7 @@ describe('revalidatePosts, with the budget running out between requests', () => 
     vi.useRealTimers()
   })
 
-  /** The outcome of a run in which each request takes `cost(path)` ms on the clock. */
+  /** The outcome of a run in which `handle` answers each request, moving the clock as it likes. */
   async function runWith(slugs: string[], handle: Handler) {
     const api = stubApi(slugs, handle)
     const outcome = revalidatePosts({ budgetMs: BUDGET_MS })
@@ -213,20 +213,30 @@ describe('revalidatePosts, with the budget running out between requests', () => 
 
   it('requests nothing more once one read has used the budget up, and waits for the reads in flight', async () => {
     let inFlight = 0
+    let inFlightWhenSettled: number | undefined
     const slugs = Array.from({ length: 9 }, (_, i) => `post-${i + 1}`)
-    const { api, result } = await runWith(slugs, async (path, _init, answer) => {
+    const api = stubApi(slugs, async (path, _init, answer) => {
       if (path === '/api/posts')
         return answer()
       inFlight++
-      // the four that start together are all in flight before any ends
-      await Promise.resolve()
+      // the four that start together are all in flight before any ends;
+      // then post-1 uses the budget up, and the others end 10 ms past the deadline
+      if (path === '/api/post/post-1') {
+        await Promise.resolve()
+        inFlight--
+        return taking(BUDGET_MS, answer)
+      }
+      await new Promise(resolve => setTimeout(resolve, BUDGET_MS + 10))
       inFlight--
-      return taking(path === '/api/post/post-1'
-        ? BUDGET_MS
-        : 0, answer)
+      return answer()
     })
+    const outcome = revalidatePosts({ budgetMs: BUDGET_MS }).then((result) => {
+      inFlightWhenSettled = inFlight
+      return result
+    })
+    await vi.runAllTimersAsync()
 
-    expect(result).toEqual(OUT_OF_TIME)
+    expect(await outcome).toEqual(OUT_OF_TIME)
     expect(pathsOf(api)).toEqual([
       '/api/posts',
       '/api/categories',
@@ -234,7 +244,7 @@ describe('revalidatePosts, with the budget running out between requests', () => 
       '/api/post/post-2',
       '/api/post/post-3',
     ])
-    expect(inFlight).toBe(0)
+    expect(inFlightWhenSettled).toBe(0)
     expect(revalidateTag).not.toHaveBeenCalled()
   })
 

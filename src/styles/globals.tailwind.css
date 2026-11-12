@@ -6,7 +6,8 @@
 /* Theme customization */
 @theme inline {
   --font-sans: var(--font-rubik);
-  --font-mono: var(--font-berkeley-mono);
+  /* the variable is set on post bodies only (mono.ts); elsewhere a monospace fallback */
+  --font-mono: var(--font-berkeley-mono, ui-monospace, SFMono-Regular, Menlo, Consolas, monospace);
 }
 
 /*
