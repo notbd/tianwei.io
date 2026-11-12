@@ -141,12 +141,20 @@ describe('fetchOne', () => {
     })
     vi.stubGlobal('fetch', fetchMock)
 
-    const settled = fetchOne('/api/thing', itemSchema, { deadline: performance.now() + 50 })
-      .then(() => 'resolved', (error: unknown) => String(error))
+    // not awaited: a wait that is not cut short would leave it pending
+    let outcome = 'still waiting'
+    void fetchOne('/api/thing', itemSchema, { deadline: performance.now() + 50 }).then(
+      () => {
+        outcome = 'resolved'
+      },
+      (error: unknown) => {
+        outcome = String(error)
+      },
+    )
     // the retry would have waited 300 ms
     await vi.advanceTimersByTimeAsync(50)
 
-    expect(await settled).toContain('No time left to request')
+    expect(outcome).toContain('No time left to request')
     expect(fetchMock).toHaveBeenCalledOnce()
   })
 
