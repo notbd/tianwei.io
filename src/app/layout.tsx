@@ -1,6 +1,6 @@
+import { ThemeProvider } from 'next-themes'
 import { RootFooter } from '@/components/RootFooter'
 import { RootHeader } from '@/components/RootHeader'
-import { ThemeProvider } from '@/components/ThemeProvider'
 import { DEFAULT_THEME, THEMES } from '@/lib/theme'
 import { cn } from '@/lib/utils'
 import { rubik } from '@/styles/fonts/sans'
@@ -9,9 +9,12 @@ import '@/styles/globals.tailwind.css'
 
 export { metadata, viewport } // declared in metadata.ts
 
-// Mirrors the stored theme choice (next-themes' localStorage key) into a
-// data attribute BEFORE first paint, so the toggle icon is correct without
-// any server-side state. Runs synchronously as the first thing in <body>.
+// The theme choice lives entirely on the client (localStorage). No cookies:
+// the server renders theme-agnostic markup, which keeps every route
+// statically renderable. next-themes' own inline script applies the `dark`
+// class before paint. The script below, the first thing in <body>, mirrors
+// the stored choice (next-themes' localStorage key) into `data-theme-choice`
+// before that paint too, so CSS shows the right toggle icon.
 const themeChoiceScript = `(function(){var c=${JSON.stringify(DEFAULT_THEME)};try{var t=localStorage.getItem('theme');if(${JSON.stringify(THEMES)}.indexOf(t)>=0)c=t}catch(e){}document.documentElement.setAttribute('data-theme-choice',c)})()`
 
 type RootLayoutProps = { children: React.ReactNode }
@@ -41,7 +44,14 @@ export default function RootLayout(
         <script dangerouslySetInnerHTML={{ __html: themeChoiceScript }} />
 
         {/* theme */}
-        <ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme={DEFAULT_THEME} // used when the user has no localStorage preference
+          enableSystem
+          // colors switch at once, inside the toggle's cross-fade, instead of
+          // each element running its own hover transition
+          disableTransitionOnChange
+        >
 
           {/* content */}
           <div
