@@ -1,98 +1,126 @@
-# Release verification: full-chain staging before any merge to main
+# Release verification: rehearse the whole chain before any merge to main
 
-Goal: everything that reaches `main` has been exercised end-to-end
-(content → database → API → frontend → browser) and **manually signed
-off**. Nothing here touches production data or production traffic.
+Goal: everything that reaches `main` has been exercised end to end
+(content, database, API, frontend, browser) and **manually signed off**.
+Nothing here touches production data or production traffic.
 
-## The staging chain
+## The rehearsed stack
 
 ```mermaid
-flowchart LR
-  content["content (dev branch)<br/>pnpm db:migrate<br/>pnpm sync:prod"]
-  db[("Neon branch database")]
-  api["api (dev branch)<br/>wrangler dev :8787"]
-  web["frontend (dev branch)<br/>next build + start :3000<br/>Playwright + manual pass"]
+flowchart TB
+  subgraph content ["tianwei-io-content: pnpm rehearse"]
+    run["the deploy's own steps"]
+    db[("Postgres in that process<br/>served on 127.0.0.1")]
+  end
+  api["tianwei-io-api<br/>wrangler dev"]
+  web["tianwei.io<br/>next build, next start"]
 
-  content -- "DATABASE_URL=$STAGING_DB" --> db
-  api -- "DATABASE_URL in .dev.vars" --> db
-  web -- "CONTENT_API_URL" --> api
-  content -- "FRONTEND_URL, for check:contract<br/>and frontend:revalidate" --> web
+  run -- "migrate, sync" --> db
+  db -- "posts" --> api
+  api -- "posts" --> web
+  run -- "contract check,<br/>revalidate, reconcile" --> web
 ```
 
-The one piece of infrastructure needed: a **Neon branch**: a
-copy-on-write fork of the production database (free, instant, safe to
-migrate and wipe). Create once in the Neon console: Branches → New branch
-from `main` → copy its connection string (below: `$STAGING_DB`).
+Everything runs on this machine, on `127.0.0.1`, from the three
+checkouts as they are on disk. The database is built in memory from the
+content engine's migrations and files, so there is nothing to create or
+clean up ([its ADR-0004](https://github.com/notbd/tianwei-io-content/blob/main/docs/adr/0004-in-process-local-database.md)).
 
-## Steps (run in order, each from its own repo)
+## Steps
 
-### 1. Content engine → staging DB
+### 1. Rehearse the release
+
+Put the three checkouts, side by side, on what is about to ship. In each
+of `tianwei-io-content`, `tianwei-io-api` and `tianwei.io`:
 
 ```shell
-cd tianwei-io-content   # dev branch
-pnpm install && pnpm lint && pnpm typecheck && pnpm test
-
-DATABASE_URL=$STAGING_DB pnpm db:migrate     # applies pending migrations
-DATABASE_URL=$STAGING_DB pnpm sync:prod      # transactional reconcile
+git fetch
+git switch --detach origin/<the branch to release>   # --detach: another worktree may hold the branch
+pnpm install
 ```
 
-Expect: `Completed: N upserted, M deleted`. Spot-check a row in the Neon
-SQL console: `created_at` values are ET-midnight instants (04:00/05:00 UTC).
+Before starting:
 
-### 2. API → local Worker on the staging DB
+- Nothing else may be using the frontend checkout's production build: no
+  `next start`, screenshots or e2e there. The rehearsal replaces it.
+- The frontend's `.env.local` has `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME`.
+  Without it the build fails and names the variable.
+
+Then, in the content engine:
 
 ```shell
-cd tianwei-io-api       # dev branch
-pnpm install && pnpm lint && pnpm typecheck && pnpm test
-
-# .dev.vars: DATABASE_URL=$STAGING_DB, NODE_ENV=production (+ PREVIEW_SECRET=... to test previews)
-pnpm dev                 # wrangler dev on http://127.0.0.1:8787
+cd tianwei-io-content
+pnpm rehearse --keep
 ```
 
-Contract check against live production. `pnpm smoke` compares the parsed
-JSON of two deployments (key order ignored, the `/health` body skipped), so
-it only passes when this release carries no content change; with content
-changes, run it before step 1's sync or read the diff as the expected
-content delta:
+It starts the stack and plays a content deploy against it: the contract
+check, a sync, the revalidation, the reconcile of every page, and the
+failures a deploy must catch (an API that cannot read the database, a
+post that passes the contract but fails to render). What it does, what
+it needs and how to stop it are in
+[the content engine's README](https://github.com/notbd/tianwei-io-content/blob/main/README.md)
+(Rehearsing a release).
+
+Expect `Every scenario passed`, then the addresses of the stack it now
+holds, both secrets and a draft's slug. Leave it running for steps 2
+and 3. A run that fails prints the scenario, the reason and the last
+lines each service logged, and exits non-zero.
+
+### 2. Browser tests against the held stack
 
 ```shell
-pnpm smoke https://tio.twz.app http://127.0.0.1:8787
+cd tianwei.io
+CONTENT_API_URL=<the API address it printed> pnpm test:e2e
 ```
 
-Expect 11/11. One mismatch on `/api/__dev/posts` means the local
-`.dev.vars` has `NODE_ENV=development` (the value `.dev.vars.example` ships
-with; production answers 404 there). Set `NODE_ENV=production` in
-`.dev.vars` and restart `pnpm dev` for a clean comparison.
+Port 3000 must be free: Playwright starts its own `next start` there on
+the build the rehearsal made, and with another server already on that
+port it would test that one without saying so.
 
-### 3. Frontend → against the local Worker
+### 3. Manual sign-off checklist
 
-```shell
-cd tianwei.io           # dev branch
-pnpm install && pnpm lint && pnpm typecheck && pnpm test
-
-CONTENT_API_URL=http://127.0.0.1:8787 pnpm build
-CONTENT_API_URL=http://127.0.0.1:8787 pnpm test:e2e   # Playwright smoke
-CONTENT_API_URL=http://127.0.0.1:8787 pnpm start      # manual pass
-```
-
-### 4. Manual sign-off checklist (http://localhost:3000)
+On the frontend address the rehearsal printed:
 
 - [ ] Home, /posts, each post render; dates show the authored day (ET)
-- [ ] Build output listed every post under `● /posts/[slug]` (none dropped)
 - [ ] Theme toggle cycles and survives reload
 - [ ] /feed.xml valid, /sitemap.xml lists posts + categories
 - [ ] /categories/<name> filters correctly
 - [ ] A post's `opengraph-image` renders (append `/opengraph-image` to its URL)
-- [ ] Draft preview: `/api/preview?secret=...&slug=<slug>` shows the banner; `/api/preview/disable` exits
-- [ ] Contract: in the content repo,
-      `FRONTEND_URL=http://localhost:3000 pnpm check:contract` passes
-- [ ] Revalidation round-trip: re-run step 1's sync with an edited post,
-      then in the content repo run
-      `FRONTEND_URL=http://localhost:3000 pnpm frontend:revalidate` (its
-      `REVALIDATION_SECRET` must equal the one in this repo's
-      `.env.local`). It revalidates twice, a minute apart, then
-      reconciles, and passes only when each post page shows the synced
-      body
+- [ ] Draft preview: `/api/preview?secret=<the PREVIEW_SECRET it printed>&slug=<the draft it printed>`
+      shows the banner; `/api/preview/disable` exits
+
+Then press Ctrl-C in the rehearsal's terminal; it stops the stack and
+cleans up after itself.
+
+### 4. Compare with production (only for some releases)
+
+Do this when the release changes the API, the table's schema, or the
+content engine's sync or database code. `pnpm smoke` compares the same
+data under the old code and the new, so it needs a database with
+production's data: a **Neon branch**, a copy-on-write fork of the
+production database (Neon console: Branches, New branch from `main`,
+copy its connection string; below `<branch>`).
+
+```shell
+cd tianwei-io-content
+DATABASE_URL=<branch> pnpm db:migrate     # applies pending migrations
+DATABASE_URL=<branch> pnpm sync:prod      # the transactional sync
+
+cd ../tianwei-io-api
+# .dev.vars: DATABASE_URL=<branch>, NODE_ENV=production
+pnpm dev                                  # wrangler dev on http://127.0.0.1:8787
+pnpm smoke https://tio.twz.app http://127.0.0.1:8787
+```
+
+Expect 11/11. `pnpm smoke` compares the parsed JSON of the two (key
+order ignored, the `/health` body skipped), so it passes only when the
+release carries no content change; with content changes, run it before
+the sync or read the diff as the expected content delta. One mismatch on
+`/api/__dev/posts` means `.dev.vars` has `NODE_ENV=development`
+(production answers 404 there).
+
+This is also the only time before a release that `pnpm sync:prod` and
+its `pg` driver run against a real database.
 
 ### 5. Merge (only after sign-off)
 
@@ -108,8 +136,9 @@ content deploy does and checks is in the Deploy section of
 Merging is always a human action on the PR page. Each repo's CI must be
 green: lint, typecheck and tests in all three, plus the build and
 Playwright in the frontend, the contract check in the content engine and
-the deploy script's check in the API. Green CI is necessary, not
-sufficient: this runbook is the sufficient part.
+the deploy script's check in the API. This runbook does not repeat them.
+Green CI is necessary, not sufficient: this runbook is the sufficient
+part.
 
 Optional hardening: GitHub → Settings → Branches → protect `main`
 (require PR + passing checks) on all three repos, so nothing can land
@@ -117,5 +146,6 @@ without going through this flow.
 
 ## Cleanup
 
-Delete or reset the Neon branch afterwards (Branches → … → Reset from
-parent) so the next verification starts from fresh production data.
+Only after step 4: delete or reset the Neon branch (Branches → … →
+Reset from parent) so the next comparison starts from fresh production
+data. The rehearsal leaves nothing behind.

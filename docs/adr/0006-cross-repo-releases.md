@@ -92,17 +92,19 @@ it was and turns the deploy red.
 
 ### Reconcile: every page, and each post body by its hash
 
-Each `/posts/<slug>` page carries
+Each `/posts/<slug>` page carries exactly one
 `<meta name="post-body-sha256" content="...">`: the SHA-256, in lowercase
 hex, of the post's `content` exactly as the API returned it (UTF-8, not
-trimmed). The metadata and the page share one read (`React.cache`), so
-the hash describes the body on the page. Static regeneration stores a
+trimmed). The page component renders the tag inside the article, from
+the same post object it renders the body from, so the hash describes the
+body on the page. Static regeneration stores a
 page only when its whole render succeeds, so a body that fails to render
 leaves the previous page, and its previous hash, in place.
 
 After its second revalidation the content deploy reconciles: it requests
 every page the sitemap lists and compares each post page's hash with the
-body it just synced. The full list of checks, with their timeouts and
+body it just synced. A post page with no tag, or with more than one,
+fails like a wrong hash. The full list of checks, with their timeouts and
 retries, is in [tianwei-io-content's README](https://github.com/notbd/tianwei-io-content/blob/main/README.md)
 (Deploy).
 
@@ -119,7 +121,8 @@ The API's deploy makes the new Worker version live first, then verifies
 it, and restores the version that was live before when the verification
 fails (steps in [tianwei-io-api's README](https://github.com/notbd/tianwei-io-api/blob/main/README.md),
 Deploy). When the commands end normally, a bad version is live for about
-two minutes: the 90 s verification budget plus the rollback (an estimate;
+two minutes: the verification budget (tianwei-io-api's README, Deploy)
+plus the rollback (an estimate;
 the job's limit is 15 minutes). In that window the calls that reach the
 API are the frontend's builds, the read before expiry (which then expires
 nothing), the renders right after a content deploy's expiry, and draft
@@ -149,13 +152,19 @@ writing side produces.** It holds on every edge between the repos:
   lists, with post pages at `/posts/<slug>`, `/feed.xml`, each post's
   `/opengraph-image`, a 404 for a draft).
 
-The test for a change has two questions. Once this side's change is
-live, can every other live side its data flows to (not only the next
-one) keep working with what this side produces, now and later? And can
-this side keep working with what the live sides it reads from (directly
-or through another side) can produce today? If both are yes, this side
-ships first. If either is no, the other side changes first. A rename or
-a type change is two releases: add the new one, then remove the old one.
+A side may ship first only when both answers are yes:
+
+1. Downstream: once it is live, can every side its data reaches, not
+   only the next one, keep working with what it produces, now and later?
+2. Upstream: can it keep working with what the live sides it reads from,
+   directly or through another side, can produce today?
+
+If either answer is no, the other side changes first. A rename or a type
+change is two releases: add the new one, then remove the old one.
+
+Think of a paper form passed between two desks: before the sender fills
+in a new box, the receiver must accept forms that have it; before the
+sender stops filling in a box, the receiver must stop needing it.
 
 | Change | Ships first | If the order is wrong, who notices and when |
 | --- | --- | --- |
@@ -165,7 +174,9 @@ a type change is two releases: add the new one, then remove the old one.
 | Drop a column | The API stops reading it, then the content engine drops it | Content first: right after the migration, the same deploy's read before expiry fails (502), with the database already changed and the API failing until it is fixed |
 | Drop a wire field | The frontend stops reading it, then the API drops it | API first: its own deploy verification passes; the next content deploy's read before expiry (502) or the next frontend build fails |
 | Remove an MDX component, or tighten its attributes | The posts stop using it or meet the new rule, then the frontend changes | Frontend first: its own pull request's build fails, since it renders every published post. When only a draft uses it, that build is green (it does not render drafts), and the next content deploy stops at the contract gate with the database untouched |
-| Widen a value's range (a field may be null, an enum gains a value) | The reader accepts it, then the writer produces it | Writer first. Table: the same content deploy's read before expiry fails (502), with the database written and the site unchanged. Wire: the API deploy is green; the next content deploy's read before expiry (502) or the next frontend build fails. MDX attribute: the content pull request's `check:contract` fails, and the deploy is refused before writing |
+| Widen a value's range in the table (a column may be null, an enum gains a value) | The reader accepts it, then the writer produces it | Writer first: the same content deploy's read before expiry fails (502), with the database written and the site unchanged |
+| Widen a value's range on the wire | The reader accepts it, then the writer produces it | Writer first: the API deploy is green; the next content deploy's read before expiry (502) or the next frontend build fails |
+| Widen an MDX attribute's range | The reader accepts it, then the writer produces it | Writer first: the content pull request's `check:contract` fails, and the deploy is refused before writing |
 | Narrow a value's range (no longer null, one enum value fewer; table or wire) | The writer stops producing the old values and clears the stored ones, then the reader tightens | Reader first. If a stored value is already old, a frontend that tightens fails at once, in its own pull request's build against the production API. Otherwise the reader stays green until the writer next produces an old value; then the read before expiry fails (502) or a frontend build fails. The API does not validate the rows it reads, so narrowing only the table is never caught. Only this rule prevents it |
 | Rename or change anything the frontend gives the content deploy (the last item of the list above) | Before their first release, both sides together; after it, as a rename | The content deploy's contract gate, the revalidation (a 400, or a 200 without `posts` in `revalidated`) or the reconcile fails |
 
@@ -182,8 +193,8 @@ deploy before it migrates. To recover:
   not go live. Once the fix's production build is Ready, promote that
   deployment (the Manage button on the project's production deployment,
   or `vercel promote <deployment URL>`), which turns that assignment back
-  on. Do not pick the deployment that was rolled back.
-  (https://vercel.com/docs/instant-rollback)
+  on. Do not pick the deployment that was rolled back
+  ([Vercel docs, Instant Rollback](https://vercel.com/docs/instant-rollback)).
 
 Either way, once `https://tianwei.io/contract.json` answers 200, run the
 content deploy by hand on `main` (Actions > Deploy Content to Neon > Run
@@ -227,13 +238,14 @@ workflow): the changes it stopped reach the database only that way.
 10. The parts of the five steps the contract cannot carry (steps 1 and 3,
     how step 4 treats `children` and `key`, what step 5 means) are
     written once in each repo, and the shared test inputs are copied into
-    both; no machine checks that the copies agree. Each repo upgrades its
-    own `@mdx-js/mdx` and `remark-gfm`, and one side could add a syntax
-    plugin without the other. A drift fails safe: a stricter content
-    engine refuses more, a stricter frontend is caught by the reconcile.
-    A draft passes only the contract gate: the reconcile checks only that
+    both; no machine checks that the copies agree. Each repo also
+    upgrades its own `@mdx-js/mdx` and `remark-gfm`, and one side could
+    add a syntax plugin without the other. A drift fails safe: a stricter
+    content engine refuses more, a stricter frontend is caught by the
+    reconcile.
+11. A draft passes only the contract gate: the reconcile checks only that
     its page is a 404, and the frontend's build does not render it.
-11. A manual `DATABASE_URL=... pnpm sync:prod` skips the contract gate,
+12. A manual `DATABASE_URL=... pnpm sync:prod` skips the contract gate,
     the revalidation and the reconcile. That manual path is deliberate.
 
 ## Consequences
@@ -242,14 +254,18 @@ workflow): the changes it stopped reach the database only that way.
   `<details>` cannot be written until it is added to the frontend's
   component table with a strict attribute schema, and the frontend ships
   first (table above).
-- The content repo's pull-request check reads the production frontend,
-  and only warns when the frontend has no contract to give (a 404 or a
-  network error, Decision 1); any other failure fails it. Its deploy needs
-  the frontend, as it did before.
+- The content repo's pull-request check reads the production frontend
+  (Decision 1 says when it only warns); its deploy needs the frontend,
+  as it did before.
 - The content deploy's frontend is a constant (`https://tianwei.io`), not
   a secret, so it cannot be pointed at another environment by mistake.
 - This decision itself ships frontend first: the content deploy's gate
   reads the frontend's `/contract.json`.
-- Not chosen: a shared package (ADR-0001 says why), and running all
-  three repos together in each pull request, which is deferred; it would
-  not cover failures at production time.
+- Not chosen: a shared package (ADR-0001 says why).
+- Deferred until the three repos have shipped this release: running the
+  three together in pull requests. The content repo's pull requests will
+  then rehearse a deploy (`pnpm rehearse`) against the other two repos'
+  `main`; the API's and the frontend's will not. That moves gaps 2 and 3
+  from "found by the deploy" to "found before the merge", at a price: a
+  content pull request turns red when the API's or the frontend's `main`
+  cannot start. It will not cover failures at production time.

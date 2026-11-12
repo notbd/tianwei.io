@@ -27,8 +27,8 @@ The **Next.js data cache is the only cache**:
   (Deploy).
 - `{ expire: 0 }` expires the entries outright, so the next request to
   each page blocks on a fresh render; `'max'` would have served that
-  visitor the previous version once (stale-while-revalidate,
-  https://nextjs.org/docs/app/api-reference/functions/revalidateTag).
+  visitor the previous version once (stale-while-revalidate;
+  [Next.js docs, revalidateTag](https://nextjs.org/docs/app/api-reference/functions/revalidateTag)).
 - The API sets `Cache-Control: no-store` on `/api/*`, deliberately
   forbidding edge/browser caching so this decision is enforced, not just
   hoped for.
@@ -53,14 +53,13 @@ The **Next.js data cache is the only cache**:
   | After the expiry | The render succeeds | The render fails |
   | --- | --- | --- |
   | A page generated before | The first request gets the new page (`x-vercel-cache: REVALIDATED`) | The last good version, with a 200 (`STALE`) |
-  | A page never generated | | 500 |
+  | A page never generated | Not measured (an ordinary on-demand render) | 500 |
 
   So on Vercel a post that cannot render keeps showing its previous
   version, and only the deploy's reconcile, which compares each post
   body's hash, tells that apart from success (ADR-0006). Vercel is moving
   its Data Cache to its Runtime Cache
-  (https://vercel.com/changelog/data-cache-is-moving-to-runtime-cache,
-  2026-10-30); these results predate that move and should be measured
+  ([Vercel changelog, 2026-10-30](https://vercel.com/changelog/data-cache-is-moving-to-runtime-cache)); these results predate that move and should be measured
   again after it.
 - The same expiry makes a race possible: a page that was rendering when
   the sync committed can read the old rows and store its result after
