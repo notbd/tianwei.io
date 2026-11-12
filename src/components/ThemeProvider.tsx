@@ -2,7 +2,7 @@
 
 import type { ThemeProviderProps as NextThemeProviderProps } from 'next-themes'
 import { ThemeProvider as NextThemesProvider } from 'next-themes'
-import { DEFAULT_THEME } from '@/lib/constants'
+import { DEFAULT_THEME } from '@/lib/theme'
 
 /**
  * Thin wrapper around next-themes.

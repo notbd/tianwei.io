@@ -14,7 +14,7 @@ The author wants everything presented in US Eastern time.
 ## Decision
 
 - `DISPLAY_TIME_ZONE = 'America/New_York'` in
-  `src/lib/constants.ts` is the single source of truth for
+  `src/lib/dates.ts` is the single source of truth for
   how dates are **presented**. Storage remains UTC instants end to end.
 - All visible dates go through one helper, `formatPostDate()`
   (`src/lib/dates.ts`); components never call `toLocaleDateString`
