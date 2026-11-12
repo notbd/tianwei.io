@@ -2,7 +2,9 @@
 
 Goal: everything that reaches `main` has been exercised end to end
 (content, database, API, frontend, browser) and **manually signed off**.
-Nothing here touches production data or production traffic.
+The rehearsal runs on this machine only. Step 4 reads the production API
+(GET requests) and writes to a Neon branch; nothing here writes to
+production.
 
 ## The rehearsed stack
 
@@ -74,8 +76,8 @@ CONTENT_API_URL=<the API address it printed> pnpm test:e2e
 ```
 
 Port 3000 must be free: Playwright starts its own `next start` there on
-the build the rehearsal made, and with another server already on that
-port it would test that one without saying so.
+the build the rehearsal made. Outside CI, with another server already on
+that port, it would test that one without saying so.
 
 ### 3. Manual sign-off checklist
 
@@ -148,4 +150,9 @@ without going through this flow.
 
 Only after step 4: delete or reset the Neon branch (Branches → … →
 Reset from parent) so the next comparison starts from fresh production
-data. The rehearsal leaves nothing behind.
+data.
+
+The rehearsal stops its services and removes its lock and its temporary
+directory. It leaves one thing: the frontend checkout's `.next` is the
+build it made, against its own API address. Run `pnpm build` there again
+before using that checkout's production build for anything else.
