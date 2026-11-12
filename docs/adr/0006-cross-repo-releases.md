@@ -80,9 +80,9 @@ contract. Both repos test the same list of inputs against these steps.
 
 The frontend reads the post list, every post on it and the categories
 straight from the API (`cache: 'no-store'`), through the schemas its
-pages use, four requests at a time and within 25 s in all, retries
-included. Only when every read works does it expire the `posts` tag
-(ADR-0002); otherwise it expires nothing. Its statuses and bodies are in
+pages use, four requests at a time. Only when every read works does it
+expire the `posts` tag (ADR-0002); otherwise it expires nothing. Its
+statuses and bodies are in
 [this repo's README](../../README.md) (Revalidation API).
 
 Expiring first would leave every page to render against an API that may

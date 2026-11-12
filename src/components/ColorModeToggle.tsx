@@ -1,13 +1,13 @@
 'use client'
 
 import type { ComponentProps } from 'react'
-import type { Theme } from '@/lib/constants'
+import type { Theme } from '@/lib/theme'
 import { clsx } from 'clsx'
 import { LaptopMinimal, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect } from 'react'
 import { flushSync } from 'react-dom'
-import { DEFAULT_THEME, isTheme } from '@/lib/constants'
+import { DEFAULT_THEME, isTheme } from '@/lib/theme'
 
 const NEXT_THEME = {
   system: 'dark',

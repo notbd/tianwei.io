@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { authorComponents } from '@/components/mdx/MdxComponents'
-import { DISPLAY_TIME_ZONE } from '@/lib/constants'
+import { DISPLAY_TIME_ZONE } from '@/lib/dates'
 
 // What the content engine checks posts against before it syncs them: the
 // display time zone its dates must be anchored to, and the components a

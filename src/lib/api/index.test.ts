@@ -54,9 +54,9 @@ describe('endpoints', () => {
     })
   })
 
-  it('reads past the cache with plain no-store when given a deadline', async () => {
+  it('reads past the cache with plain no-store when asked for an uncached read', async () => {
     respond([])
-    await getPosts({ deadline: performance.now() + 1_000 })
+    await getPosts('uncached')
     expect(requested()).toEqual({
       url: 'https://api.example.test/api/posts',
       cache: 'no-store',

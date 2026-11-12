@@ -17,24 +17,13 @@ export async function generateStaticParams() {
   return categories.map(category => ({ category }))
 }
 
-// Route params may arrive percent-encoded; categories are slugified
-// (ASCII-safe) today, so this is future-proofing, not a hot path.
-function decodeCategoryParam(raw: string): string {
-  try {
-    return decodeURIComponent(raw)
-  }
-  catch {
-    return raw
-  }
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const label = categoryLabel(decodeCategoryParam((await params).category))
+  const label = categoryLabel((await params).category)
   return pageMetadata(label, `${label} by ${site.name}.`)
 }
 
 export default async function CategoryPage({ params }: PageProps) {
-  const category = decodeCategoryParam((await params).category)
+  const { category } = await params
 
   const [posts, categories] = await Promise.all([
     getPosts(),

@@ -22,7 +22,6 @@ beforeEach(() => {
 })
 
 afterEach(() => {
-  vi.useRealTimers()
   vi.restoreAllMocks()
   vi.unstubAllGlobals()
   vi.unstubAllEnvs()
@@ -99,63 +98,6 @@ describe('fetchOne', () => {
     expect(await fetchOne('/api/thing', itemSchema)).toEqual({ id: 4 })
     expect(fetchMock).toHaveBeenCalledTimes(2)
     expect(timeout).toHaveBeenCalledWith(10_000)
-  })
-
-  it.each([
-    ['its own limit without a deadline', undefined, 10_000],
-    ['its own limit when the deadline is further away', 60_000, 10_000],
-    ['the time left when that is less', 2_500.5, 2_501],
-    ['1 ms when less than that is left', 0.4, 1],
-  ])('times an attempt at %s', async (_name, msLeft, timeoutMs) => {
-    vi.spyOn(performance, 'now').mockReturnValue(1_000)
-    const timeout = vi.spyOn(AbortSignal, 'timeout')
-    stubFetch({
-      json: {
-        status: 'success',
-        data: { id: 1 },
-      },
-    })
-
-    await fetchOne('/api/thing', itemSchema, msLeft === undefined
-      ? {}
-      : { deadline: 1_000 + msLeft })
-
-    expect(timeout).toHaveBeenCalledExactlyOnceWith(timeoutMs)
-  })
-
-  it('starts no request at or past the deadline', async () => {
-    const fetchMock = stubFetch({})
-    await expect(fetchOne('/api/thing', itemSchema, {
-      deadline: performance.now(),
-    })).rejects.toThrow('No time left to request https://api.example.test/api/thing')
-    expect(fetchMock).not.toHaveBeenCalled()
-  })
-
-  it('waits before a retry only until the deadline, and does not retry past it', async () => {
-    // on a fake clock: a real timer may fire a fraction of a millisecond early
-    vi.useFakeTimers({
-      toFake: ['performance', 'setTimeout'],
-    })
-    const fetchMock = vi.fn<typeof fetch>(async () => {
-      throw new TypeError('fetch failed')
-    })
-    vi.stubGlobal('fetch', fetchMock)
-
-    // not awaited: a wait that is not cut short would leave it pending
-    let outcome = 'still waiting'
-    void fetchOne('/api/thing', itemSchema, { deadline: performance.now() + 50 }).then(
-      () => {
-        outcome = 'resolved'
-      },
-      (error: unknown) => {
-        outcome = String(error)
-      },
-    )
-    // the retry would have waited 300 ms
-    await vi.advanceTimersByTimeAsync(50)
-
-    expect(outcome).toContain('No time left to request')
-    expect(fetchMock).toHaveBeenCalledOnce()
   })
 
   it.each([

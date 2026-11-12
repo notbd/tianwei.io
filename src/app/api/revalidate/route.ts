@@ -5,7 +5,8 @@ import { POSTS_TAG } from '@/lib/api'
 import { revalidatePosts } from '@/lib/cache'
 import { secureEquals } from '@/lib/secureCompare'
 
-// the API read's 25 s budget, then the expiry, with room to spare
+// Room for the API reads, then the expiry. A hung API fails the first read,
+// retries included, in about 30 s; reads that are only slow get the rest.
 export const maxDuration = 60
 
 // The one body the content engine's deploy sends; anything else is a 400.
