@@ -1,6 +1,6 @@
 import type { z } from 'zod'
 import type { sizeCategorySchema } from '@/components/mdx/schemas'
-import Image from 'next/image'
+import { getImageProps } from 'next/image'
 import { mdxImageAttributesSchema } from '@/components/mdx/schemas'
 import { cn } from '@/lib/utils'
 
@@ -13,20 +13,29 @@ const mdxImageSizeCategoryRecord = {
   '3xl': { maxWidthInRem: 48, tailwindMaxWidthClass: 'max-w-3xl' },
 } satisfies Record<z.infer<typeof sizeCategorySchema>, { maxWidthInRem: number, tailwindMaxWidthClass: string }>
 
+// the page's horizontal padding (px-6 on each side, layout.tsx): an image is never wider than the viewport minus this
+const PAGE_GUTTER_IN_REM = 3
+// the text column: max-w-3xl (48rem) less the gutter, so no image is shown wider than 45rem (720 px)
+const COLUMN_IN_REM = 48 - PAGE_GUTTER_IN_REM
+
 export function MdxImage(attributes: z.input<typeof mdxImageAttributesSchema>) {
   // the syntax-tree check has already held the post to this schema; parsing
   // again turns the strings into typed props
   const { sizeCategory = 'lg', title, ...image } = mdxImageAttributesSchema.parse(attributes)
   const { maxWidthInRem, tailwindMaxWidthClass } = mdxImageSizeCategoryRecord[sizeCategory]
+  const slotInRem = Math.min(maxWidthInRem, COLUMN_IN_REM)
+
+  const { props } = getImageProps({
+    sizes: `(max-width: ${slotInRem + PAGE_GUTTER_IN_REM}rem) calc(100vw - ${PAGE_GUTTER_IN_REM}rem), ${slotInRem}rem`,
+    className: cn('mx-auto w-full rounded-md', tailwindMaxWidthClass),
+    ...image,
+  })
 
   return (
     <figure className="my-8">
       {/* src is a Cloudinary public id; src/lib/cloudinaryLoader.ts (images.loaderFile) builds the URL */}
-      <Image
-        sizes={`(max-width: ${maxWidthInRem}rem) 100vw, ${maxWidthInRem}rem`}
-        className={cn('mx-auto w-full rounded-md', tailwindMaxWidthClass)}
-        {...image}
-      />
+      {/* eslint-disable-next-line next/no-img-element -- next/image's own markup, built here so no client code ships for it */}
+      <img {...props} alt={image.alt} />
 
       {title !== undefined && title !== '' && (
         <figcaption className="mt-2 text-center text-sm text-zinc-600 dark:text-zinc-200">

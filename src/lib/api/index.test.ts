@@ -56,7 +56,7 @@ describe('endpoints', () => {
 
   it('reads past the cache with plain no-store when given a deadline', async () => {
     respond([])
-    await getPosts({ signal: new AbortController().signal })
+    await getPosts({ deadline: performance.now() + 1_000 })
     expect(requested()).toEqual({
       url: 'https://api.example.test/api/posts',
       cache: 'no-store',

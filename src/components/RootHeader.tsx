@@ -1,12 +1,12 @@
 'use client'
 
 import type { ComponentProps } from 'react'
+import { clsx } from 'clsx'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ColorModeToggle } from '@/components/ColorModeToggle'
 import { SiteLogo } from '@/components/svgs/SiteLogo'
 import { site } from '@/lib/site'
-import { cn } from '@/lib/utils'
 
 type RootHeaderProps = ComponentProps<'header'>
 
@@ -23,14 +23,14 @@ export function RootHeader({
   return (
     <header
       {...props}
-      className={cn(
+      className={clsx(
         'flex items-center justify-between',
         className,
       )}
     >
       {/* site logo */}
       {/* the site's one designed motion: the logo glides over on the home page */}
-      <div className={cn('pr-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none', logoTranslation)}>
+      <div className={clsx('pr-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none', logoTranslation)}>
         <Link
           href="/"
           tabIndex={-1}
@@ -88,7 +88,7 @@ function NavLink({
   return (
     <Link
       {...props}
-      className={cn(
+      className={clsx(
         'inline-block rounded-md px-4 py-2 text-sm font-semibold underline',
         'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
         {

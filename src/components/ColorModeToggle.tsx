@@ -2,12 +2,12 @@
 
 import type { ComponentProps } from 'react'
 import type { Theme } from '@/lib/constants'
+import { clsx } from 'clsx'
 import { LaptopMinimal, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { DEFAULT_THEME, isTheme } from '@/lib/constants'
-import { cn } from '@/lib/utils'
 
 const NEXT_THEME = {
   system: 'dark',
@@ -44,9 +44,10 @@ export function ColorModeToggle({
   }, [theme])
 
   const toggleTheme = () => {
-    const next = NEXT_THEME[isTheme(theme)
+    const current = isTheme(theme)
       ? theme
-      : DEFAULT_THEME]
+      : DEFAULT_THEME
+    const next = NEXT_THEME[current]
 
     if (!('startViewTransition' in document) || matchMedia('(prefers-reduced-motion: reduce)').matches) {
       setTheme(next)
@@ -72,7 +73,7 @@ export function ColorModeToggle({
       {...props}
       type="button"
       onClick={toggleTheme}
-      className={cn(
+      className={clsx(
         'border-zinc-200 text-zinc-600 dark:border-zinc-800 dark:text-zinc-400',
         'transition-[color] duration-200 hover:text-zinc-400 dark:hover:text-zinc-100',
         'size-7 rounded-md border text-center',

@@ -41,17 +41,16 @@ afterEach(() => {
 })
 
 describe('/api/preview', () => {
-  it('401s with a wrong secret and never enables draft mode', async () => {
-    const res = await GET(makeRequest({ secret: 'wrong', slug: 'a-post' }))
+  it.each([
+    ['a wrong secret', SECRET, 'wrong'],
+    ['PREVIEW_SECRET unset (feature disabled)', '', ''],
+  ])('401s on %s, enabling nothing and waking nothing', async (_name, configured, given) => {
+    vi.stubEnv('PREVIEW_SECRET', configured)
+    const res = await GET(makeRequest({ secret: given, slug: 'a-post' }))
     expect(res.status).toBe(401)
     expect(enable).not.toHaveBeenCalled()
-  })
-
-  it('401s when PREVIEW_SECRET is unset (feature disabled)', async () => {
-    vi.stubEnv('PREVIEW_SECRET', '')
-    const res = await GET(makeRequest({ secret: '', slug: 'a-post' }))
-    expect(res.status).toBe(401)
-    expect(enable).not.toHaveBeenCalled()
+    // no public lever to wake the database
+    expect(fetchMock).not.toHaveBeenCalled()
   })
 
   it('400s without a slug', async () => {
@@ -60,23 +59,14 @@ describe('/api/preview', () => {
     expect(enable).not.toHaveBeenCalled()
   })
 
-  it('enables draft mode and redirects to the post', async () => {
+  it('enables draft mode, redirects to the post and wakes the database (ADR-0005)', async () => {
     const res = await GET(makeRequest({ secret: SECRET, slug: 'my-draft' }))
     expect(enable).toHaveBeenCalledOnce()
     expect(res.status).toBe(307)
     expect(res.headers.get('location')).toBe('https://tianwei.io/posts/my-draft')
-  })
-
-  it('fires a best-effort DB pre-warm after successful auth (ADR-0005)', async () => {
-    await GET(makeRequest({ secret: SECRET, slug: 'my-draft' }))
     expect(fetchMock).toHaveBeenCalledWith(
       'https://api.example.test/api/categories',
       expect.objectContaining({ cache: 'no-store' }),
     )
-  })
-
-  it('never warms the DB for unauthenticated requests (no public wake lever)', async () => {
-    await GET(makeRequest({ secret: 'wrong', slug: 'my-draft' }))
-    expect(fetchMock).not.toHaveBeenCalled()
   })
 })

@@ -7,10 +7,6 @@
   @apply px-4 py-2 text-sm font-medium font-mono;
 }
 
-[data-rehype-pretty-code-title] + [data-code-block] {
-  @apply mt-0;
-}
-
 /* Code lines: the block's horizontal padding (the <pre> has vertical only) */
 pre [data-line] {
   padding: 0 1rem;

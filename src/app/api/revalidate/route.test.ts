@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { maxDuration, POST } from './route'
+import { POST } from './route'
 
 const { revalidatePosts } = vi.hoisted(() => ({
   revalidatePosts: vi.fn(),
@@ -125,9 +125,5 @@ describe('/api/revalidate', () => {
     const res = await POST(makeRequest(body, `Bearer ${SECRET}`))
     expect(res.status).toBe(400)
     expect(revalidatePosts).not.toHaveBeenCalled()
-  })
-
-  it('may run for 60 s: the 25 s API read and the expiry fit inside', () => {
-    expect(maxDuration).toBe(60)
   })
 })

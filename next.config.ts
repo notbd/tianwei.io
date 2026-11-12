@@ -41,6 +41,18 @@ const nextConfig: NextConfig = {
   images: {
     loader: 'custom',
     loaderFile: './src/lib/cloudinaryLoader.ts',
+    // the defaults plus 1440: the widest image slot is 720 px, and without it a 2x screen is sent 1920
+    deviceSizes: [
+      640,
+      750,
+      828,
+      1080,
+      1200,
+      1440,
+      1920,
+      2048,
+      3840,
+    ],
   },
   async headers() {
     return [

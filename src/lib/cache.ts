@@ -1,3 +1,4 @@
+import type { UncachedRead } from '@/lib/api'
 import { revalidateTag } from 'next/cache'
 import { getCategories, getPost, getPosts, POSTS_TAG } from '@/lib/api'
 
@@ -15,6 +16,13 @@ const READ_BUDGET_MS = 25_000
  * running out, expires nothing: the site keeps serving what it has instead
  * of rendering pages against an API that cannot answer them.
  *
+ * The budget is a deadline on the performance.now() clock. The fetcher
+ * starts no request past it and cuts the ones in flight short, but a
+ * response that arrived in time can still be parsed and validated past
+ * it, so the clock is read once more when the reads are over: that check
+ * is what makes "over the budget, nothing expired" hold. `budgetMs` is for
+ * the tests; the route passes nothing.
+ *
  * `{ expire: 0 }` expires the tagged entries outright once the route
  * handler returns, so the next request renders fresh content instead of
  * being served the previous version once ('max' is stale-while-revalidate).
@@ -22,35 +30,28 @@ const READ_BUDGET_MS = 25_000
  * webhook-style Route Handler:
  * https://nextjs.org/docs/app/api-reference/functions/revalidateTag
  */
-export async function revalidatePosts(): Promise<{ ok: true } | { ok: false, message: string }> {
-  const budgetMs = readBudgetMs()
-  const deadline = AbortSignal.timeout(budgetMs)
+export async function revalidatePosts({ budgetMs = READ_BUDGET_MS } = {}): Promise<{ ok: true } | { ok: false, message: string }> {
+  const deadline = performance.now() + budgetMs
+  let failure: string | undefined
   try {
-    await readEverything(deadline)
+    await readEverything({ deadline })
   }
   catch (error) {
-    const message = deadline.aborted
-      ? `reading the content API took longer than ${budgetMs} ms`
-      : messageOf(error)
-    console.error(`[revalidate] nothing expired: ${message}`)
-    return { ok: false, message }
+    failure = messageOf(error)
+  }
+  // at the deadline counts as over it, whatever else went wrong
+  if (performance.now() >= deadline)
+    failure = `reading the content API took longer than ${budgetMs} ms`
+  if (failure !== undefined) {
+    console.error(`[revalidate] nothing expired: ${failure}`)
+    return { ok: false, message: failure }
   }
 
   revalidateTag(POSTS_TAG, { expire: 0 })
   return { ok: true }
 }
 
-// The local rehearsal shortens the budget to exercise it; nothing else
-// sets this, and it can only shorten.
-function readBudgetMs(): number {
-  const override = Number(process.env.REVALIDATE_READ_BUDGET_MS)
-  return override > 0 && override < READ_BUDGET_MS
-    ? override
-    : READ_BUDGET_MS
-}
-
-async function readEverything(signal: AbortSignal): Promise<void> {
-  const uncached = { signal }
+async function readEverything(uncached: UncachedRead): Promise<void> {
   const posts = await getPosts(uncached)
   await forEachConcurrently([
     {

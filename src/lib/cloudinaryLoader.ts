@@ -1,5 +1,3 @@
-'use client'
-
 import type { ImageLoaderProps } from 'next/image'
 
 const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME

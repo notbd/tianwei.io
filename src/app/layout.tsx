@@ -3,7 +3,7 @@ import { RootHeader } from '@/components/RootHeader'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { DEFAULT_THEME, THEMES } from '@/lib/constants'
 import { cn } from '@/lib/utils'
-import { berkeleyMono, rubik } from '@/styles/fonts'
+import { rubik } from '@/styles/fonts/sans'
 import { metadata, viewport } from './metadata'
 import '@/styles/globals.tailwind.css'
 
@@ -33,7 +33,7 @@ export default function RootLayout(
           // cannot add 'transition-colors' here, else it may cause a flash under dark mode,
           // since html always starts with light mode and 'dark' class is added later by code
           'font-sans antialiased',
-          `${rubik.variable} ${berkeleyMono.variable}`,
+          rubik.variable,
         )}
       >
         {/* only constants are interpolated, as JSON, so safe by construction */}

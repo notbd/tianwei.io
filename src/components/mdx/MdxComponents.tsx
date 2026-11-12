@@ -174,11 +174,10 @@ const markdownElements = {
     />
   ),
   // the wrapper lets the copy button sit in the block's corner without
-  // scrolling away with wide code. Its margins space a block without a
-  // language; rehype-pretty-code puts every other block in a figure, whose
-  // my-8 they collapse into
+  // scrolling away with wide code. It needs no margins of its own:
+  // rehype-pretty-code puts every block in a figure, which has them
   pre: ({ className, ...props }: ComponentProps<'pre'>) => (
-    <div data-code-block className="group/code relative mb-4 mt-6">
+    <div data-code-block className="group/code relative">
       <pre
         className={cn(
           'overflow-x-auto rounded-lg border border-zinc-300/30 py-4 drop-shadow-sm dark:border-zinc-500/20',

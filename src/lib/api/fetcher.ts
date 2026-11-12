@@ -1,5 +1,4 @@
 import type { z } from 'zod'
-import { setTimeout as sleep } from 'node:timers/promises'
 import { errorEnvelope, listEnvelope, successEnvelope } from './schemas'
 
 /**
@@ -41,8 +40,11 @@ export type FetchOptions = {
   next?: NextFetchRequestConfig
   cache?: RequestCache
   headers?: Record<string, string>
-  /** The caller's deadline over every attempt and the waits between them. */
-  signal?: AbortSignal
+  /**
+   * The caller's deadline over every attempt and the waits between them: a
+   * time on the performance.now() clock.
+   */
+  deadline?: number
 }
 
 // Transient failures (network errors, timeouts, 5xx) are retried with
@@ -58,37 +60,43 @@ export type FetchOptions = {
 // (https://nextjs.org/docs/app/api-reference/functions/fetch#memoization).
 // The data cache key ignores the signal, so caching is unaffected.
 //
-// A caller's signal joins each attempt's deadline and also cuts the wait
-// before a retry short; once it has fired, no further attempt starts.
+// A caller's deadline is a time on one clock, and both timers are computed
+// from it: the wait before a retry ends at the deadline at the latest, and
+// an attempt's timer is the time left when that is less than its own
+// limit. Timers can fire late (or, rounded up to a whole millisecond, up to
+// 1 ms after the deadline), so they are not the guarantee: before every
+// attempt the clock itself is read, and with no time left no request
+// starts. What has to hold once the reads are over is the caller's to check.
 const ATTEMPTS = 3
 const BACKOFF_BASE_MS = 300
 const ATTEMPT_TIMEOUT_MS = 10_000
 
-async function requestJson(path: string, { signal, ...options }: FetchOptions = {}): Promise<unknown> {
+async function requestJson(path: string, { deadline = Infinity, ...options }: FetchOptions = {}): Promise<unknown> {
   const url = apiUrl(path)
 
   let lastError: unknown
   for (let attempt = 0; attempt < ATTEMPTS; attempt++) {
-    if (attempt > 0)
-      await sleep(BACKOFF_BASE_MS * 2 ** (attempt - 1), undefined, { signal })
-    signal?.throwIfAborted()
+    if (attempt > 0) {
+      const waitMs = Math.min(BACKOFF_BASE_MS * 2 ** (attempt - 1), Math.max(0, deadline - performance.now()))
+      await new Promise(resolve => setTimeout(resolve, waitMs))
+    }
+    const remainingMs = deadline - performance.now()
+    if (remainingMs <= 0)
+      throw new Error(`No time left to request ${url}`, { cause: lastError })
 
-    const attemptDeadline = AbortSignal.timeout(ATTEMPT_TIMEOUT_MS)
     let response: Response
     let body: string
     try {
-      // the deadline covers the body too: a stalled stream is a timeout
+      // the timer covers the body too: a stalled stream is a timeout
+      // (AbortSignal.timeout takes whole milliseconds, hence the ceil)
       response = await fetch(url, {
         ...options,
         headers: { Accept: 'application/json', ...options.headers },
-        signal: signal === undefined
-          ? attemptDeadline
-          : AbortSignal.any([signal, attemptDeadline]),
+        signal: AbortSignal.timeout(Math.ceil(Math.min(ATTEMPT_TIMEOUT_MS, remainingMs))),
       })
       body = await response.text()
     }
     catch (error) {
-      signal?.throwIfAborted()
       lastError = error
       continue
     }

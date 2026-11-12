@@ -30,9 +30,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Third-party, so pinned to a commit (GitHub's own actions stay on
+      # tags): a moved tag cannot change the pnpm that later steps run. The
+      # pnpm version comes from packageManager.
       - name: Setup pnpm
-        # pinned to a commit: a moved tag must not change what installs the
-        # dependencies; the pnpm version comes from packageManager
         uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
       - name: Setup Node.js
