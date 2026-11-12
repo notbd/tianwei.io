@@ -15,15 +15,18 @@ const mdxImageSizeCategoryRecord = {
 
 // the page's horizontal padding (px-6 on each side, layout.tsx): an image is never wider than the viewport minus this
 const PAGE_GUTTER_IN_REM = 3
+// the text column: max-w-3xl (48rem) less the gutter, so no image is shown wider than 45rem (720 px)
+const COLUMN_IN_REM = 48 - PAGE_GUTTER_IN_REM
 
 export function MdxImage(attributes: z.input<typeof mdxImageAttributesSchema>) {
   // the syntax-tree check has already held the post to this schema; parsing
   // again turns the strings into typed props
   const { sizeCategory = 'lg', title, ...image } = mdxImageAttributesSchema.parse(attributes)
   const { maxWidthInRem, tailwindMaxWidthClass } = mdxImageSizeCategoryRecord[sizeCategory]
+  const slotInRem = Math.min(maxWidthInRem, COLUMN_IN_REM)
 
   const { props } = getImageProps({
-    sizes: `(max-width: ${maxWidthInRem + PAGE_GUTTER_IN_REM}rem) calc(100vw - ${PAGE_GUTTER_IN_REM}rem), ${maxWidthInRem}rem`,
+    sizes: `(max-width: ${slotInRem + PAGE_GUTTER_IN_REM}rem) calc(100vw - ${PAGE_GUTTER_IN_REM}rem), ${slotInRem}rem`,
     className: cn('mx-auto w-full rounded-md', tailwindMaxWidthClass),
     ...image,
   })
