@@ -95,10 +95,10 @@ it was and turns the deploy red.
 Each `/posts/<slug>` page carries exactly one
 `<meta name="post-body-sha256" content="...">`: the SHA-256, in lowercase
 hex, of the post's `content` exactly as the API returned it (UTF-8, not
-trimmed). The page component renders the tag inside the article, from
-the same post object it renders the body from, so the hash describes the
-body on the page. Static regeneration stores a
-page only when its whole render succeeds, so a body that fails to render
+trimmed). The page component renders the tag from the same post object
+it renders the body from, so the hash describes the body on the page;
+React hoists the tag into `<head>`. Static regeneration stores a page
+only when its whole render succeeds, so a body that fails to render
 leaves the previous page, and its previous hash, in place.
 
 After its second revalidation the content deploy reconciles: it requests
