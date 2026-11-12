@@ -14,39 +14,35 @@ export type { Post, PostSummary } from './schemas'
  */
 export const POSTS_TAG = 'posts'
 
-// Cached until the tag is expired: content changes only through the
-// content engine's deploy, which calls /api/revalidate, never on a timer.
-const CACHED: FetchOptions = {
-  next: {
-    revalidate: false,
-    tags: [POSTS_TAG],
+// The two ways to read published content. The read functions take one of
+// these names, not fetch options, so a page's read cannot miss the tag.
+const READS = {
+  // Cached until the tag is expired: content changes only through the
+  // content engine's deploy, which calls /api/revalidate, never on a timer.
+  cached: {
+    next: {
+      revalidate: false,
+      tags: [POSTS_TAG],
+    },
   },
-}
-
-/**
- * A read straight from the API, past the data cache, within the caller's
- * deadline: how /api/revalidate checks the API before expiring anything.
- * Plain `cache: 'no-store'`, nothing else: Next drops both settings, with a
- * warning, when it meets one next to `next.revalidate`.
- */
-export type UncachedRead = { deadline: number }
-
-function readOptions(uncached: UncachedRead | undefined): FetchOptions {
-  return uncached === undefined
-    ? CACHED
-    : { cache: 'no-store', deadline: uncached.deadline }
-}
+  // Straight from the API, past the data cache: how /api/revalidate checks
+  // the API before expiring anything. Plain no-store, nothing else: Next
+  // drops both settings, with a warning, when it meets one next to
+  // `next.revalidate`.
+  uncached: { cache: 'no-store' },
+} satisfies Record<string, FetchOptions>
+type Read = keyof typeof READS
 
 /** Published posts, newest first, without their content. */
-export async function getPosts(uncached?: UncachedRead): Promise<PostSummary[]> {
-  return fetchList('/api/posts', postSummarySchema, readOptions(uncached))
+export async function getPosts(read: Read = 'cached'): Promise<PostSummary[]> {
+  return fetchList('/api/posts', postSummarySchema, READS[read])
 }
 
 /** One published post with its MDX source. Rejects with a 404/400 ApiError (see isNotFoundError) when the slug names no post. */
-export async function getPost(slug: string, uncached?: UncachedRead): Promise<Post> {
+export async function getPost(slug: string, read: Read = 'cached'): Promise<Post> {
   // encoded so a crafted URL segment (`a?b`, `a/b`) reaches the API as one
   // invalid slug instead of a different path or query
-  return fetchOne(`/api/post/${encodeURIComponent(slug)}`, postSchema, readOptions(uncached))
+  return fetchOne(`/api/post/${encodeURIComponent(slug)}`, postSchema, READS[read])
 }
 
 /**
@@ -71,8 +67,8 @@ export async function findPost(slug: string): Promise<Post | undefined> {
 }
 
 /** Categories of published posts, alphabetical. Derived from posts, so it shares their tag. */
-export async function getCategories(uncached?: UncachedRead): Promise<string[]> {
-  return fetchList('/api/categories', z.string(), readOptions(uncached))
+export async function getCategories(read: Read = 'cached'): Promise<string[]> {
+  return fetchList('/api/categories', z.string(), READS[read])
 }
 
 /** Any post, published or not, for draft mode. Never cached; requires PREVIEW_SECRET. */

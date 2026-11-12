@@ -1,27 +1,16 @@
-import type { UncachedRead } from '@/lib/api'
 import { revalidateTag } from 'next/cache'
 import { getCategories, getPost, getPosts, POSTS_TAG } from '@/lib/api'
 
 // One route invocation reads every post; more at once would stampede the
 // API as the catalog grows. The categories read counts toward the limit.
 const READ_CONCURRENCY = 4
-// The whole read, retries and the waits between them included. Well inside
-// the route's maxDuration (60 s) and the content engine's 60 s timeout.
-const READ_BUDGET_MS = 25_000
 
 /**
  * Expires the `posts` tag, but only after reading everything it covers
  * straight from the API (the list, every post on it, the categories)
- * through the same schemas the pages use. A failed read, or the budget
- * running out, expires nothing: the site keeps serving what it has instead
- * of rendering pages against an API that cannot answer them.
- *
- * The budget is a deadline on the performance.now() clock. The fetcher
- * starts no request past it and cuts the ones in flight short, but a
- * response that arrived in time can still be parsed and validated past
- * it, so the clock is read once more when the reads are over: that check
- * is what makes "over the budget, nothing expired" hold. `budgetMs` is for
- * the tests; the route passes nothing.
+ * through the same schemas the pages use. A failed read expires nothing:
+ * the site keeps serving what it has instead of rendering pages against an
+ * API that cannot answer them.
  *
  * `{ expire: 0 }` expires the tagged entries outright once the route
  * handler returns, so the next request renders fresh content instead of
@@ -30,37 +19,30 @@ const READ_BUDGET_MS = 25_000
  * webhook-style Route Handler:
  * https://nextjs.org/docs/app/api-reference/functions/revalidateTag
  */
-export async function revalidatePosts({ budgetMs = READ_BUDGET_MS } = {}): Promise<{ ok: true } | { ok: false, message: string }> {
-  const deadline = performance.now() + budgetMs
-  let failure: string | undefined
+export async function revalidatePosts(): Promise<{ ok: true } | { ok: false, message: string }> {
   try {
-    await readEverything({ deadline })
+    await readEverything()
   }
   catch (error) {
-    failure = messageOf(error)
-  }
-  // at the deadline counts as over it, whatever else went wrong
-  if (performance.now() >= deadline)
-    failure = `reading the content API took longer than ${budgetMs} ms`
-  if (failure !== undefined) {
-    console.error(`[revalidate] nothing expired: ${failure}`)
-    return { ok: false, message: failure }
+    const message = messageOf(error)
+    console.error(`[revalidate] nothing expired: ${message}`)
+    return { ok: false, message }
   }
 
   revalidateTag(POSTS_TAG, { expire: 0 })
   return { ok: true }
 }
 
-async function readEverything(uncached: UncachedRead): Promise<void> {
-  const posts = await getPosts(uncached)
+async function readEverything(): Promise<void> {
+  const posts = await getPosts('uncached')
   await forEachConcurrently([
     {
       what: 'the categories',
-      read: async () => getCategories(uncached),
+      read: async () => getCategories('uncached'),
     },
     ...posts.map(post => ({
       what: `post "${post.slug}"`,
-      read: async () => getPost(post.slug, uncached),
+      read: async () => getPost(post.slug, 'uncached'),
     })),
   ], READ_CONCURRENCY, async ({ what, read }) => {
     try {
