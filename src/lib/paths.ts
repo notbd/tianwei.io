@@ -14,13 +14,13 @@ export function absoluteUrl(path: string): string {
   return `${SITE_URL}${path}`
 }
 
-// Route paths, built in one place so every link, sitemap entry and feed
-// item encodes them the same way. The content engine slugifies both slugs
-// and categories to [a-z0-9-], so encoding the category is belt and braces.
+// Route paths, built in one place for every link, sitemap entry and feed
+// item. The content engine slugifies both slugs and categories to
+// [a-z0-9-], so neither needs encoding.
 export function postPath(slug: string): string {
   return `/posts/${slug}`
 }
 
 export function categoryPath(category: string): string {
-  return `/categories/${encodeURIComponent(category)}`
+  return `/categories/${category}`
 }
