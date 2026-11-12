@@ -268,4 +268,6 @@ workflow): the changes it stopped reach the database only that way.
   `main`; the API's and the frontend's will not. That moves gaps 2 and 3
   from "found by the deploy" to "found before the merge", at a price: a
   content pull request turns red when the API's or the frontend's `main`
-  cannot start. It will not cover failures at production time.
+  cannot start. The job was run once on a GitHub runner against these
+  branches (2026-11-11, about a minute, in parallel with the other
+  checks). It will not cover failures at production time.
