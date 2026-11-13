@@ -1,14 +1,35 @@
 import type { NextConfig } from 'next'
 
-// Conservative security headers. A strict CSP is deliberately omitted:
-// it would have to account for the inline theme scripts and MDX-rendered
-// content, and the payoff on a static content site is small.
+// A baseline Content-Security-Policy, without nonces or hashes: scripts,
+// frames, plugins, form targets and <base> can only come from the site, and
+// no one can frame it. It cannot stop an inline <script>; keeping those out
+// of posts is the post rules' job (src/lib/mdx.tsx), and this is the
+// fallback if they regress. Hashes are out because Next inlines per-page
+// RSC payload scripts, and nonces would make every page render per request,
+// giving up static generation. Production only: `next dev` needs eval and a
+// websocket for hot reload.
+const contentSecurityPolicy = [
+  `default-src 'self'`,
+  `script-src 'self' 'unsafe-inline'`, // the theme scripts and Next's RSC payload
+  `style-src 'self' 'unsafe-inline'`, // Shiki's and React's inline styles
+  `img-src 'self' data: https:`, // Cloudinary, and Markdown images from anywhere
+  `font-src 'self'`,
+  `connect-src 'self'`,
+  `object-src 'none'`,
+  `base-uri 'none'`,
+  `form-action 'self'`,
+  `frame-src 'none'`,
+  `frame-ancestors 'none'`,
+].join('; ')
+
 const securityHeaders = [
   { key: 'X-Content-Type-Options', value: 'nosniff' },
   { key: 'X-Frame-Options', value: 'DENY' },
   { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
   { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
 ]
+if (process.env.NODE_ENV === 'production')
+  securityHeaders.push({ key: 'Content-Security-Policy', value: contentSecurityPolicy })
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
@@ -20,6 +41,18 @@ const nextConfig: NextConfig = {
   images: {
     loader: 'custom',
     loaderFile: './src/lib/cloudinaryLoader.ts',
+    // the defaults plus 1440: the widest image slot is 720 px, and without it a 2x screen is sent 1920
+    deviceSizes: [
+      640,
+      750,
+      828,
+      1080,
+      1200,
+      1440,
+      1920,
+      2048,
+      3840,
+    ],
   },
   async headers() {
     return [

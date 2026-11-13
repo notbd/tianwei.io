@@ -2,44 +2,59 @@ import type { Metadata } from 'next'
 import type { Post } from '@/lib/api'
 import { draftMode } from 'next/headers'
 import { notFound } from 'next/navigation'
-import { openGraphSiteName, twitterAccounts } from '@/app/metadata'
+import { cache } from 'react'
+import { twitterAccounts } from '@/app/metadata'
 import { JsonLd } from '@/components/JsonLd'
 import { MdxContent } from '@/components/mdx/MdxContent'
 import { TextLink } from '@/components/TextLink'
-import { getDraftPost, getPost, getPosts, isNotFoundError } from '@/lib/api'
+import { findPost, getDraftPost, getPosts, isNotFoundError } from '@/lib/api'
 import { categoryLabel } from '@/lib/categories'
 import { formatPostDate } from '@/lib/dates'
 import { absoluteUrl, categoryPath, postPath, SITE_URL } from '@/lib/paths'
+import { POST_BODY_HASH_META, postBodyHash } from '@/lib/postBodyHash'
 import { readingMinutes } from '@/lib/readingTime'
+import { site } from '@/lib/site'
 
 type PageProps = {
   params: Promise<{ slug: string }>
 }
 
-// Draft mode (the author's preview) reads through the API's preview
-// endpoint, which also returns unpublished posts; the metadata and the page
-// must read the same post, or a draft's tab shows the site name.
-async function loadPost(slug: string): Promise<Post> {
+// The items around it do not wrap, so the line may only break after a
+// separator: the <wbr> is that one opportunity (without it a line with an
+// Updated date cannot break at all and overflows a phone).
+const metaSeparator = (
+  <>
+    <span className="mx-2" aria-hidden>·</span>
+    <wbr />
+  </>
+)
+
+// One read per render, shared by the metadata and the page, so the page
+// costs one lookup and a draft's tab shows its title. Nothing depends on the
+// sharing for correctness: the body hash is rendered by the page, from the
+// post it renders. Draft mode (the author's preview) reads through the
+// API's preview endpoint, which also returns unpublished posts, and skips
+// the list. Only a slug that names no post becomes a not-found page; any
+// other failure (network hiccup, 500, schema drift) propagates, since
+// during a build a swallowed error would silently drop the page from the
+// prerendered set.
+const loadPost = cache(async (slug: string): Promise<Post> => {
   const { isEnabled } = await draftMode()
-  return isEnabled
-    ? getDraftPost(slug)
-    : getPost(slug)
-}
+  if (!isEnabled)
+    return await findPost(slug) ?? notFound()
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params
-
-  let post: Post
   try {
-    post = await loadPost(slug)
+    return await getDraftPost(slug)
   }
   catch (error) {
-    // unknown or malformed slug: the page itself will render notFound()
     if (isNotFoundError(error))
-      return {}
+      notFound()
     throw error
   }
+})
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const post = await loadPost((await params).slug)
   const description = post.description ?? undefined
   return {
     title: post.title, // root template appends '· tianwei.io'
@@ -47,7 +62,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // no images here: the route's opengraph-image.tsx supplies the card
     openGraph: {
       type: 'article',
-      siteName: openGraphSiteName,
+      siteName: site.domain,
       url: absoluteUrl(postPath(post.slug)),
       title: post.title,
       description,
@@ -76,27 +91,18 @@ export async function generateStaticParams() {
 }
 
 export default async function PostPage({ params }: PageProps) {
-  const { slug } = await params
+  const post = await loadPost((await params).slug)
   const { isEnabled: isDraftPreview } = await draftMode()
-
-  let post: Post
-  try {
-    post = await loadPost(slug)
-  }
-  catch (error) {
-    // Only a slug that names no post (404, or the API's 400 for a malformed
-    // slug) becomes a not-found page. Anything else (network hiccup, 500,
-    // schema drift) must propagate: during a build a swallowed error would
-    // silently drop the page from the prerendered set.
-    if (isNotFoundError(error))
-      notFound()
-    throw error
-  }
 
   const url = absoluteUrl(postPath(post.slug))
 
   return (
-    <article className="max-w-3xl pb-8">
+    <article className="pb-8">
+      {/* The hash of the body rendered below, taken from the same `post`, so
+          the two cannot describe different reads. React hoists the tag into
+          <head>; the content deploy's reconcile reads it from the page. */}
+      <meta name={POST_BODY_HASH_META} content={postBodyHash(post.content)} />
+
       <JsonLd data={{
         '@context': 'https://schema.org',
         '@type': 'BlogPosting',
@@ -135,13 +141,13 @@ export default async function PostPage({ params }: PageProps) {
 
         {/* other attributes */}
         <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
-          <time dateTime={post.createdAt.toISOString()}>
+          <time dateTime={post.createdAt.toISOString()} className="whitespace-nowrap">
             {formatPostDate(post.createdAt)}
           </time>
           {post.updatedAt !== null && (
             <>
-              <span className="mx-2" aria-hidden>·</span>
-              <span>
+              {metaSeparator}
+              <span className="whitespace-nowrap">
                 {'Updated '}
                 <time dateTime={post.updatedAt.toISOString()}>
                   {formatPostDate(post.updatedAt)}
@@ -149,10 +155,10 @@ export default async function PostPage({ params }: PageProps) {
               </span>
             </>
           )}
-          <span className="mx-2" aria-hidden>·</span>
-          <span>{`${readingMinutes(post.content)} min read`}</span>
-          <span className="mx-2" aria-hidden>·</span>
-          <TextLink href={categoryPath(post.category)}>
+          {metaSeparator}
+          <span className="whitespace-nowrap">{`${readingMinutes(post.content)} min read`}</span>
+          {metaSeparator}
+          <TextLink href={categoryPath(post.category)} className="whitespace-nowrap">
             {categoryLabel(post.category)}
           </TextLink>
         </div>

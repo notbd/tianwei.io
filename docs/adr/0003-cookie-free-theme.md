@@ -18,8 +18,7 @@ anti-flash bought the loss of all static rendering.
 Move theme state fully client-side; the server renders theme-agnostic
 markup:
 
-- next-themes' inline script keeps applying the `dark` class before paint
-  (unchanged).
+- next-themes' own inline script applies the `dark` class before paint.
 - A second tiny inline script (the first element in `<body>`) mirrors the
   stored choice from localStorage into `data-theme-choice` on `<html>`
   before first paint.

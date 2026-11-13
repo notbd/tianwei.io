@@ -1,19 +1,19 @@
 'use client'
 
 import type { ComponentProps } from 'react'
-import type { Theme } from '@/lib/constants'
+import type { Theme } from '@/lib/theme'
+import { clsx } from 'clsx'
 import { LaptopMinimal, Moon, Sun } from 'lucide-react'
 import { useTheme } from 'next-themes'
 import { useEffect } from 'react'
 import { flushSync } from 'react-dom'
-import { DEFAULT_THEME } from '@/lib/constants'
-import { cn } from '@/lib/utils'
+import { DEFAULT_THEME, isTheme } from '@/lib/theme'
 
-const NEXT_THEME: Record<Theme, Theme> = {
+const NEXT_THEME = {
   system: 'dark',
   dark: 'light',
   light: 'system',
-}
+} satisfies Record<Theme, Theme>
 
 type ColorModeToggleProps = ComponentProps<'button'>
 
@@ -39,12 +39,12 @@ export function ColorModeToggle({
   // it in the click handler: theme can also change from OTHER sources
   // (cross-tab localStorage sync), and this keeps one source of truth.
   useEffect(() => {
-    if (theme === 'system' || theme === 'dark' || theme === 'light')
+    if (isTheme(theme))
       document.documentElement.setAttribute('data-theme-choice', theme)
   }, [theme])
 
   const toggleTheme = () => {
-    const current: Theme = theme === 'dark' || theme === 'light'
+    const current = isTheme(theme)
       ? theme
       : DEFAULT_THEME
     const next = NEXT_THEME[current]
@@ -73,7 +73,7 @@ export function ColorModeToggle({
       {...props}
       type="button"
       onClick={toggleTheme}
-      className={cn(
+      className={clsx(
         'border-zinc-200 text-zinc-600 dark:border-zinc-800 dark:text-zinc-400',
         'transition-[color] duration-200 hover:text-zinc-400 dark:hover:text-zinc-100',
         'size-7 rounded-md border text-center',

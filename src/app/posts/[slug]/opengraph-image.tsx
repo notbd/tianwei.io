@@ -1,8 +1,7 @@
 /* eslint-disable react-refresh/only-export-components -- Next.js metadata
  * file convention requires exporting size/contentType alongside the image */
-import type { Post } from '@/lib/api'
 import { ImageResponse } from 'next/og'
-import { getPost, getPosts, isNotFoundError } from '@/lib/api'
+import { findPost, getPosts } from '@/lib/api'
 import { formatPostDate } from '@/lib/dates'
 import { site } from '@/lib/site'
 
@@ -22,23 +21,15 @@ export async function generateStaticParams() {
 }
 
 export default async function OpengraphImage({ params }: ImageProps) {
-  const { slug } = await params
-
-  let post: Post
-  try {
-    post = await getPost(slug)
-  }
-  catch (error) {
-    // a slug that names no post should not get a 200 default card
-    if (isNotFoundError(error))
-      return new Response('Not Found', { status: 404 })
-    // Anything else propagates, like the page does: this route is
-    // prerendered, so a site card drawn on a transient failure would be
-    // cached until the next content sync. A throw fails the build instead,
-    // and an on-demand render errors for that request and is retried on
-    // the next one.
-    throw error
-  }
+  // A failed read propagates, like the page's does: this route is
+  // prerendered, so a site card drawn on a transient failure would be
+  // cached until the next content sync. A throw fails the build instead,
+  // and an on-demand render errors for that request and is retried on the
+  // next one.
+  const post = await findPost((await params).slug)
+  // a slug that names no post should not get a 200 default card
+  if (post === undefined)
+    return new Response('Not Found', { status: 404 })
 
   const title = post.title
   const description = post.description ?? ''

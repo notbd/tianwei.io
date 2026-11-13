@@ -12,6 +12,11 @@ import { secureEquals } from '@/lib/secureCompare'
  * With the draft cookie set, the post page bypasses the static cache and
  * fetches through the API's secret-protected preview endpoint, so
  * unpublished posts render for the author only.
+ *
+ * The secret travels in the query string (browser history, request logs)
+ * and is also the API's bearer for drafts. Use at least 32 random bytes,
+ * keep preview links out of chats and documents, and if one leaks, rotate
+ * PREVIEW_SECRET here and on the API together.
  */
 export async function GET(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get('secret')

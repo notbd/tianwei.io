@@ -1,4 +1,40 @@
-import { expect, test } from '@playwright/test'
+import type { APIRequestContext } from '@playwright/test'
+import { test as base, expect } from '@playwright/test'
+
+// Every page a test opens reports Content-Security-Policy violations back
+// to the test process, and the test fails if there were any: the policy
+// must not block anything the site itself does. (Init scripts and exposed
+// bindings run outside the page's CSP.)
+const test = base.extend<{ cspViolations: string[] }>({
+  cspViolations: [
+    async ({ page }, use) => {
+      const violations: string[] = []
+      await page.exposeBinding('reportCspViolation', (_source, violation: string) => {
+        violations.push(violation)
+      })
+      await page.addInitScript({
+        content: `document.addEventListener('securitypolicyviolation', event => {
+        window.reportCspViolation(event.violatedDirective + ' blocked ' + event.blockedURI + ' on ' + location.pathname)
+      })`,
+      })
+      await use(violations)
+      expect(violations).toEqual([])
+    },
+    { auto: true },
+  ],
+})
+
+/** Paths of the sitemap's URLs that start with `prefix`, in sitemap order. */
+async function sitemapPaths(request: APIRequestContext, prefix: string): Promise<string[]> {
+  const sitemap = await (await request.get('/sitemap.xml')).text()
+  return [
+    ...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g),
+  ]
+    .flatMap(([, url]) => url === undefined
+      ? []
+      : [new URL(url).pathname])
+    .filter(path => path.startsWith(prefix))
+}
 
 test('home page renders with header navigation', async ({ page }) => {
   await page.goto('/')
@@ -95,20 +131,28 @@ test('feed.xml serves RSS with every post', async ({ request }) => {
     expect(body, url).toContain(`<link>${url}</link>`)
 })
 
-test('sitemap includes posts and categories', async ({ request }) => {
-  const response = await request.get('/sitemap.xml')
-  expect(response.status()).toBe(200)
-  const body = await response.text()
-  expect(body).toContain('/posts</loc>')
-  expect(body).toContain('/categories/')
-  expect(body).toContain('/posts/')
+test('every post page carries exactly one post-body-sha256 meta tag', async ({ page, request }) => {
+  // the content deploy reads this tag from each post page and fails on any other count
+  const paths = await sitemapPaths(request, '/posts/')
+  expect(paths.length).toBeGreaterThan(0)
+  for (const path of paths) {
+    await page.goto(path)
+    await expect(page.locator('meta[name="post-body-sha256"]'), path).toHaveCount(1)
+  }
 })
 
-test('a code block copy button copies the code and confirms it', async ({ page, context }) => {
+test('a code block copy button copies the code and confirms it', async ({ page, context, request }) => {
   await context.grantPermissions(['clipboard-read', 'clipboard-write'])
-  await page.goto('/posts/1password-git-workflow')
 
+  // the first post with a code block in its body
   const block = page.locator('[data-code-block]').first()
+  for (const path of await sitemapPaths(request, '/posts/')) {
+    await page.goto(path)
+    if (await block.count() > 0)
+      break
+  }
+  await expect(block, 'no post has a code block').toBeVisible()
+
   const button = block.getByRole('button', { name: 'Copy code' })
   await block.hover()
   // first click may race hydration, as in the theme test
@@ -122,9 +166,29 @@ test('a code block copy button copies the code and confirms it', async ({ page, 
   expect(copied.length).toBeGreaterThan(0)
 })
 
-test('category pages count as the Posts section in the header', async ({ page }) => {
-  await page.goto('/categories/articles')
+test('category pages count as the Posts section in the header', async ({ page, request }) => {
+  const [category] = await sitemapPaths(request, '/categories/')
+  if (category === undefined)
+    throw new Error('the sitemap lists no category')
+  await page.goto(category)
   const nav = page.locator('header nav')
   await expect(nav.getByRole('link', { name: 'Posts', exact: true })).toHaveAttribute('aria-current', 'true')
   await expect(nav.getByRole('link', { name: 'Home', exact: true })).not.toHaveAttribute('aria-current')
+})
+
+test('production responses carry the baseline Content-Security-Policy', async ({ request }) => {
+  const response = await request.get('/')
+  expect(response.headers()['content-security-policy']).toBe([
+    `default-src 'self'`,
+    `script-src 'self' 'unsafe-inline'`,
+    `style-src 'self' 'unsafe-inline'`,
+    `img-src 'self' data: https:`,
+    `font-src 'self'`,
+    `connect-src 'self'`,
+    `object-src 'none'`,
+    `base-uri 'none'`,
+    `form-action 'self'`,
+    `frame-src 'none'`,
+    `frame-ancestors 'none'`,
+  ].join('; '))
 })

@@ -12,10 +12,13 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "strict": true,
+    "exactOptionalPropertyTypes": true,
     "noUncheckedIndexedAccess": true,
+    "noUncheckedSideEffectImports": true,
     "noEmit": true,
     "esModuleInterop": true,
     "isolatedModules": true,
+    "verbatimModuleSyntax": true,
     "skipLibCheck": true,
     "plugins": [
       {

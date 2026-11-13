@@ -1,17 +1,20 @@
+import type { PostSummary } from '@/lib/api'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { GET } from './route'
 
-const listAll = vi.fn()
+const { getPosts } = vi.hoisted(() => ({
+  getPosts: vi.fn(),
+}))
+vi.mock('@/lib/api', () => ({ getPosts }))
 
-vi.mock('@/lib/api', () => ({ getPosts: listAll }))
-
-const { GET } = await import('./route')
-
-function post(overrides: Record<string, unknown>) {
+function post(overrides: Partial<PostSummary>): PostSummary {
   return {
+    id: 1,
     slug: 'alpha',
     title: 'Alpha',
     description: null,
     category: 'articles',
+    author: 'Tianwei Zhang',
     createdAt: new Date('2025-10-23T04:00:00.000Z'),
     updatedAt: null,
     ...overrides,
@@ -28,7 +31,7 @@ beforeEach(() => {
 
 describe('/feed.xml', () => {
   it('serves RSS 2.0 with one item per post and canonical absolute links', async () => {
-    listAll.mockResolvedValue([
+    getPosts.mockResolvedValue([
       post({}),
       post({
         slug: 'beta',
@@ -50,7 +53,7 @@ describe('/feed.xml', () => {
   })
 
   it('escapes the five XML special characters in text nodes', async () => {
-    listAll.mockResolvedValue([
+    getPosts.mockResolvedValue([
       post({ title: 'Tom & Jerry <"\'>', description: 'a < b' }),
     ])
 
@@ -60,7 +63,7 @@ describe('/feed.xml', () => {
   })
 
   it('omits the item <description> when a post has none', async () => {
-    listAll.mockResolvedValue([
+    getPosts.mockResolvedValue([
       post({ description: null }),
     ])
 
@@ -71,7 +74,7 @@ describe('/feed.xml', () => {
 
   it('sets lastBuildDate to the newest createdAt or updatedAt across all posts', async () => {
     // an OLD post with a NEW updatedAt must bump it, so readers re-poll
-    listAll.mockResolvedValue([
+    getPosts.mockResolvedValue([
       post({
         slug: 'old',
         createdAt: new Date('2024-04-15T04:00:00.000Z'),

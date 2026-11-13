@@ -1,17 +1,21 @@
+import { ThemeProvider } from 'next-themes'
 import { RootFooter } from '@/components/RootFooter'
 import { RootHeader } from '@/components/RootHeader'
-import { ThemeProvider } from '@/lib/contexts/ThemeProvider'
+import { DEFAULT_THEME, THEMES } from '@/lib/theme'
 import { cn } from '@/lib/utils'
-import { berkeleyMono, rubik } from '@/styles/fonts'
+import { rubik } from '@/styles/fonts/sans'
 import { metadata, viewport } from './metadata'
 import '@/styles/globals.tailwind.css'
 
 export { metadata, viewport } // declared in metadata.ts
 
-// Mirrors the stored theme choice (next-themes' localStorage key) into a
-// data attribute BEFORE first paint, so the toggle icon is correct without
-// any server-side state. Runs synchronously as the first thing in <body>.
-const themeChoiceScript = `(function(){var c='system';try{var t=localStorage.getItem('theme');if(t==='dark'||t==='light')c=t}catch(e){}document.documentElement.setAttribute('data-theme-choice',c)})()`
+// The theme choice lives entirely on the client (localStorage). No cookies:
+// the server renders theme-agnostic markup, which keeps every route
+// statically renderable. next-themes' own inline script applies the `dark`
+// class before paint. The script below, the first thing in <body>, mirrors
+// the stored choice (next-themes' localStorage key) into `data-theme-choice`
+// before that paint too, so CSS shows the right toggle icon.
+const themeChoiceScript = `(function(){var c=${JSON.stringify(DEFAULT_THEME)};try{var t=localStorage.getItem('theme');if(${JSON.stringify(THEMES)}.indexOf(t)>=0)c=t}catch(e){}document.documentElement.setAttribute('data-theme-choice',c)})()`
 
 type RootLayoutProps = { children: React.ReactNode }
 
@@ -32,15 +36,22 @@ export default function RootLayout(
           // cannot add 'transition-colors' here, else it may cause a flash under dark mode,
           // since html always starts with light mode and 'dark' class is added later by code
           'font-sans antialiased',
-          `${rubik.variable} ${berkeleyMono.variable}`,
+          rubik.variable,
         )}
       >
-        {/* static template literal, zero interpolation, so safe by construction */}
+        {/* only constants are interpolated, as JSON, so safe by construction */}
         {/* eslint-disable-next-line react/dom-no-dangerously-set-innerhtml */}
         <script dangerouslySetInnerHTML={{ __html: themeChoiceScript }} />
 
         {/* theme */}
-        <ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme={DEFAULT_THEME} // used when the user has no localStorage preference
+          enableSystem
+          // colors switch at once, inside the toggle's cross-fade, instead of
+          // each element running its own hover transition
+          disableTransitionOnChange
+        >
 
           {/* content */}
           <div
@@ -52,7 +63,7 @@ export default function RootLayout(
 
             {/* top: header + main */}
             <div
-              className="flex flex-col gap-y-12 transition-[row-gap] ease-out md:gap-y-14"
+              className="flex flex-col gap-y-12 transition-[row-gap] ease-out motion-reduce:transition-none md:gap-y-14"
             >
 
               {/* header */}

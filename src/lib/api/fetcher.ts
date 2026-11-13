@@ -69,7 +69,7 @@ async function requestJson(path: string, options: FetchOptions = {}): Promise<un
     let response: Response
     let body: string
     try {
-      // the deadline covers the body too: a stalled stream is a timeout
+      // the timer covers the body too: a stalled stream is a timeout
       response = await fetch(url, {
         ...options,
         headers: { Accept: 'application/json', ...options.headers },

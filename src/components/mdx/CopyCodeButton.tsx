@@ -1,9 +1,9 @@
 'use client'
 
 import type { ComponentProps } from 'react'
+import { clsx } from 'clsx'
 import { Check, Copy } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { cn } from '@/lib/utils'
 
 const RESET_AFTER_MS = 1500
 
@@ -45,7 +45,7 @@ export function CopyCodeButton({ className, ...props }: ComponentProps<'button'>
       type="button"
       onClick={() => void copy()}
       aria-label={copied ? 'Copied' : 'Copy code'}
-      className={cn(
+      className={clsx(
         'grid size-7 cursor-pointer place-items-center rounded-md border',
         'border-zinc-200 bg-white text-zinc-500 hover:text-zinc-800',
         'dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-400 dark:hover:text-zinc-100',

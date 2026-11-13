@@ -45,45 +45,6 @@ export default function Home() {
         </HomeSectionBody>
       </HomeSection>
 
-      {/* Projects */}
-      <HomeSection id="projects">
-        <HomeSectionHeader>
-          Projects
-        </HomeSectionHeader>
-
-        <HomeSectionBody>
-          <ul>
-
-            {/* ikalendar2 */}
-            <li className="pb-3">
-              <ExternalLink href="https://ikalendar.app">
-                ikalendar2
-              </ExternalLink>
-              {/* the App Store version, bumped by hand on each release */}
-              <span className="pl-2 text-sm font-normal text-zinc-500 dark:text-zinc-400">
-                v2.4.0
-              </span>
-
-              <SubscriptBlock>
-                Open-source SwiftUI app tracking Splatoon 2 rotations
-              </SubscriptBlock>
-            </li>
-
-            {/* SimpleHaptics */}
-            <li className="pb-3">
-              <ExternalLink href="https://github.com/notbd/SimpleHaptics">
-                SimpleHaptics
-              </ExternalLink>
-
-              <SubscriptBlock>
-                Swift package for simple haptic feedback on iOS
-              </SubscriptBlock>
-            </li>
-
-          </ul>
-        </HomeSectionBody>
-      </HomeSection>
-
       {/* Currently */}
       <HomeSection id="currently">
         <HomeSectionHeader>
@@ -93,10 +54,10 @@ export default function Home() {
         <HomeSectionBody>
           <ul>
 
-            {/* Five Continents International */}
+            {/* Five Continents */}
             <li className="pb-3">
               <ExternalLink href="https://fivecontinentsintl.com/">
-                Five Continents International
+                Five Continents
               </ExternalLink>
               , Business Systems Analyst
             </li>
@@ -147,6 +108,45 @@ export default function Home() {
 
               <SubscriptBlock>
                 Bachelor of Science, The Grainger College of Engineering
+              </SubscriptBlock>
+            </li>
+
+          </ul>
+        </HomeSectionBody>
+      </HomeSection>
+
+      {/* Projects */}
+      <HomeSection id="projects">
+        <HomeSectionHeader>
+          Projects
+        </HomeSectionHeader>
+
+        <HomeSectionBody>
+          <ul>
+
+            {/* ikalendar2 */}
+            <li className="pb-3">
+              <ExternalLink href="https://ikalendar.app">
+                ikalendar2
+              </ExternalLink>
+              {/* the App Store version, bumped by hand on each release */}
+              <span className="pl-2 text-sm font-normal text-zinc-500 dark:text-zinc-400">
+                v2.4.0
+              </span>
+
+              <SubscriptBlock>
+                Open-source SwiftUI app tracking Splatoon 2 rotations
+              </SubscriptBlock>
+            </li>
+
+            {/* SimpleHaptics */}
+            <li className="pb-3">
+              <ExternalLink href="https://github.com/notbd/SimpleHaptics">
+                SimpleHaptics
+              </ExternalLink>
+
+              <SubscriptBlock>
+                Swift package for simple haptic feedback on iOS
               </SubscriptBlock>
             </li>
 
@@ -231,7 +231,7 @@ function HomeSectionBody({
     <div
       {...props}
       className={cn(
-        'grow pl-2 font-semibold transition-[padding] duration-300 ease-out md:pl-4',
+        'grow pl-2 font-semibold transition-[padding] duration-300 ease-out motion-reduce:transition-none md:pl-4',
         className,
       )}
     >

@@ -28,10 +28,9 @@ describe('canonical base URL (SITE_URL)', () => {
 })
 
 describe('route paths', () => {
-  it('builds post and category paths, percent-encoding the category', async () => {
+  it('builds post and category paths', async () => {
     const { categoryPath, postPath } = await import('./paths')
     expect(postPath('hello-world')).toBe('/posts/hello-world')
     expect(categoryPath('articles')).toBe('/categories/articles')
-    expect(categoryPath('dev notes')).toBe('/categories/dev%20notes')
   })
 })

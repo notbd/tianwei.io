@@ -14,7 +14,7 @@ The author wants everything presented in US Eastern time.
 ## Decision
 
 - `DISPLAY_TIME_ZONE = 'America/New_York'` in
-  `src/lib/constants.ts` is the single source of truth for
+  `src/lib/dates.ts` is the single source of truth for
   how dates are **presented**. Storage remains UTC instants end to end.
 - All visible dates go through one helper, `formatPostDate()`
   (`src/lib/dates.ts`); components never call `toLocaleDateString`
@@ -33,4 +33,4 @@ The author wants everything presented in US Eastern time.
   display-layer-only change.
 - Deploy coupling: the content re-sync (ET-anchored instants) must land
   before or with this change, or legacy UTC-midnight rows display one
-  day early.
+  day early. (Done in the 2026-07 release.)

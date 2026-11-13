@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
-import { metadata as rootMetadata } from '@/app/metadata'
+import { pageMetadata } from '@/app/metadata'
 import { PageHeader } from '@/components/PageHeader'
 import { PostList } from '@/components/PostList'
 import { TextLink } from '@/components/TextLink'
@@ -17,31 +17,13 @@ export async function generateStaticParams() {
   return categories.map(category => ({ category }))
 }
 
-// Route params may arrive percent-encoded; categories are slugified
-// (ASCII-safe) today, so this is future-proofing, not a hot path.
-function decodeCategoryParam(raw: string): string {
-  try {
-    return decodeURIComponent(raw)
-  }
-  catch {
-    return raw
-  }
-}
-
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const label = categoryLabel(decodeCategoryParam((await params).category))
-  const description = `${label} by ${site.name}.`
-  return {
-    title: label, // root template appends '· tianwei.io'
-    description,
-    // a child openGraph/twitter replaces the root's whole object, hence the spreads
-    openGraph: { ...rootMetadata.openGraph, title: label, description },
-    twitter: { ...rootMetadata.twitter, title: label, description },
-  }
+  const label = categoryLabel((await params).category)
+  return pageMetadata(label, `${label} by ${site.name}.`)
 }
 
 export default async function CategoryPage({ params }: PageProps) {
-  const category = decodeCategoryParam((await params).category)
+  const { category } = await params
 
   const [posts, categories] = await Promise.all([
     getPosts(),
@@ -54,17 +36,20 @@ export default async function CategoryPage({ params }: PageProps) {
   const filtered = posts.filter(post => post.category === category)
 
   return (
-    <div className="max-w-3xl pb-8">
-      <PageHeader title={categoryLabel(category)}>
-        <p className="mt-2 text-zinc-500 dark:text-zinc-200">
-          {filtered.length}
-          {filtered.length === 1
-            ? ' post'
-            : ' posts'}
-          {' in this category · '}
-          <TextLink href="/posts">all posts</TextLink>
-        </p>
-      </PageHeader>
+    <div className="pb-8">
+      <PageHeader
+        title={categoryLabel(category)}
+        description={(
+          <>
+            {filtered.length}
+            {filtered.length === 1
+              ? ' post'
+              : ' posts'}
+            {' in this category · '}
+            <TextLink href="/posts">all posts</TextLink>
+          </>
+        )}
+      />
 
       <PostList posts={filtered} />
     </div>

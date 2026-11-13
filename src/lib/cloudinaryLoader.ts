@@ -1,12 +1,10 @@
-'use client'
-
 import type { ImageLoaderProps } from 'next/image'
 
 const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 
-// next/image loader (next.config.ts `images.loaderFile`). Emits the same
-// delivery URL next-cloudinary did for <MdxImage>: a width-capped,
-// format- and quality-negotiated rendition of the Cloudinary public id.
+// next/image loader (next.config.ts `images.loaderFile`) for <MdxImage>:
+// the Cloudinary delivery URL of the public id, capped at the requested
+// width, in the format and quality Cloudinary picks for the browser.
 export default function cloudinaryLoader({ src, width, quality }: ImageLoaderProps): string {
   if (cloudName === undefined || cloudName === '')
     throw new Error('NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME is not set: MDX images cannot be resolved')
