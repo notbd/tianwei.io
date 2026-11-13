@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 
-# A force-push supersedes the running check — don't burn minutes finishing it.
+# A force-push supersedes the running check: don't burn minutes finishing it.
 # (Also applies to main: only the latest merge's regression check matters.)
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -30,8 +30,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Third-party, so pinned to a commit (GitHub's own actions stay on
+      # tags): a moved tag cannot change the pnpm that later steps run. The
+      # pnpm version comes from packageManager.
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6 # version read from packageManager field
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
       - name: Setup Node.js
         uses: actions/setup-node@v7
@@ -51,7 +54,7 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # Regression check only — Vercel performs the real deploy build.
+      # Regression check only; Vercel performs the real deploy build.
       # Hits the public read-only content API at build time (SSG).
       - name: Build
         run: pnpm build

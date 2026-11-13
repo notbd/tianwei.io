@@ -1,25 +1,20 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import sitemap from './sitemap'
 
-const listAll = vi.fn()
-const listCategories = vi.fn()
-
-vi.mock('@/lib/api', () => ({
-  apiClient: {
-    post: { listAll },
-    category: { listAll: listCategories },
-  },
+const { getCategories, getPosts } = vi.hoisted(() => ({
+  getCategories: vi.fn(),
+  getPosts: vi.fn(),
 }))
-
-const sitemap = (await import('./sitemap')).default
+vi.mock('@/lib/api', () => ({ getCategories, getPosts }))
 
 beforeEach(() => {
   vi.clearAllMocks()
-  listCategories.mockResolvedValue(['articles'])
+  getCategories.mockResolvedValue(['articles'])
 })
 
 describe('sitemap', () => {
   it('lists the homepage, the posts index, categories, and every post', async () => {
-    listAll.mockResolvedValue([
+    getPosts.mockResolvedValue([
       {
         slug: 'alpha',
         createdAt: new Date('2025-10-23T04:00:00.000Z'),
@@ -35,11 +30,13 @@ describe('sitemap', () => {
     const entries = await sitemap()
     const urls = entries.map(entry => entry.url)
 
-    expect(urls[0]).toMatch(/\/$/)
-    expect(urls).toContainEqual(expect.stringContaining('/posts'))
-    expect(urls).toContainEqual(expect.stringContaining('/categories/articles'))
-    expect(urls).toContainEqual(expect.stringContaining('/posts/alpha'))
-    expect(urls).toContainEqual(expect.stringContaining('/posts/beta'))
+    expect(urls).toEqual([
+      'https://tianwei.io/',
+      'https://tianwei.io/posts',
+      'https://tianwei.io/categories/articles',
+      'https://tianwei.io/posts/alpha',
+      'https://tianwei.io/posts/beta',
+    ])
 
     // lastModified prefers updatedAt, falls back to createdAt
     expect(entries.find(entry => entry.url.endsWith('/posts/alpha'))?.lastModified)
@@ -51,7 +48,7 @@ describe('sitemap', () => {
   it('propagates an API failure instead of producing a sitemap without posts', async () => {
     // a reduced sitemap would be cached until the next content sync;
     // a throw fails the build or keeps the last good sitemap served
-    listAll.mockRejectedValue(new Error('api down'))
+    getPosts.mockRejectedValue(new Error('api down'))
 
     await expect(sitemap()).rejects.toThrow('api down')
   })

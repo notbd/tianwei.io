@@ -1,38 +1,40 @@
 'use client'
 
-import type { LinkProps } from 'next/link'
 import type { ComponentProps } from 'react'
+import { clsx } from 'clsx'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { ColorModeToggle } from '@/components/ColorModeToggle'
-import { SiteLogo } from '@/components/svgs'
-import { cn } from '@/lib/utils'
+import { SiteLogo } from '@/components/svgs/SiteLogo'
+import { site } from '@/lib/site'
 
-type PageHeaderProps = ComponentProps<'header'>
+type RootHeaderProps = ComponentProps<'header'>
 
 export function RootHeader({
   className,
   ...props
-}: PageHeaderProps) {
+}: RootHeaderProps) {
   const pathname = usePathname()
   const isHome = pathname === '/'
-  const isPosts = pathname.startsWith('/posts')
+  // category pages belong to the Posts section
+  const isPosts = pathname.startsWith('/posts') || pathname.startsWith('/categories')
   const logoTranslation = isHome ? 'md:translate-x-[7.5rem]' : ''
 
   return (
     <header
       {...props}
-      className={cn(
+      className={clsx(
         'flex items-center justify-between',
         className,
       )}
     >
       {/* site logo */}
-      <div className={`pr-4 transition ease-out ${logoTranslation}`}>
+      {/* the site's one designed motion: the logo glides over on the home page */}
+      <div className={clsx('pr-4 transition-transform duration-300 ease-[cubic-bezier(0.16,1,0.3,1)] motion-reduce:transition-none', logoTranslation)}>
         <Link
           href="/"
           tabIndex={-1}
-          aria-label="tianwei.io"
+          aria-label={site.domain}
         >
           {/* logo svg imported as component */}
           <SiteLogo
@@ -72,7 +74,7 @@ export function RootHeader({
   )
 }
 
-type NavLinkProps = ComponentProps<'a'> & LinkProps & {
+type NavLinkProps = ComponentProps<typeof Link> & {
   isSelected: boolean
   children: React.ReactNode
 }
@@ -86,13 +88,13 @@ function NavLink({
   return (
     <Link
       {...props}
-      className={cn(
+      className={clsx(
         'inline-block rounded-md px-4 py-2 text-sm font-semibold underline',
         'text-zinc-600 hover:text-zinc-400 dark:text-zinc-300 dark:hover:text-zinc-100',
         {
           'bg-zinc-200 dark:bg-zinc-800': isSelected,
         },
-        'transition-[color] duration-300', // only text color transition, not bg color
+        'transition-[color] duration-200', // only text color transition, not bg color
         className,
       )}
     >

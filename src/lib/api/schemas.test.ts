@@ -28,9 +28,9 @@ describe('postSchema', () => {
     expect(post.content).toBe('# Hello\n\nBody.\n')
   })
 
-  it('accepts a null description', () => {
-    const post = postSchema.parse({ ...CANONICAL_POST, description: null })
-    expect(post.description).toBeNull()
+  it('accepts a null description and reads an empty one as none', () => {
+    expect(postSchema.parse({ ...CANONICAL_POST, description: null }).description).toBeNull()
+    expect(postSchema.parse({ ...CANONICAL_POST, description: '' }).description).toBeNull()
   })
 
   it('parses updatedAt as a Date, passes null through, rejects absence', () => {
@@ -38,7 +38,7 @@ describe('postSchema', () => {
     expect(withDate.updatedAt).toBeInstanceOf(Date)
     expect(withDate.updatedAt?.getTime()).toBe(Date.UTC(2025, 10, 5, 5))
 
-    // null must stay null — never coerce to Date(0)
+    // null must stay null, never coerced to Date(0)
     const withNull = postSchema.parse({ ...CANONICAL_POST, updatedAt: null })
     expect(withNull.updatedAt).toBeNull()
 
@@ -84,10 +84,6 @@ describe('postSummarySchema', () => {
   it('parses the canonical list payload', () => {
     const summary = postSummarySchema.parse(CANONICAL_SUMMARY)
     expect(summary.createdAt.getTime()).toBe(Date.UTC(2024, 3, 15, 4))
-  })
-
-  it('does not require content or isPublished', () => {
-    expect(() => postSummarySchema.parse(CANONICAL_SUMMARY)).not.toThrow()
   })
 
   it('strips content when present (omit semantics)', () => {

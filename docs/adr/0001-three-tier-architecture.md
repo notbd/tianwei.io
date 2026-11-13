@@ -10,7 +10,7 @@ repo with local MDX (the previous Contentlayer setup) renders the same site
 with less latency, less configuration and no cross-repo coordination.
 
 The system was split anyway, for explicitly educational reasons: to
-practice the problems that only exist **between** services — contract
+practice the problems that only exist **between** services: contract
 management, independent deployment, cache invalidation across ownership
 boundaries, schema evolution with live readers.
 
@@ -26,17 +26,26 @@ Three repos with strict ownership:
 
 The costs are accepted and managed, not denied:
 
-- **Contract drift** is the tax. It is paid down with contract tests in
-  every repo (exact JSON fixtures) rather than a shared types package,
-  which would couple releases and defeat the purpose of the split.
-- **Operational invariants** (atomic sync, single cache layer, additive
-  migrations) are documented as ADRs and pinned by tests, because in a
-  multi-repo system nobody's compiler sees the whole picture.
+- **Contract drift** is the tax, paid down with tests rather than a
+  shared types package, which would couple releases and defeat the
+  purpose of the split. Contract tests pin the API's JSON in the API and
+  in the frontend. Post bodies are held to the frontend's published
+  component contract, which the content engine checks before it syncs,
+  and both repos test the same list of inputs against it (ADR-0006). The
+  table schema is copied verbatim from the content engine into the API (a
+  header comment marks the copy); keeping the two identical is a manual
+  step.
+- **Operational invariants** (atomic sync, a single cache layer, the
+  deploy handshake) are documented as ADRs and pinned by tests, because
+  in a multi-repo system nobody's compiler sees the whole picture. A
+  schema or wire change that renames or retypes something ships in two
+  releases (add the new, then remove the old), in the order ADR-0006
+  sets.
 
 ## Consequences
 
-- Every change touching the wire format follows a rollout order
-  (content → api → frontend, additive first) instead of one atomic commit.
+- Every change that crosses a repo boundary ships in an order instead of
+  one atomic commit; ADR-0006 gives the rule for choosing it.
 - Each repo stays independently deployable, testable, and boring.
 - The architecture is over-engineered for the traffic on purpose; the
   moment that stops being educational, collapsing back into one repo is a

@@ -18,19 +18,27 @@ anti-flash bought the loss of all static rendering.
 Move theme state fully client-side; the server renders theme-agnostic
 markup:
 
-- next-themes' inline script keeps applying the `dark` class before paint
-  (unchanged).
-- A second tiny inline script — first element in `<body>` — mirrors the
+- next-themes' own inline script applies the `dark` class before paint.
+- A second tiny inline script (the first element in `<body>`) mirrors the
   stored choice from localStorage into `data-theme-choice` on `<html>`
   before first paint.
 - The toggle renders **all three icons**; CSS shows exactly one based on
   `data-theme-choice`. No hydration gate, no cookie, no flash.
-- The toggle's click handler updates both next-themes state and the
-  attribute. (Update 2026-07: the handler only calls `setTheme`; a
-  `useEffect` on next-themes' `theme` writes the attribute, so a change
-  from another tab stays in sync. 2026-10: three `sr-only` labels switched
-  by the same CSS give the button an accessible name that states the
-  current theme.)
+- The toggle's click handler only calls `setTheme`; a `useEffect` on
+  next-themes' `theme` writes the attribute, so a change from another tab
+  stays in sync. Three `sr-only` labels switched by the same CSS give the
+  button an accessible name that states the current theme.
+- The switch cross-fades the page with the View Transitions API
+  (`document.startViewTransition`, with `flushSync` so the new theme is in
+  the DOM before the snapshot), and next-themes' `disableTransitionOnChange`
+  keeps elements from running their own hover transitions during it.
+  Browsers without the API, and readers who prefer reduced motion, get an
+  instant switch. During the cross-fade Chromium delivers clicks to
+  `<html>` (`::view-transition { pointer-events: none }` does not change
+  that), so two clicks less than about 300 ms apart move the theme one step
+  instead of two (measured: 100 and 250 ms lose the second click, 350 ms
+  does not); accepted rather than patched with a document-level click
+  handler.
 
 ## Consequences
 
@@ -41,7 +49,7 @@ markup:
   since 2026-10 the 400 for a malformed slug), and a Playwright test pins
   the toggle cycle + persistence across reload.
 - Users without JavaScript see the system-theme icon and no toggle
-  behavior — acceptable, since theming itself requires JS.
+  behavior, acceptable, since theming itself requires JS.
 - The pattern generalizes: any per-user state read during server render
   of shared layouts silently destroys static rendering. Keep per-user
   state client-side or behind dynamic islands.
