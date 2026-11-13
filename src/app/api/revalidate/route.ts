@@ -1,21 +1,32 @@
 import type { NextRequest } from 'next/server'
 import { NextResponse } from 'next/server'
 import { z } from 'zod'
-import { revalidateAndWarmPost, revalidateAndWarmTags } from '@/lib/cache'
+import { POSTS_TAG } from '@/lib/api'
+import { revalidatePosts } from '@/lib/cache'
 import { secureEquals } from '@/lib/secureCompare'
 
-const revalidateBodySchema = z.object({
-  tag: z.string().min(1).optional(),
-  tags: z.array(z.string().min(1)).optional(),
-  slug: z.string().min(1).optional(),
+// Room for the API reads, then the expiry. A hung API fails the first read,
+// retries included, in about 30 s; reads that are only slow get the rest.
+export const maxDuration = 60
+
+// The one body the content engine's deploy sends; anything else is a 400.
+const revalidateBodySchema = z.strictObject({
+  tags: z.tuple([
+    z.literal(POSTS_TAG),
+  ]),
 })
 
+/**
+ * Called by the content engine's deploy after a sync. 401 without the
+ * bearer, 400 for any other body, 502 when the API read before the expiry
+ * failed (nothing was expired), 200 once the `posts` tag is expired.
+ */
 export async function POST(request: NextRequest) {
   // Fail CLOSED on missing configuration: the old interpolated comparison
   // made an unset secret match the literal header "Bearer undefined".
   const secret = process.env.REVALIDATION_SECRET
   if (secret === undefined || secret === '') {
-    console.error('REVALIDATION_SECRET is not configured — rejecting revalidation request')
+    console.error('REVALIDATION_SECRET is not configured: rejecting revalidation request')
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
@@ -24,63 +35,25 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  try {
-    const parsedBody = revalidateBodySchema.safeParse(await request.json())
-    if (!parsedBody.success) {
-      return NextResponse.json(
-        { error: 'Missing tag, tags, or slug' },
-        { status: 400 },
-      )
-    }
-    const { tag, tags, slug } = parsedBody.data
-
-    // Option 1: Revalidate a specific post
-    if (slug !== undefined) {
-      const result = await revalidateAndWarmPost(slug)
-
-      // Return appropriate status based on success
-      if (!result.success) {
-        return NextResponse.json(result, { status: 207 }) // 207 Multi-Status for partial success
-      }
-
-      return NextResponse.json(result)
-    }
-
-    // Option 2: Revalidate multiple tags
-    if (tags !== undefined) {
-      const result = await revalidateAndWarmTags(tags)
-
-      if (!result.success) {
-        return NextResponse.json(result, { status: 207 })
-      }
-
-      return NextResponse.json(result)
-    }
-
-    // Option 3: Revalidate a single tag
-    if (tag !== undefined) {
-      const result = await revalidateAndWarmTags([tag])
-
-      if (!result.success) {
-        return NextResponse.json(result, { status: 207 })
-      }
-
-      return NextResponse.json(result)
-    }
-
+  // an unparsable or invalid body is the caller's error
+  if (!revalidateBodySchema.safeParse(await request.json().catch(() => undefined)).success) {
     return NextResponse.json(
-      { error: 'Missing tag, tags, or slug' },
+      { error: `Expected the body { "tags": ["${POSTS_TAG}"] }` },
       { status: 400 },
     )
   }
-  catch (error) {
-    console.error('Revalidation error:', error)
+
+  const result = await revalidatePosts()
+  if (!result.ok) {
     return NextResponse.json(
-      {
-        error: 'Internal server error',
-        message: error instanceof Error ? error.message : String(error),
-      },
-      { status: 500 },
+      { error: 'Could not read the content API; nothing was revalidated', message: result.message },
+      { status: 502 },
     )
   }
+
+  // the 2026-07 content engine checks `success`, the current one `revalidated`
+  return NextResponse.json({
+    success: true,
+    revalidated: [POSTS_TAG],
+  })
 }

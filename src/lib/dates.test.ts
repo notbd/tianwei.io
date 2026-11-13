@@ -1,27 +1,25 @@
-import { describe, expect, it } from 'vitest'
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest'
 import { formatPostDate } from './dates'
 
 // The content engine anchors authored calendar dates to America/New_York
 // midnight; these instants are what actually lands in the database.
 
+// Run WEST of ET. On a UTC (CI) or ET (dev) machine a formatter that lost
+// the explicit timeZone would still pass every case below; in Los Angeles
+// each ET midnight is still the previous evening, so the day flips.
+beforeAll(() => {
+  vi.stubEnv('TZ', 'America/Los_Angeles')
+})
+
+afterAll(() => {
+  vi.unstubAllEnvs()
+})
+
 describe('formatPostDate', () => {
-  it('renders an EDT-midnight instant as the authored calendar date', () => {
-    // 2025-10-23 authored in ET -> stored as 04:00Z
-    const stored = new Date(Date.UTC(2025, 9, 23, 4))
-    expect(formatPostDate(stored)).toBe('October 23, 2025')
-    expect(formatPostDate(stored, 'short')).toBe('Oct 23, 2025')
-  })
-
-  it('renders an EST-midnight instant as the authored calendar date', () => {
-    // 2025-01-31 authored in ET -> stored as 05:00Z
-    const stored = new Date(Date.UTC(2025, 0, 31, 5))
-    expect(formatPostDate(stored)).toBe('January 31, 2025')
-  })
-
-  it('is independent of the machine timezone (explicit zone in options)', () => {
-    // Any instant renders identically wherever the server runs — the
-    // display zone is pinned, never inherited from the environment.
-    const stored = new Date(Date.UTC(2024, 5, 15, 4))
-    expect(formatPostDate(stored)).toBe('June 15, 2024')
+  it.each([
+    ['an EDT midnight', '2025-10-23T04:00:00.000Z', 'October 23, 2025'],
+    ['an EST midnight', '2025-01-31T05:00:00.000Z', 'January 31, 2025'],
+  ])('renders %s as the authored calendar date', (_name, stored, shown) => {
+    expect(formatPostDate(new Date(stored))).toBe(shown)
   })
 })

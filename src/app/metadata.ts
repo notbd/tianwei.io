@@ -1,49 +1,67 @@
 import type { Metadata, Viewport } from 'next'
-import { AssetPaths, BasePaths } from '@/lib/paths'
+import { absoluteUrl, SITE_URL } from '@/lib/paths'
+import { site } from '@/lib/site'
+
+// The tab icon says which deployment you are looking at; no VERCEL_ENV
+// means a local `next dev` / `next start`.
+const ICON_VARIANT: Record<string, string> = {
+  development: 'dev',
+  preview: 'preview',
+  production: 'variable',
+}
+const iconVariant = ICON_VARIANT[process.env.VERCEL_ENV ?? ''] ?? 'local'
+
+// A page's own `openGraph` or `twitter` object replaces the root's whole
+// object (Next merges metadata shallowly), so pages that set their own
+// repeat these fields.
+export const twitterAccounts = {
+  siteId: site.twitter.id,
+  creator: site.twitter.handle,
+  creatorId: site.twitter.id,
+}
 
 export const metadata: Metadata = {
   title: {
-    template: '%s · tianwei.io',
-    default: 'Tianwei Zhang',
+    template: `%s · ${site.domain}`,
+    default: site.name,
   },
-  description: 'A software developer.',
+  description: site.description,
   authors: {
-    name: 'Tianwei Zhang',
-    url: BasePaths.url,
+    name: site.name,
+    url: SITE_URL,
   },
-  creator: 'Tianwei Zhang',
+  creator: site.name,
   generator: 'Next.js',
-  keywords: ['Tianwei Zhang', 'notbd', 'tianwei.io', 'Personal Website'],
-  referrer: 'origin-when-cross-origin',
-  metadataBase: new URL('https://tianwei.io'),
+  metadataBase: new URL(SITE_URL),
   icons: {
     icon: [
       {
-        url: AssetPaths.iconSVG,
+        url: `/assets/icon-squircle-${iconVariant}.svg`,
         type: 'image/svg+xml',
         sizes: 'any',
       },
       {
-        url: AssetPaths.favicon,
-        type: 'image/x-icon',
+        // for browsers without SVG icon support (Safari)
+        url: '/favicon.ico',
+        type: 'image/png', // a PNG despite the .ico name
         sizes: '192x192',
       },
     ],
     apple: {
-      url: AssetPaths.appleTouchIcon,
+      url: '/apple-touch-icon.png',
       type: 'image/png',
       sizes: '180x180',
     },
   },
   openGraph: {
     type: 'website',
-    url: BasePaths.url,
-    title: 'Tianwei Zhang',
-    description: 'A software developer.',
-    siteName: 'Tianwei.io',
+    url: './', // resolved against each page's own path (and metadataBase)
+    title: site.name,
+    description: site.description,
+    siteName: site.domain,
     images: [
       {
-        url: BasePaths.url + AssetPaths.openGraphImage,
+        url: absoluteUrl('/assets/icon-square-1024.png'),
         width: 1024,
         height: 1024,
       },
@@ -51,19 +69,32 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Tianwei Zhang • tianwei.io',
-    description: 'A software developer.',
-    siteId: '1110568647041400832',
-    creator: '@defnotbd',
-    creatorId: '1110568647041400832',
-    images: [BasePaths.url + AssetPaths.twitterImage],
+    title: site.name,
+    description: site.description,
+    ...twitterAccounts,
+    images: [
+      absoluteUrl('/assets/banner-2_1-2048.png'),
+    ],
   },
-  manifest: `${BasePaths.url}/manifest.json`,
   alternates: {
+    canonical: './', // same per-page resolution as og:url above
     types: {
-      'application/rss+xml': `${BasePaths.url}/feed.xml`,
+      'application/rss+xml': absoluteUrl('/feed.xml'),
     },
   },
+}
+
+/**
+ * Metadata for a page with its own title and description: the social cards
+ * repeat both, over the root's (Next merges metadata shallowly).
+ */
+export function pageMetadata(title: string, description: string): Metadata {
+  return {
+    title, // root template appends '· tianwei.io'
+    description,
+    openGraph: { ...metadata.openGraph, title, description },
+    twitter: { ...metadata.twitter, title, description },
+  }
 }
 
 export const viewport: Viewport = {

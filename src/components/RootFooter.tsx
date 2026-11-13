@@ -1,26 +1,23 @@
-'use client'
-
 import type { ComponentProps } from 'react'
-import { useEffect, useState } from 'react'
 import { ExternalLink } from '@/components/ExternalLink'
 import { Subscript } from '@/components/Subscript'
-import { useMediaQuery } from '@/lib/hooks/useMediaQuery'
+import { site } from '@/lib/site'
 import { cn } from '@/lib/utils'
 
-type PageFooterProps = ComponentProps<'footer'>
+type RootFooterProps = ComponentProps<'footer'>
 
+const CONTENT_LICENSE_URL = 'https://creativecommons.org/licenses/by-nc-sa/4.0'
+const CODE_LICENSE_URL = 'https://www.gnu.org/licenses/agpl-3.0.html'
+const CROSS_FADE = 'transition-[opacity,translate,visibility] duration-200 ease-out motion-reduce:transition-none'
+
+// The two license messages cross-fade at the md breakpoint. The inactive one
+// is hidden with `visibility` as well as opacity: that keeps it out of the
+// tab order and the accessibility tree while still letting the fade run,
+// so no JavaScript is needed to juggle tabIndex/aria-hidden.
 export function RootFooter({
   className,
   ...props
-}: PageFooterProps) {
-  const [isMounted, setIsMounted] = useState(false)
-  const isAboveMd = useMediaQuery('(min-width: 48rem)')
-  const isMountedAndAboveMd = isMounted && isAboveMd === true
-
-  useEffect(() => {
-    queueMicrotask(() => setIsMounted(true))
-  }, [])
-
+}: RootFooterProps) {
   return (
     <footer
       {...props}
@@ -36,20 +33,16 @@ export function RootFooter({
           <div
             className={cn(
               'absolute bottom-0',
-              'transition duration-200 ease-out',
-              'translate-x-0 opacity-100',
-              'md:pointer-events-none md:translate-x-4 md:opacity-0',
+              CROSS_FADE,
+              'visible translate-x-0 opacity-100',
+              'md:invisible md:translate-x-4 md:opacity-0',
             )}
           >
 
             <FooterSegment>
               {'Content licensed under '}
 
-              <ExternalLink
-                href="https://creativecommons.org/licenses/by-nc-sa/4.0"
-                tabIndex={isMountedAndAboveMd ? -1 : 0}
-                aria-hidden={isMountedAndAboveMd}
-              >
+              <ExternalLink href={CONTENT_LICENSE_URL}>
                 CC BY-NC-SA 4.0
               </ExternalLink>
 
@@ -59,12 +52,7 @@ export function RootFooter({
             <FooterSegment>
               {'Source code licensed under '}
 
-              <ExternalLink
-                href="https://www.gnu.org/licenses/agpl-3.0.html"
-                tabIndex={isMountedAndAboveMd ? -1 : 0}
-                aria-hidden={isMountedAndAboveMd}
-              >
-
+              <ExternalLink href={CODE_LICENSE_URL}>
                 AGPLv3
               </ExternalLink>
 
@@ -75,18 +63,14 @@ export function RootFooter({
           {/* above md width: combined license msg */}
           <FooterSegment
             className={cn(
-              'transition duration-200 ease-out',
-              'pointer-events-none -translate-x-4 opacity-0',
-              'md:pointer-events-auto md:translate-x-0 md:opacity-100',
+              CROSS_FADE,
+              'invisible -translate-x-4 opacity-0',
+              'md:visible md:translate-x-0 md:opacity-100',
             )}
           >
             {'Licensed under '}
 
-            <ExternalLink
-              href="https://creativecommons.org/licenses/by-nc-sa/4.0"
-              tabIndex={!isMountedAndAboveMd ? -1 : 0}
-              aria-hidden={!isMountedAndAboveMd}
-            >
+            <ExternalLink href={CONTENT_LICENSE_URL}>
               CC BY-NC-SA 4.0
             </ExternalLink>
 
@@ -96,11 +80,7 @@ export function RootFooter({
 
             {' & '}
 
-            <ExternalLink
-              href="https://www.gnu.org/licenses/agpl-3.0.html"
-              tabIndex={!isMountedAndAboveMd ? -1 : 0}
-              aria-hidden={!isMountedAndAboveMd}
-            >
+            <ExternalLink href={CODE_LICENSE_URL}>
               AGPLv3
             </ExternalLink>
 
@@ -114,13 +94,13 @@ export function RootFooter({
 
         {/* copyright msg */}
         <FooterSegment>
-          tianwei.io · &copy; 2024-present · Tianwei Zhang
+          {`${site.domain} · © 2024-present · `}
+          <span className="whitespace-nowrap">{site.name}</span>
         </FooterSegment>
 
       </div>
     </footer>
   )
-  // )
 }
 
 type FooterSegmentProps = ComponentProps<'p'> & { children: React.ReactNode }

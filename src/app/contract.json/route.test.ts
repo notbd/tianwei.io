@@ -1,0 +1,48 @@
+import { describe, expect, it } from 'vitest'
+import { GET } from './route'
+
+describe('/contract.json', () => {
+  it('publishes the time zone and every post component with its attribute schema', async () => {
+    // The content engine reads this document; a change here is a change to
+    // the cross-repo contract (docs/adr/0006)
+    expect(await GET().json()).toEqual({
+      timeZone: 'America/New_York',
+      mdx: {
+        components: {
+          MdxImage: {
+            attributes: {
+              $schema: 'https://json-schema.org/draft/2020-12/schema',
+              type: 'object',
+              properties: {
+                src: { type: 'string', minLength: 1 },
+                alt: { type: 'string' },
+                width: { type: 'string', pattern: '^[1-9]\\d*$' },
+                height: { type: 'string', pattern: '^[1-9]\\d*$' },
+                title: { type: 'string' },
+                sizeCategory: {
+                  type: 'string',
+                  enum: ['sm', 'md', 'lg', 'xl', '2xl', '3xl'],
+                },
+              },
+              required: ['src', 'alt', 'width', 'height'],
+              additionalProperties: false,
+            },
+            children: false,
+          },
+          Link: {
+            attributes: {
+              $schema: 'https://json-schema.org/draft/2020-12/schema',
+              type: 'object',
+              properties: {
+                href: { type: 'string', minLength: 1 },
+              },
+              required: ['href'],
+              additionalProperties: false,
+            },
+            children: true,
+          },
+        },
+      },
+    })
+  })
+})

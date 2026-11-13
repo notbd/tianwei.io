@@ -10,7 +10,7 @@ on:
 permissions:
   contents: read
 
-# A force-push supersedes the running check — don't burn minutes finishing it.
+# A force-push supersedes the running check: don't burn minutes finishing it.
 # (Also applies to main: only the latest merge's regression check matters.)
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
@@ -20,17 +20,26 @@ jobs:
   checks:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    # Public values, not secrets: the read-only content API and the Cloudinary
+    # cloud name visible in every image URL. Inlined so Dependabot and fork
+    # PRs, which get no Actions secrets, can build.
+    env:
+      CONTENT_API_URL: https://tio.twz.app
+      NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: dllyef7is
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
+      # Third-party, so pinned to a commit (GitHub's own actions stay on
+      # tags): a moved tag cannot change the pnpm that later steps run. The
+      # pnpm version comes from packageManager.
       - name: Setup pnpm
-        uses: pnpm/action-setup@v6 # version read from packageManager field
+        uses: pnpm/action-setup@73e46992e05b19abd31f2f3c20e0e7370d762115 # v6.1.1
 
       - name: Setup Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version-file: .nvmrc
           cache: pnpm
 
       - name: Install dependencies
@@ -45,27 +54,13 @@ jobs:
       - name: Test
         run: pnpm test
 
-      # Regression check only — Vercel performs the real deploy build.
+      # Regression check only; Vercel performs the real deploy build.
       # Hits the public read-only content API at build time (SSG).
       - name: Build
         run: pnpm build
-        env:
-          CONTENT_API_URL: ${{ secrets.CONTENT_API_URL }}
-          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
-          REVALIDATION_SECRET: ci-dummy-secret
-
-      - name: Cache Playwright browsers
-        uses: actions/cache@v4
-        with:
-          path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install Playwright browsers
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Browser smoke tests
         run: pnpm test:e2e
-        env:
-          CONTENT_API_URL: ${{ secrets.CONTENT_API_URL }}
-          NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${{ secrets.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME }}
-          REVALIDATION_SECRET: ci-dummy-secret

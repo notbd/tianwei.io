@@ -1,38 +1,69 @@
 import type { Metadata } from 'next'
-import type { Post, PostSummary } from '@/lib/api'
+import type { Post } from '@/lib/api'
 import { draftMode } from 'next/headers'
-import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { cache } from 'react'
+import { twitterAccounts } from '@/app/metadata'
+import { JsonLd } from '@/components/JsonLd'
 import { MdxContent } from '@/components/mdx/MdxContent'
-import { apiClient, NetworkRequestError } from '@/lib/api'
+import { TextLink } from '@/components/TextLink'
+import { findPost, getDraftPost, getPosts, isNotFoundError } from '@/lib/api'
+import { categoryLabel } from '@/lib/categories'
 import { formatPostDate } from '@/lib/dates'
-import { BasePaths } from '@/lib/paths'
+import { absoluteUrl, categoryPath, postPath, SITE_URL } from '@/lib/paths'
+import { POST_BODY_HASH_META, postBodyHash } from '@/lib/postBodyHash'
+import { readingMinutes } from '@/lib/readingTime'
+import { site } from '@/lib/site'
 
 type PageProps = {
   params: Promise<{ slug: string }>
 }
 
-export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { slug } = await params
+// The items around it do not wrap, so the line may only break after a
+// separator: the <wbr> is that one opportunity (without it a line with an
+// Updated date cannot break at all and overflows a phone).
+const metaSeparator = (
+  <>
+    <span className="mx-2" aria-hidden>·</span>
+    <wbr />
+  </>
+)
 
-  let post: Post
+// One read per render, shared by the metadata and the page, so the page
+// costs one lookup and a draft's tab shows its title. Nothing depends on the
+// sharing for correctness: the body hash is rendered by the page, from the
+// post it renders. Draft mode (the author's preview) reads through the
+// API's preview endpoint, which also returns unpublished posts, and skips
+// the list. Only a slug that names no post becomes a not-found page; any
+// other failure (network hiccup, 500, schema drift) propagates, since
+// during a build a swallowed error would silently drop the page from the
+// prerendered set.
+const loadPost = cache(async (slug: string): Promise<Post> => {
+  const { isEnabled } = await draftMode()
+  if (!isEnabled)
+    return await findPost(slug) ?? notFound()
+
   try {
-    post = await apiClient.post.getBySlug(slug)
+    return await getDraftPost(slug)
   }
   catch (error) {
-    // unknown slug: the page itself will render notFound()
-    if (error instanceof NetworkRequestError && error.status === 404)
-      return {}
+    if (isNotFoundError(error))
+      notFound()
     throw error
   }
+})
 
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  const post = await loadPost((await params).slug)
   const description = post.description ?? undefined
   return {
     title: post.title, // root template appends '· tianwei.io'
     description,
+    // no images here: the route's opengraph-image.tsx supplies the card
     openGraph: {
       type: 'article',
-      url: `${BasePaths.url}/posts/${post.slug}`,
+      siteName: site.domain,
+      url: absoluteUrl(postPath(post.slug)),
       title: post.title,
       description,
       publishedTime: post.createdAt.toISOString(),
@@ -41,6 +72,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     },
     twitter: {
       card: 'summary_large_image',
+      ...twitterAccounts,
       title: post.title,
       description,
     },
@@ -48,37 +80,43 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 }
 
 export async function generateStaticParams() {
-  const posts: PostSummary[] = await apiClient.post.listAll()
+  const posts = await getPosts()
 
   // Fail the build loudly rather than silently shipping zero prerendered
   // pages (which would degrade every post visit to on-demand rendering).
   if (posts.length === 0)
-    throw new Error('generateStaticParams: API returned 0 posts — refusing to build an empty catalog')
+    throw new Error('generateStaticParams: API returned 0 posts; refusing to build an empty catalog')
 
   return posts.map(post => ({ slug: post.slug }))
 }
 
 export default async function PostPage({ params }: PageProps) {
-  const { slug } = await params
+  const post = await loadPost((await params).slug)
   const { isEnabled: isDraftPreview } = await draftMode()
 
-  let post: Post
-  try {
-    post = isDraftPreview
-      ? await apiClient.post.getPreviewBySlug(slug)
-      : await apiClient.post.getBySlug(slug)
-  }
-  catch (error) {
-    // Only a true 404 becomes a not-found page. Anything else (network
-    // hiccup, 500, schema drift) must propagate — during a build a swallowed
-    // error would silently drop the page from the prerendered set.
-    if (error instanceof NetworkRequestError && error.status === 404)
-      notFound()
-    throw error
-  }
+  const url = absoluteUrl(postPath(post.slug))
 
   return (
-    <main className="max-w-3xl pb-8">
+    <article className="pb-8">
+      {/* The hash of the body rendered below, taken from the same `post`, so
+          the two cannot describe different reads. React hoists the tag into
+          <head>; the content deploy's reconcile reads it from the page. */}
+      <meta name={POST_BODY_HASH_META} content={postBodyHash(post.content)} />
+
+      <JsonLd data={{
+        '@context': 'https://schema.org',
+        '@type': 'BlogPosting',
+        'headline': post.title,
+        'description': post.description ?? undefined,
+        'datePublished': post.createdAt.toISOString(),
+        'dateModified': (post.updatedAt ?? post.createdAt).toISOString(),
+        'author': { '@type': 'Person', 'name': post.author, 'url': SITE_URL },
+        'url': url,
+        'mainEntityOfPage': url,
+        'image': `${url}/opengraph-image`,
+        'articleSection': post.category,
+      }}
+      />
 
       {/* draft preview banner */}
       {isDraftPreview && (
@@ -91,45 +129,44 @@ export default async function PostPage({ params }: PageProps) {
       )}
 
       {/* header */}
-      <header className="mb-16 pb-4 border-b border-gray-200/30 dark:border-gray-800/30">
+      <header className="mb-16 border-b border-zinc-200/30 pb-4 dark:border-zinc-800/30">
 
         {/* title */}
         <h1 className="text-2xl font-bold">{post.title}</h1>
 
         {/* (optional) description */}
-        {post.description !== null && post.description !== '' && (
+        {post.description !== null && (
           <p className="mt-2 text-zinc-600 dark:text-zinc-400">{post.description}</p>
         )}
 
         {/* other attributes */}
-        <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-500">
-          <time dateTime={post.createdAt.toISOString()}>
-            {formatPostDate(post.createdAt, 'short')}
+        <div className="mt-2 text-sm text-zinc-500 dark:text-zinc-400">
+          <time dateTime={post.createdAt.toISOString()} className="whitespace-nowrap">
+            {formatPostDate(post.createdAt)}
           </time>
-          {post.updatedAt != null && (
+          {post.updatedAt !== null && (
             <>
-              <span className="mx-2">·</span>
-              <span>
+              {metaSeparator}
+              <span className="whitespace-nowrap">
                 {'Updated '}
                 <time dateTime={post.updatedAt.toISOString()}>
-                  {formatPostDate(post.updatedAt, 'short')}
+                  {formatPostDate(post.updatedAt)}
                 </time>
               </span>
             </>
           )}
-          <span className="mx-2">·</span>
-          <Link
-            href={`/categories/${encodeURIComponent(post.category)}`}
-            className="underline decoration-zinc-300 underline-offset-2 hover:text-zinc-700 dark:decoration-zinc-700 dark:hover:text-zinc-300"
-          >
-            {post.category}
-          </Link>
+          {metaSeparator}
+          <span className="whitespace-nowrap">{`${readingMinutes(post.content)} min read`}</span>
+          {metaSeparator}
+          <TextLink href={categoryPath(post.category)} className="whitespace-nowrap">
+            {categoryLabel(post.category)}
+          </TextLink>
         </div>
       </header>
 
       {/* content */}
       <MdxContent source={post.content} />
 
-    </main>
+    </article>
   )
 }

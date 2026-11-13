@@ -1,14 +1,21 @@
 import type { MDXComponents } from 'mdx/types'
-import type { ComponentProps } from 'react'
-import Link from 'next/link'
-import MdxImage from '@/components/mdx/MdxImage'
+import type { ComponentProps, ComponentType } from 'react'
+import type { z } from 'zod'
+import { CopyCodeButton } from '@/components/mdx/CopyCodeButton'
+import { MdxImage } from '@/components/mdx/MdxImage'
+import { MdxLink } from '@/components/mdx/MdxLink'
+import { PROSE_LINK } from '@/components/mdx/proseLink'
+import { linkAttributesSchema, mdxImageAttributesSchema } from '@/components/mdx/schemas'
 import { cn } from '@/lib/utils'
 
-export const mdxComponents: MDXComponents = {
+// Styles for the HTML elements Markdown produces. A post cannot name these
+// as JSX: the syntax-tree check (src/lib/mdx.tsx) only lets through the
+// components in authorComponents below.
+const markdownElements = {
   h1: ({ className, ...props }: ComponentProps<'h1'>) => (
     <h1
       className={cn(
-        'mt-10 scroll-m-20 text-3xl font-bold tracking-tight',
+        'mt-10 scroll-m-20 text-3xl font-bold tracking-tight text-balance',
         className,
       )}
       {...props}
@@ -17,7 +24,7 @@ export const mdxComponents: MDXComponents = {
   h2: ({ className, ...props }: ComponentProps<'h2'>) => (
     <h2
       className={cn(
-        'mt-10 scroll-m-20 pb-1 text-2xl font-semibold tracking-tight',
+        'mt-10 scroll-m-20 pb-1 text-2xl font-semibold tracking-tight text-balance',
         'border-b border-zinc-200 dark:border-zinc-800',
         className,
       )}
@@ -27,7 +34,7 @@ export const mdxComponents: MDXComponents = {
   h3: ({ className, ...props }: ComponentProps<'h3'>) => (
     <h3
       className={cn(
-        'mt-8 scroll-m-20 text-xl font-semibold tracking-tight',
+        'mt-8 scroll-m-20 text-xl font-semibold tracking-tight text-balance',
         className,
       )}
       {...props}
@@ -54,13 +61,18 @@ export const mdxComponents: MDXComponents = {
   h6: ({ className, ...props }: ComponentProps<'h6'>) => (
     <h6
       className={cn(
-        'mt-8 scroll-m-20 text-base font-semibold tracking-tight opacity-60',
+        'mt-8 scroll-m-20 text-base font-semibold tracking-tight text-zinc-500 dark:text-zinc-400',
         className,
       )}
       {...props}
     />
   ),
   a: ({ className, href = '', ...props }: ComponentProps<'a'>) => {
+    // rehype-autolink-headings wraps each heading's text in an `.anchor`
+    // link; it keeps the heading's own colour and weight (mdx.tailwind.css)
+    if (className === 'anchor')
+      return <a href={href} className={className} {...props} />
+
     const isExternal
       = href.startsWith('http')
         || href.startsWith('mailto:')
@@ -71,18 +83,14 @@ export const mdxComponents: MDXComponents = {
         href={href}
         target={isExternal ? '_blank' : undefined}
         rel={isExternal ? 'noopener noreferrer' : undefined}
-        className={cn(
-          'text-teal-700 hover:text-teal-600 dark:text-teal-600 dark:hover:text-teal-500',
-          'transition-[color] duration-300 font-medium underline underline-offset-4',
-          className,
-        )}
+        className={cn(PROSE_LINK, className)}
         {...props}
       />
     )
   },
   p: ({ className, ...props }: ComponentProps<'p'>) => (
     <p
-      className={cn('leading-7', 'not-first:mt-6', className)}
+      className={cn('leading-7 text-pretty', 'not-first:mt-6', className)}
       {...props}
     />
   ),
@@ -113,22 +121,22 @@ export const mdxComponents: MDXComponents = {
   blockquote: ({ className, ...props }: ComponentProps<'blockquote'>) => (
     <blockquote
       className={cn(
-        'mt-6 border-l-2 pl-6 text-zinc-600 dark:text-zinc-400',
+        'mt-6 border-l-2 border-zinc-300 pl-6 text-zinc-600 dark:border-zinc-700 dark:text-zinc-400',
         className,
       )}
       {...props}
     />
   ),
   img: ({ className, alt, ...props }: ComponentProps<'img'>) => (
-    // using img instead of next Image because already using Cloudinary for image optimization
+    // plain Markdown images carry arbitrary URLs, not Cloudinary public ids, so they bypass next/image and its Cloudinary loader; use <MdxImage> for optimized images
     // eslint-disable-next-line next/no-img-element
     <img className={cn('rounded-md', className)} alt={alt} {...props} />
   ),
-  hr: ({ ...props }: ComponentProps<'hr'>) => (
-    <hr className="my-4 md:my-8" {...props} />
+  hr: (props: ComponentProps<'hr'>) => (
+    <hr className="my-4 border-zinc-200 md:my-8 dark:border-zinc-800" {...props} />
   ),
   table: ({ className, ...props }: ComponentProps<'table'>) => (
-    <div className="my-6 w-full overflow-hidden overflow-y-auto rounded-lg border border-zinc-200 drop-shadow-sm dark:border-zinc-800">
+    <div className="my-6 w-full overflow-x-auto rounded-lg border border-zinc-200 drop-shadow-sm dark:border-zinc-800">
       <table
         className={cn(
           'w-full border-collapse bg-white dark:bg-zinc-950',
@@ -165,14 +173,25 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
+  // the wrapper lets the copy button sit in the block's corner without
+  // scrolling away with wide code. It needs no margins of its own:
+  // rehype-pretty-code puts every block in a figure, which has them
   pre: ({ className, ...props }: ComponentProps<'pre'>) => (
-    <pre
-      className={cn(
-        'mb-4 mt-6 overflow-x-auto rounded-lg border border-zinc-300/30 py-4 drop-shadow-sm dark:border-zinc-500/20',
-        className,
-      )}
-      {...props}
-    />
+    <div data-code-block className="group/code relative">
+      <pre
+        className={cn(
+          'overflow-x-auto rounded-lg border border-zinc-300/30 py-4 drop-shadow-sm dark:border-zinc-500/20',
+          className,
+        )}
+        {...props}
+      />
+      <CopyCodeButton
+        className={cn(
+          'absolute right-2 top-2',
+          'opacity-0 focus-visible:opacity-100 group-hover/code:opacity-100 pointer-coarse:opacity-100',
+        )}
+      />
+    </div>
   ),
   code: ({ className, ...props }: ComponentProps<'code'>) => (
     <code
@@ -184,11 +203,28 @@ export const mdxComponents: MDXComponents = {
       {...props}
     />
   ),
-  MdxImage,
-  Link: ({ className, ...props }: ComponentProps<typeof Link>) => (
-    <Link
-      className={cn('font-medium underline underline-offset-4', className)}
-      {...props}
-    />
-  ),
+} satisfies MDXComponents
+
+type AuthorComponent = {
+  component: ComponentType<never>
+  /** Every attribute the component accepts; strict, so no other gets through */
+  attributes: z.ZodObject<z.ZodRawShape, z.core.$strict>
+  /** Whether the component takes content between its tags */
+  children: boolean
+}
+
+/**
+ * The components a post may use, by the name it writes them with. The
+ * syntax-tree check enforces this table and /contract.json publishes it,
+ * so the content engine applies the same rules before it syncs a post.
+ * A new component starts here (docs/adr/0006 says which deploy goes first).
+ */
+export const authorComponents = {
+  MdxImage: { component: MdxImage, attributes: mdxImageAttributesSchema, children: false },
+  Link: { component: MdxLink, attributes: linkAttributesSchema, children: true },
+} satisfies Record<string, AuthorComponent>
+
+export const mdxComponents: MDXComponents = {
+  ...markdownElements,
+  ...Object.fromEntries(Object.entries(authorComponents).map(([name, { component }]) => [name, component])),
 }

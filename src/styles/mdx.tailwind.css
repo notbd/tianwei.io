@@ -1,20 +1,13 @@
-@reference "tailwindcss";
+/* the main sheet, not "tailwindcss": its class-based `dark` variant is what
+ * the toggle drives; the default one follows the OS preference instead */
+@reference "./globals.tailwind.css";
 
 /* Code block title styling */
 [data-rehype-pretty-code-title] {
-  @apply mt-4 px-4 py-2 text-sm font-medium font-mono;
+  @apply px-4 py-2 text-sm font-medium font-mono;
 }
 
-[data-rehype-pretty-code-title] + pre {
-  @apply mt-0;
-}
-
-/* Pre and code base styling */
-pre {
-  overflow-x: auto;
-  padding: 1rem 0;
-}
-
+/* Code lines: the block's horizontal padding (the <pre> has vertical only) */
 pre [data-line] {
   padding: 0 1rem;
 }
@@ -41,6 +34,11 @@ pre [data-line] {
   @apply bg-transparent;
 }
 
+/* Inline-code padding stays inline: block code is spaced by [data-line] */
+[data-rehype-pretty-code-figure] pre code {
+  @apply p-0;
+}
+
 /* Code text styling - dark mode */
 .dark [data-rehype-pretty-code-figure] code,
 .dark [data-rehype-pretty-code-figure] code span {
@@ -52,26 +50,24 @@ pre [data-line] {
   background-color: var(--shiki-dark-bg);
 }
 
-/* Character highlighting - light mode */
+/* Character highlighting: a light wash, so the highlighted tokens keep
+ * their contrast (zinc-200 / zinc-800) */
 [data-highlighted-chars] {
   @apply rounded bg-transparent;
-  box-shadow: 0 0 0 0.2rem rgb(212 212 216);
+  box-shadow: 0 0 0 0.2rem var(--color-zinc-200);
 }
 
 mark[data-highlighted-chars] span {
   @apply rounded;
-  background-color: rgb(212 212 216);
+  background-color: var(--color-zinc-200);
 }
 
-/* Character highlighting - dark mode */
 .dark [data-highlighted-chars] {
-  @apply rounded bg-transparent;
-  box-shadow: 0 0 0 0.2rem rgb(63 63 70);
+  box-shadow: 0 0 0 0.2rem var(--color-zinc-800);
 }
 
 .dark mark[data-highlighted-chars] span {
-  @apply rounded;
-  background-color: rgb(63 63 70);
+  background-color: var(--color-zinc-800);
 }
 
 /* Line numbers */
@@ -87,7 +83,12 @@ pre code[data-line-numbers] > [data-line]::before {
   width: 1rem;
   margin-right: 2rem;
   text-align: right;
-  @apply text-zinc-300 dark:text-zinc-700;
+  @apply text-zinc-300;
+}
+
+/* (`dark:` cannot follow a pseudo-element, hence the explicit selector) */
+.dark pre code[data-line-numbers] > [data-line]::before {
+  @apply text-zinc-700;
 }
 
 code[data-line-numbers-max-digits='2'] > [data-line]::before {
@@ -98,9 +99,10 @@ code[data-line-numbers-max-digits='3'] > [data-line]::before {
   width: 3rem;
 }
 
-/* Line highlighting */
-[data-highlighted-line] {
-  @apply border-l-2 border-teal-500 bg-teal-500/10;
+/* Line highlighting (scoped to the figure to outrank the transparent
+ * background on `code span` above) */
+[data-rehype-pretty-code-figure] [data-highlighted-line] {
+  @apply bg-teal-500/10;
 }
 
 /* Nested list marker styling (migrated from Tailwind plugin) */
@@ -112,16 +114,28 @@ code[data-line-numbers-max-digits='3'] > [data-line]::before {
   content: '·  ';
 }
 
-/* Anchor link styling for headings */
+/* Heading self-links (rehype-autolink-headings): the heading stays as it
+ * is, with a quiet '#' on hover or focus to say it links to itself. The
+ * empty alt text keeps screen readers from reading the '#'. */
 .mdx .anchor {
-  @apply no-underline;
+  @apply text-inherit no-underline;
 }
 
-.mdx h1 .anchor,
-.mdx h2 .anchor,
-.mdx h3 .anchor,
-.mdx h4 .anchor,
-.mdx h5 .anchor,
-.mdx h6 .anchor {
-  @apply text-inherit no-underline;
+.mdx .anchor::after {
+  content: '#' / '';
+  @apply ml-2 font-normal text-zinc-400 opacity-0 transition-opacity duration-200;
+}
+
+.dark .mdx .anchor::after {
+  @apply text-zinc-600;
+}
+
+.mdx .anchor:hover::after,
+.mdx .anchor:focus-visible::after {
+  @apply opacity-100;
+}
+
+/* GFM footnotes: set apart from the post body */
+.mdx .footnotes {
+  @apply mt-12 border-t border-zinc-200 pt-4 text-sm text-zinc-600 dark:border-zinc-800 dark:text-zinc-400;
 }

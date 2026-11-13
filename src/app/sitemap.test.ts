@@ -1,58 +1,55 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
+import sitemap from './sitemap'
 
-const listAll = vi.fn()
-const listCategories = vi.fn()
-
-vi.mock('@/lib/api', () => ({
-  apiClient: {
-    post: { listAll },
-    category: { listAll: listCategories },
-  },
+const { getCategories, getPosts } = vi.hoisted(() => ({
+  getCategories: vi.fn(),
+  getPosts: vi.fn(),
 }))
-
-const sitemap = (await import('./sitemap')).default
+vi.mock('@/lib/api', () => ({ getCategories, getPosts }))
 
 beforeEach(() => {
   vi.clearAllMocks()
-  listCategories.mockResolvedValue(['articles'])
+  getCategories.mockResolvedValue(['articles'])
 })
 
 describe('sitemap', () => {
   it('lists the homepage, the posts index, categories, and every post', async () => {
-    listAll.mockResolvedValue([
+    getPosts.mockResolvedValue([
       {
         slug: 'alpha',
-        createdAt: new Date('2025-10-23T00:00:00.000Z'),
-        updatedAt: new Date('2025-11-05T00:00:00.000Z'),
+        createdAt: new Date('2025-10-23T04:00:00.000Z'),
+        updatedAt: new Date('2025-11-05T05:00:00.000Z'),
       },
-      { slug: 'beta', createdAt: new Date('2024-04-15T00:00:00.000Z'), updatedAt: null },
+      {
+        slug: 'beta',
+        createdAt: new Date('2024-04-15T04:00:00.000Z'),
+        updatedAt: null,
+      },
     ])
 
     const entries = await sitemap()
     const urls = entries.map(entry => entry.url)
 
-    expect(urls[0]).toMatch(/\/$/)
-    expect(urls).toContainEqual(expect.stringContaining('/posts'))
-    expect(urls).toContainEqual(expect.stringContaining('/categories/articles'))
-    expect(urls).toContainEqual(expect.stringContaining('/posts/alpha'))
-    expect(urls).toContainEqual(expect.stringContaining('/posts/beta'))
+    expect(urls).toEqual([
+      'https://tianwei.io/',
+      'https://tianwei.io/posts',
+      'https://tianwei.io/categories/articles',
+      'https://tianwei.io/posts/alpha',
+      'https://tianwei.io/posts/beta',
+    ])
 
     // lastModified prefers updatedAt, falls back to createdAt
     expect(entries.find(entry => entry.url.endsWith('/posts/alpha'))?.lastModified)
-      .toEqual(new Date('2025-11-05T00:00:00.000Z'))
+      .toEqual(new Date('2025-11-05T05:00:00.000Z'))
     expect(entries.find(entry => entry.url.endsWith('/posts/beta'))?.lastModified)
-      .toEqual(new Date('2024-04-15T00:00:00.000Z'))
+      .toEqual(new Date('2024-04-15T04:00:00.000Z'))
   })
 
-  it('falls back to the static entries when the API is unavailable', async () => {
-    listAll.mockRejectedValue(new Error('api down'))
+  it('propagates an API failure instead of producing a sitemap without posts', async () => {
+    // a reduced sitemap would be cached until the next content sync;
+    // a throw fails the build or keeps the last good sitemap served
+    getPosts.mockRejectedValue(new Error('api down'))
 
-    const entries = await sitemap()
-
-    expect(entries).toHaveLength(2)
-    expect(entries.map(entry => entry.url)).toEqual([
-      expect.stringMatching(/\/$/),
-      expect.stringContaining('/posts'),
-    ])
+    await expect(sitemap()).rejects.toThrow('api down')
   })
 })
